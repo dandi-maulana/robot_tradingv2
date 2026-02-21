@@ -50,27 +50,39 @@
             </div>
         </div>
 
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-            <h3 class="text-xl font-bold text-dark mb-2 md:mb-0">Pilih Market (Monitoring)</h3>
-            <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
-                <button onclick="startAllMarkets()" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-sm text-sm transition-all">
-                    🌍 Hubungkan Semua
-                </button>
-                <button onclick="resetAllMarkets()" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 shadow-sm text-sm transition-all">
-                    🔄 Reset Semua
-                </button>
+        <div class="flex flex-col md:flex-row justify-between items-start mb-6 gap-4 border-b border-gray-100 pb-6">
+            <h3 class="text-xl font-bold text-dark whitespace-nowrap">Pilih Market <br><span class="text-sm font-normal text-gray-400">(Monitoring)</span></h3>
+            
+            <div class="flex flex-col w-full md:w-auto gap-3">
+                <div class="flex flex-wrap gap-2 items-center md:justify-end">
+                    <button onclick="startAllMarkets(event)" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-sm text-sm transition-all">
+                        🌍 Hubungkan Semua
+                    </button>
+                    <button onclick="stopAllMarkets(event)" class="px-4 py-2 bg-red text-white font-bold rounded-lg hover:bg-red-dark shadow-sm text-sm transition-all">
+                        ⏹ Hentikan Semua
+                    </button>
+                    <button onclick="resetAllMarkets()" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 shadow-sm text-sm transition-all">
+                        🔄 Reset Data
+                    </button>
+                </div>
                 
-                <div class="flex border border-blue-200 rounded-lg overflow-hidden bg-white shadow-sm ml-0 md:ml-2">
-                    <div class="bg-blue-50 px-3 py-2 border-r border-blue-200 flex items-center">
-                        <span class="text-xs font-bold text-blue-800">Loss Ke:</span>
+                <div class="flex flex-wrap gap-2 items-center md:justify-end">
+                    <div class="flex border border-blue-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                        <div class="bg-blue-50 px-3 py-1.5 border-r border-blue-200 flex items-center">
+                            <span class="text-[11px] font-bold text-blue-800 uppercase">Loss Ke:</span>
+                        </div>
+                        <input type="number" id="mass-tg-loss" value="7" min="1" class="w-16 text-center text-sm font-bold outline-none text-blue-900 border-r border-blue-200">
+                        <button onclick="activateMassTelegram(event)" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-colors flex items-center gap-1">
+                            📲 Sinyal Massal
+                        </button>
                     </div>
-                    <input type="number" id="mass-tg-loss" value="7" min="1" class="w-16 text-center text-sm font-bold outline-none text-blue-900 border-r border-blue-200">
-                    <button onclick="activateMassTelegram(event)" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-colors flex items-center gap-1">
-                        📲 Sinyal Massal
+                    <button onclick="stopMassTelegram(event)" class="px-4 py-1.5 bg-red-light text-red font-bold border border-red-200 rounded-lg hover:bg-red-200 shadow-sm text-sm transition-all">
+                        🔕 Matikan Telegram Semua
                     </button>
                 </div>
             </div>
         </div>
+        
         <div id="market-grid-container" class="grid grid-cols-2 md:grid-cols-4 gap-5 min-h-[300px]"></div>
         <div id="pagination-controls" class="flex justify-center items-center gap-2 mt-8"></div>
     </div>
@@ -430,12 +442,16 @@
         }
     }
 
-    function startAllMarkets() {
+    // ==========================================
+    // FITUR: KONTROL SEMUA MARKET (START / STOP)
+    // ==========================================
+    function startAllMarkets(event) {
         const token = document.getElementById('token').value;
         const accountId = document.getElementById('account-id').value;
         if (!token || !accountId) return alert("Harap isi Access Token & Target Account ID di Dashboard terlebih dahulu!");
         
-        const btn = event.target; let originalText = btn.innerHTML;
+        const btn = event.currentTarget || event.target;
+        let originalText = btn.innerHTML;
         btn.innerHTML = '⏳ Menghubungkan...'; btn.disabled = true;
 
         fetch(`${API_BASE}/start_all`, {
@@ -447,40 +463,60 @@
         }).catch(err => { btn.innerHTML = originalText; btn.disabled = false; });
     }
 
+    function stopAllMarkets(event) {
+        if(!confirm("Apakah Anda yakin ingin MENGHENTIKAN SEMUA bot market yang sedang berjalan?")) return;
+        
+        const btn = event.currentTarget || event.target;
+        let originalText = btn.innerHTML;
+        btn.innerHTML = '⏳ Memproses...'; btn.disabled = true;
+
+        fetch(`${API_BASE}/stop_all`, { method: 'POST' })
+        .then(res => res.json()).then(data => {
+            btn.innerHTML = originalText; btn.disabled = false;
+            alert(`✅ ${data.message}`); refreshDashboardStatus();
+        }).catch(err => { btn.innerHTML = originalText; btn.disabled = false; });
+    }
+
     function resetAllMarkets() {
         if(!confirm("Apakah Anda yakin ingin MERESET SEMUA data history market? Semua hitungan candle akan dimulai dari 0 kembali.")) return;
         fetch(`${API_BASE}/reset_all`, { method: 'POST' })
         .then(res => res.json()).then(data => { alert(`✅ ${data.message}`); refreshDashboardStatus(); });
     }
 
-    // FUNGSI BARU: AKTIFKAN TELEGRAM MASSAL DARI DASHBOARD
+    // ==========================================
+    // FITUR: KONTROL TELEGRAM MASSAL (START / STOP)
+    // ==========================================
     function activateMassTelegram(event) {
         const targetLoss = document.getElementById('mass-tg-loss').value;
         if(!confirm(`Aktifkan Telegram otomatis di SEMUA market aktif dengan Target Loss ${targetLoss}?`)) return;
         
-        const btn = event.currentTarget;
+        const btn = event.currentTarget || event.target;
         const originalText = btn.innerHTML;
-        btn.innerHTML = '⏳ Memproses...';
-        btn.disabled = true;
+        btn.innerHTML = '⏳ Memproses...'; btn.disabled = true;
 
         fetch(`${API_BASE}/toggle_telegram_all`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ target_loss: targetLoss })
         }).then(res => res.json()).then(data => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            if(data.status === 'success') {
-                alert(`✅ ${data.message}`);
-                refreshDashboardStatus();
-            } else { 
-                alert(`❌ ${data.message}`); 
-            }
-        }).catch(err => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            alert("Gagal terhubung ke server.");
-        });
+            btn.innerHTML = originalText; btn.disabled = false;
+            if(data.status === 'success') { alert(`✅ ${data.message}`); refreshDashboardStatus(); refreshDetailData(); } 
+            else { alert(`❌ ${data.message}`); }
+        }).catch(err => { btn.innerHTML = originalText; btn.disabled = false; alert("Gagal terhubung ke server."); });
+    }
+
+    function stopMassTelegram(event) {
+        if(!confirm("Apakah Anda yakin ingin MEMATIKAN sinyal Telegram di SEMUA market?")) return;
+        
+        const btn = event.currentTarget || event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '⏳ Memproses...'; btn.disabled = true;
+
+        fetch(`${API_BASE}/stop_telegram_all`, { method: 'POST' })
+        .then(res => res.json()).then(data => {
+            btn.innerHTML = originalText; btn.disabled = false;
+            if(data.status === 'success') { alert(`✅ ${data.message}`); refreshDetailData(); } 
+            else { alert(`❌ ${data.message}`); }
+        }).catch(err => { btn.innerHTML = originalText; btn.disabled = false; alert("Gagal terhubung ke server."); });
     }
 
     function resetCurrentMarket() {
@@ -753,7 +789,7 @@
         let startPage = Math.max(1, historyCurrentPage - 2); let endPage = Math.min(totalPages, historyCurrentPage + 2);
         for(let i = startPage; i <= endPage; i++) {
             const activeClass = i === historyCurrentPage ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100 cursor-pointer';
-            container.innerHTML += `<button onclick="changeHistoryPage(${i})" class="w-8 h-8 border rounded-lg text-xs font-bold ${activeClass}">${i}</button>`;
+            container.innerHTML += `<button onclick="changeHistoryPage(${i})" class="w-8 h-8 border rounded-lg text-xs font-bold ${activeClass}"> ${i} </button>`;
         }
         
         const nextDisabled = historyCurrentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100 cursor-pointer';
@@ -827,7 +863,6 @@
                 let pillClass = "pill-abu"; let label = item.warna;
                 if(item.warna.includes("Hijau")) pillClass = "pill-hijau"; else if(item.warna.includes("Merah")) pillClass = "pill-merah";
                 
-                // FIX: Menampilkan nama market yang benar dan memisahkan waktu dan tanggal agar tidak menyatu
                 let marketName = item.market ? item.market : currentMarket;
 
                 tbody.innerHTML += `

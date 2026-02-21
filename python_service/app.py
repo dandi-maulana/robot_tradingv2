@@ -91,7 +91,6 @@ def get_history_db(market, limit=50):
     conn = get_db_connection()
     if not conn: return []
     c = conn.cursor(dictionary=True)
-    # Perbaikan: Memasukkan kolom 'market' agar tidak undefined di frontend
     c.execute("SELECT market, tanggal, waktu, warna FROM market_histories WHERE market = %s ORDER BY id DESC LIMIT %s", (market, limit))
     res = c.fetchall()
     c.close()
@@ -375,6 +374,16 @@ def stop_bot():
     conn.close()
     return jsonify({"status": "success"})
 
+@app.route('/api/stop_all', methods=['POST'])
+def stop_all():
+    conn = get_db_connection()
+    if not conn: return jsonify({"status": "error"})
+    c = conn.cursor()
+    c.execute("UPDATE market_states SET is_running = 0")
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "success", "message": "Semua bot market berhasil dihentikan!"})
+
 @app.route('/api/reset_market', methods=['POST'])
 def reset_market():
     market = request.json.get('market')
@@ -414,7 +423,6 @@ def toggle_telegram():
         return jsonify({"status": "success", "active": bool(new_active)})
     return jsonify({"status": "error", "message": "Market belum aktif!"})
 
-# --- ENDPOINT BARU: TELEGRAM MASSAL ---
 @app.route('/api/toggle_telegram_all', methods=['POST'])
 def toggle_telegram_all():
     data = request.json
@@ -437,6 +445,16 @@ def toggle_telegram_all():
     conn.commit()
     conn.close()
     return jsonify({"status": "success", "message": f"Sinyal Telegram DIAKTIFKAN di {active_count} market aktif!"})
+
+@app.route('/api/stop_telegram_all', methods=['POST'])
+def stop_telegram_all():
+    conn = get_db_connection()
+    if not conn: return jsonify({"status": "error"})
+    c = conn.cursor()
+    c.execute("UPDATE market_states SET tg_active = 0, tg_phase = 'IDLE'")
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "success", "message": "Sinyal Telegram di SEMUA market berhasil dimatikan!"})
 
 @app.route('/api/manual_trade', methods=['POST'])
 def manual_trade():
