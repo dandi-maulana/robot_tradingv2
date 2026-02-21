@@ -3,22 +3,19 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
-   public function run(): void
+    public function run(): void
     {
-        // Memanggil seeder spesifik secara berurutan
-        $this->call([
-            SettingSeeder::class,
-            MarketSeeder::class,
+        // Bikin 1 akun admin default
+        User::create([
+            'name' => 'RODIS',
+            'email' => 'rodis@localhost.com',
+            'username' => 'disini',
+            'password' => Hash::make('disana123'),
         ]);
     }
 }
