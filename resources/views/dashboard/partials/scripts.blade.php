@@ -213,6 +213,7 @@
 
         renderMarketCards();
         startDashboardPolling();
+        startRealtimeClock();
 
         const tradeInput = document.getElementById('trade-amount');
         if (tradeInput) {
@@ -385,7 +386,7 @@
 
     function activateMassTelegram(event) {
         const targetLoss = document.getElementById('mass-tg-loss').value;
-        if (!confirm(`Aktifkan Telegram otomatis di SEMUA market aktif dengan Target Loss ${targetLoss}?`)) return;
+        if (!confirm(`Aktifkan Telegram otomatis di SEMUA market aktif dengan Target False ${targetLoss}?`)) return;
 
         const btn = event.currentTarget;
         const originalText = btn.innerHTML;
@@ -506,7 +507,7 @@
             btn.classList.replace('hover:bg-indigo-400', 'hover:bg-red-400');
             btn.classList.replace('shadow-[0_0_20px_rgba(99,102,241,0.4)]', 'shadow-[0_0_20px_rgba(239,68,68,0.4)]');
 
-            logRodis(`🚀 RODIS DIAKTIFKAN! Memantau ${rodisState.market}. Target Loss: ${rodisState.targetLoss}.`,
+            logRodis(`🚀 RODIS DIAKTIFKAN! Memantau ${rodisState.market}. Target False: ${rodisState.targetLoss}.`,
                 "#22c55e");
 
             fetch(`${API_BASE}/data?market=${encodeURIComponent(rodisState.market)}`).then(res => res.json()).then(
@@ -516,7 +517,7 @@
                     document.getElementById('rodis-current-loss').innerText = sl;
                     document.getElementById('rodis-target-op').innerText = rodisState.tradeCounter + 1;
                     logRodis(
-                        `Sistem bersiaga membaca lilin. Target selanjutnya: Loss ke-${(rodisState.tradeCounter * rodisState.targetLoss) + rodisState.targetLoss}.`,
+                        `Sistem bersiaga membaca lilin. Target selanjutnya: False ke-${(rodisState.tradeCounter * rodisState.targetLoss) + rodisState.targetLoss}.`,
                         "#60a5fa");
                     rodisInterval = setInterval(runRodisLoop, 2000);
                 });
@@ -560,10 +561,10 @@
                                     document.getElementById('rodis-target-op').innerText = rodisState.tradeCounter;
                                     let nextMin = (mm + 3).toString().padStart(2, '0');
                                     logRodis(
-                                        `⏳ [STANDBY] Target Loss ke-${sigLoss} tercapai! Membaca arah di penutupan menit ${nextMin}...`,
+                                        `⏳ [STANDBY] Target False ke-${sigLoss} tercapai! Membaca arah di penutupan menit ${nextMin}...`,
                                         "#fbbf24");
                                     let msg =
-                                        `⏳ *RODIS AUTO-TRADE: STANDBY* ⏳\n\n📈 *Market:* ${rodisState.market}\n🗓 *Waktu:* ${latestC.tanggal} | ${latestC.waktu} WIB\n\nSistem mendeteksi bahwa *Target Signal Loss ke-${sigLoss}* telah tercapai!\nRODIS saat ini sedang bersiaga (loading) membaca arah market.\nEksekusi Open Posisi akan ditentukan pada penutupan candle menit ke-${nextMin}.\n\nMohon bersabar, sistem berjalan otomatis... 🤖`;
+                                        `⏳ *RODIS AUTO-TRADE: STANDBY* ⏳\n\n📈 *Market:* ${rodisState.market}\n🗓 *Waktu:* ${latestC.tanggal} | ${latestC.waktu} WIB\n\nSistem mendeteksi bahwa *Target Signal False ke-${sigLoss}* telah tercapai!\nRODIS saat ini sedang bersiaga (loading) membaca arah market.\nEksekusi Open Posisi akan ditentukan pada penutupan candle menit ke-${nextMin}.\n\nMohon bersabar, sistem berjalan otomatis... 🤖`;
                                     fetch(`${API_BASE}/send_wa`, {
                                         method: 'POST',
                                         headers: {
@@ -612,18 +613,18 @@
                                 rodisState.lastProcessedCandle = candleId;
                                 let requiredColor = rodisState.direction === 'up' ? 'Hijau' : 'Merah';
                                 let isWin = (latestC.warna === requiredColor);
-                                let resMsg = isWin ? 'PROFIT / WIN ✅' : 'LOSS ❌';
+                                let resMsg = isWin ? 'TRUE ✅' : 'FALSE ❌';
                                 let resColor = isWin ? '#22c55e' : '#f87171';
                                 let nextTargetLoss = (rodisState.tradeCounter * rodisState.targetLoss) + rodisState
                                     .targetLoss;
 
                                 logRodis(
-                                    `🎯 [HASIL] Auto-Trade ke-${rodisState.tradeCounter} selesai. Hasil Akhir: ${resMsg}. Kembali bersiaga menunggu Loss ke-${nextTargetLoss}.`,
+                                    `🎯 [HASIL] Auto-Trade ke-${rodisState.tradeCounter} selesai. Hasil Akhir: ${resMsg}. Kembali bersiaga menunggu False ke-${nextTargetLoss}.`,
                                     resColor);
                                 document.getElementById('rodis-target-op').innerText = rodisState.tradeCounter + 1;
 
                                 let msg =
-                                    `🎯 *RODIS AUTO-TRADE: HASIL* 🎯\n\nTarget Open Posisi Ke: ${rodisState.tradeCounter}\n📈 *Market:* ${rodisState.market}\n🗓 *Waktu:* ${latestC.tanggal} | ${latestC.waktu} WIB\n\nArah Eksekusi Tadi: *${rodisState.direction === 'up' ? 'BUY 🟢' : 'SELL 🔴'}*\nWarna Candle Hasil: *${latestC.warna.toUpperCase()}*\n\nStatus Hasil Akhir: *${resMsg}*\n\nRODIS kembali bersiaga memantau market untuk Target Open Posisi ke-${rodisState.tradeCounter + 1} (Menunggu Loss ke-${nextTargetLoss}).`;
+                                    `🎯 *RODIS AUTO-TRADE: HASIL* 🎯\n\nTarget Open Posisi Ke: ${rodisState.tradeCounter}\n📈 *Market:* ${rodisState.market}\n🗓 *Waktu:* ${latestC.tanggal} | ${latestC.waktu} WIB\n\nArah Eksekusi Tadi: *${rodisState.direction === 'up' ? 'BUY 🟢' : 'SELL 🔴'}*\nWarna Candle Hasil: *${latestC.warna.toUpperCase()}*\n\nStatus Hasil Akhir: *${resMsg}*\n\nRODIS kembali bersiaga memantau market untuk Target Open Posisi ke-${rodisState.tradeCounter + 1} (Menunggu False ke-${nextTargetLoss}).`;
                                 fetch(`${API_BASE}/send_wa`, {
                                     method: 'POST',
                                     headers: {
@@ -657,9 +658,19 @@
                     if (mm % 5 === 2) blocks[key].c2 = c.warna;
                 }
             });
-            for (let k in blocks) {
+
+            // Sort keys descending (terbaru ke terlama)
+            let sortedKeys = Object.keys(blocks).sort((a, b) => b.localeCompare(a));
+
+            for (let k of sortedKeys) {
                 let b = blocks[k];
-                if (b.c1 && b.c2 && b.c1 !== b.c2) sigLoss++;
+                if (b.c1 && b.c2) {
+                    if (b.c1 !== b.c2) {
+                        sigLoss++;
+                    } else {
+                        break; // Reset ke 0 jika mendeteksi ada TRUE (warna sama)
+                    }
+                }
             }
         }
         return sigLoss;
@@ -742,12 +753,68 @@
         fetch(`${API_BASE}/status_all`).then(res => res.json()).then(data => {
             if (data.balance !== undefined && data.balance !== null) document.getElementById('nav-balance')
                 .innerText = formatCurrency(data.balance);
+
             activeMarketsList = data.active_markets || [];
             document.querySelectorAll('.market-card').forEach(card => {
                 if (activeMarketsList.includes(card.getAttribute('data-market'))) card.classList.add(
                     'is-active');
                 else card.classList.remove('is-active');
             });
+
+            // Update Status Badge 27 Market & Sinyal Massal
+            let botCountEl = document.getElementById('lbl-bot-count');
+            let tgCountEl = document.getElementById('lbl-tg-count');
+            if (botCountEl) botCountEl.innerText = `${activeMarketsList.length}/27`;
+
+            if (tgCountEl) {
+                let tgCount = data.tg_active_count || 0;
+                if (tgCount > 0) {
+                    tgCountEl.innerText = `ON (${tgCount} Market)`;
+                    tgCountEl.className = 'text-blue-600 font-extrabold';
+                } else {
+                    tgCountEl.innerText = 'OFF';
+                    tgCountEl.className = 'text-gray-400 font-bold';
+                }
+            }
+
+            const streakContainer = document.getElementById('live-streak-container');
+            const streakList = document.getElementById('streak-list');
+
+            if (streakContainer && streakList) {
+                if (activeMarketsList.length > 0 && data.market_streaks) {
+                    streakContainer.classList.remove('hidden');
+                    streakList.innerHTML = '';
+
+                    let sortedMarkets = Object.keys(data.market_streaks).sort((a, b) => data.market_streaks[b] -
+                        data.market_streaks[a]);
+
+                    sortedMarkets.forEach(mkt => {
+                        let streak = data.market_streaks[mkt];
+
+                        let colorClass = 'bg-gray-50 text-gray-500 border-gray-200';
+                        if (streak >= 7) colorClass =
+                            'bg-red-100 text-red-700 border-red-300 font-extrabold shadow-md';
+                        else if (streak >= 5) colorClass =
+                            'bg-orange-100 text-orange-700 border-orange-300 font-bold shadow-sm';
+                        else if (streak >= 3) colorClass =
+                            'bg-yellow-100 text-yellow-700 border-yellow-300 font-bold';
+                        else if (streak >= 1) colorClass = 'bg-blue-50 text-blue-600 border-blue-200';
+
+                        let mktObj = allMarkets.find(x => x.id === mkt);
+                        let mktName = mktObj ? mktObj.name : mkt;
+                        let mktIcon = mktObj ? mktObj.icon : '📊';
+
+                        streakList.innerHTML += `
+                            <div class="px-3 py-1.5 rounded-lg border text-xs flex items-center gap-2 ${colorClass} transition-all">
+                                <span>${mktIcon} ${mktName}</span>
+                                <span class="bg-white/90 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider border border-white/50">False: ${streak}</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    streakContainer.classList.add('hidden');
+                }
+            }
         });
     }
 
@@ -1032,22 +1099,17 @@
         btn.innerHTML = '⏳ Proses...';
         btn.disabled = true;
 
-        let promises = activeMarketsList.map(m => fetch(`${API_BASE}/stop`, {
+        fetch(`${API_BASE}/stop_all`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                market: m
-            })
-        }));
-
-        Promise.all(promises).then(() => {
+            }
+        }).then(res => res.json()).then(data => {
             btn.innerHTML = originalText;
             btn.disabled = false;
-            alert('✅ Semua bot berhasil dihentikan.');
+            alert(`✅ ${data.message || 'Semua bot berhasil dihentikan.'}`);
             refreshDashboardStatus();
-        }).catch(() => {
+        }).catch(err => {
             btn.innerHTML = originalText;
             btn.disabled = false;
             alert('❌ Gagal menghentikan bot.');
@@ -1061,14 +1123,11 @@
         btn.innerHTML = '⏳ Proses...';
         btn.disabled = true;
 
-        fetch(`${API_BASE}/toggle_telegram_all`, {
+        fetch(`${API_BASE}/stop_telegram_all`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                target_loss: 0
-            })
+            }
         }).then(res => res.json()).then(data => {
             btn.innerHTML = originalText;
             btn.disabled = false;
@@ -1079,5 +1138,18 @@
             btn.disabled = false;
             alert("❌ Gagal terhubung ke server.");
         });
+    }
+
+    function startRealtimeClock() {
+        setInterval(() => {
+            const clockEl = document.getElementById('realtime-clock');
+            if (clockEl) {
+                const now = new Date();
+                const hh = String(now.getHours()).padStart(2, '0');
+                const mm = String(now.getMinutes()).padStart(2, '0');
+                const ss = String(now.getSeconds()).padStart(2, '0');
+                clockEl.innerText = `${hh}:${mm}:${ss} WIB`;
+            }
+        }, 1000);
     }
 </script>

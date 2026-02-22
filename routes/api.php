@@ -20,20 +20,19 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // -----------------------------------------------------------
-// Rute Jembatan API ke Database (Untuk Worker Python & Web Dashboard)
+// Rute API Laravel (Jika ada fungsi spesifik di PHP)
 // -----------------------------------------------------------
 
 Route::get('/get_settings', [ApiController::class, 'getSettings']);
-Route::get('/status_all', [ApiController::class, 'statusAll']);
-Route::get('/data', [ApiController::class, 'getMarketData']);
-Route::get('/trade_history', [ApiController::class, 'getTradeHistory']);
-
-Route::post('/check_accounts', [ApiController::class, 'checkAccounts']);
-Route::post('/start', [ApiController::class, 'startBot']);
-Route::post('/start_all', [ApiController::class, 'startAll']);
-Route::post('/stop', [ApiController::class, 'stopBot']);
-Route::post('/reset_market', [ApiController::class, 'resetMarket']);
-Route::post('/reset_all', [ApiController::class, 'resetAll']);
-Route::post('/toggle_telegram', [ApiController::class, 'toggleTelegram']);
-Route::post('/telegram_all', [ApiController::class, 'telegramAll']);
 Route::post('/manual_trade', [ApiController::class, 'manualTrade']);
+
+// =========================================================================
+// CATATAN PENTING:
+// Rute lainnya (start_all, stop_all, data, status_all, toggle_telegram)
+// sudah dihapus dari sini karena fungsi aslinya berjalan di server PYTHON
+// (Flask) pada PORT 5000.
+//
+// Pastikan variabel API_BASE di Javascript (styles.blade.php / script)
+// diarahkan langsung ke "http://127.0.0.1:5000/api"
+// agar tidak nyasar ke Laravel.
+// =========================================================================
