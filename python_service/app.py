@@ -87,7 +87,7 @@ def save_analysis_db(market, tanggal, waktu, warna):
     c.close()
     conn.close()
 
-def get_history_db(market, limit=50):
+def get_history_db(market, limit=100): # Limit ditambah agar data streak panjang bisa terbaca utuh
     conn = get_db_connection()
     if not conn: return []
     c = conn.cursor(dictionary=True)
@@ -121,31 +121,45 @@ ASSET_MAPPING = {
 }
 
 def send_telegram_internal(message):
-    bot_token = "7863925068:AAFb8sDZFpBaczKXCtyh6SHwyQ693xejNQo"
-    chat_id = "-5164724293" 
-    try:
-        encoded_msg = urllib.parse.quote(message)
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={chat_id}&text={encoded_msg}&parse_mode=Markdown"
-        urllib.request.urlopen(url)
-    except Exception as e:
-        print(f"❌ Gagal mengirim internal Telegram: {e}")
+    def send_task():
+        bot_token = "7863925068:AAFb8sDZFpBaczKXCtyh6SHwyQ693xejNQo"
+        chat_id = "-5164724293" 
+        try:
+            encoded_msg = urllib.parse.quote(message)
+            url = f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={chat_id}&text={encoded_msg}&parse_mode=Markdown"
+            urllib.request.urlopen(url, timeout=5)
+        except Exception as e:
+            print(f"❌ Gagal mengirim internal Telegram: {e}")
+            
+    threading.Thread(target=send_task, daemon=True).start()
 
+# --- PERBAIKAN: LOGIKA SIGNAL LOSS BERUNTUN ---
 def calc_sig_loss(history_list):
-    sig_loss = 0
+    streak = 0
     blocks = {}
+    
+    # Pengurutan data dari database sudah DESC (Terbaru ke Terlama).
     for c in history_list:
         if c.get("waktu") and ":" in c["waktu"]:
             parts = c["waktu"].split(":")
             hh, mm = parts[0], int(parts[1])
             base_mm = (mm // 5) * 5
             key = f"{c['tanggal']}_{hh}:{base_mm:02d}"
+            
             if key not in blocks: blocks[key] = {}
             if mm % 5 == 0: blocks[key]['c1'] = c['warna']
             if mm % 5 == 2: blocks[key]['c2'] = c['warna']
+            
+    # Iterasi dari blok waktu paling baru ke yang paling lama.
     for k, b in blocks.items():
-        if 'c1' in b and 'c2' in b and b['c1'] != b['c2']:
-            sig_loss += 1
-    return sig_loss
+        if 'c1' in b and 'c2' in b:
+            if b['c1'] != b['c2']:
+                # Jika beda = Loss. Tambahkan ke streak beruntun.
+                streak += 1
+            else:
+                # Jika sama = Win/Profit. Rantai loss BERHENTI/TERPUTUS di sini.
+                break 
+    return streak
 
 async def fetch_accounts(token):
     accounts_info = []
@@ -245,20 +259,21 @@ async def async_bot_task(market_name, token, user_account_id):
             try: await client.send_message({"e": 98, "d": []})
             except Exception: pass
 
-        # ANALISIS CANDLE PER 5 MENIT
-        if now.second == 2 and last_minute_checked != now.minute:
-            last_minute_checked = now.minute
+        # ANALISIS CANDLE PER 5 MENIT DENGAN DELAY TOLERANCE VPS
+        if 2 <= now.second <= 15 and last_minute_checked != now.minute:
             prev_minute = (now.minute - 1) % 60
             
             if prev_minute % 5 == 0 or prev_minute % 5 == 2:
                 waktu_laporan = f"{now.hour if now.minute != 0 else (now.hour - 1) % 24:02d}:{prev_minute:02d}"
                 last_raw_candles = []
-                try: await client.market.get_candles(actual_asset_id, 60, 2)
-                except Exception: pass
-                
-                await asyncio.sleep(2)
+                try: 
+                    await client.market.get_candles(actual_asset_id, 60, 2)
+                    await asyncio.sleep(1)
+                except Exception: 
+                    pass
                 
                 if len(last_raw_candles) > 0:
+                    last_minute_checked = now.minute
                     target_candle = last_raw_candles[1] if len(last_raw_candles) >= 2 else last_raw_candles[0]
                     op, cp = float(target_candle.get('open', 0)), float(target_candle.get('close', 0))
                     warna = "Hijau" if cp > op else "Merah"
@@ -267,7 +282,7 @@ async def async_bot_task(market_name, token, user_account_id):
 
                     # LOGIKA TELEGRAM SERVER
                     if state['tg_active']:
-                        hist = get_history_db(market_name, 50) 
+                        hist = get_history_db(market_name, 100) 
                         sig_loss = calc_sig_loss(hist)
                         mm = prev_minute
                         candle_id = f"{now.strftime('%Y-%m-%d')}_{waktu_laporan}"
@@ -279,11 +294,19 @@ async def async_bot_task(market_name, token, user_account_id):
 
                             if tg_phase == "IDLE" and (mm % 5 == 2):
                                 expected_trades = sig_loss // state["tg_target_loss"]
+                                
+                                # --- PERBAIKAN: RESET TRADE COUNTER OTOMATIS ---
+                                # Jika rantai loss terputus (sig_loss berkurang / jadi 0), counter OP harus di-reset
+                                # agar siklus berikutnya siap membaca streak target dari awal.
+                                if expected_trades < tg_trade_counter:
+                                    tg_trade_counter = expected_trades
+                                    c.execute("UPDATE market_states SET tg_trade_counter=%s WHERE market=%s", (tg_trade_counter, market_name))
+
                                 if expected_trades > tg_trade_counter and sig_loss > 0:
                                     tg_trade_counter += 1
                                     tg_phase = "WAIT_CONF"
                                     next_min = f"{(mm + 3) % 60:02d}"
-                                    msg = f"⚠️ *SERVER: PERSIAPAN OP* ⚠️\n\n📈 *Market:* {market_name}\n🗓 *Waktu:* {waktu_laporan} WIB\n\nTarget *LOSS ke-{sig_loss}* tercapai.\nStandby arah menit ke-{next_min}.\n"
+                                    msg = f"⚠️ *SERVER: PERSIAPAN OP* ⚠️\n\n📈 *Market:* {market_name}\n🗓 *Waktu:* {waktu_laporan} WIB\n\nTarget *LOSS BERUNTUN ke-{sig_loss}* tercapai.\nStandby arah menit ke-{next_min}.\n"
                                     send_telegram_internal(msg)
                                     c.execute("UPDATE market_states SET tg_trade_counter=%s, tg_phase=%s, tg_last_candle=%s WHERE market=%s", (tg_trade_counter, tg_phase, candle_id, market_name))
                             
@@ -305,6 +328,9 @@ async def async_bot_task(market_name, token, user_account_id):
                                 send_telegram_internal(msg)
                                 c.execute("UPDATE market_states SET tg_phase=%s, tg_last_candle=%s WHERE market=%s", (tg_phase, candle_id, market_name))
                     conn.commit()
+            else:
+                last_minute_checked = now.minute
+
         c.close()
         conn.close()
         await asyncio.sleep(0.5)
