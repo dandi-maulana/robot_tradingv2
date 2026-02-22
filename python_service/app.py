@@ -77,7 +77,7 @@ def save_analysis_db(market, tanggal, waktu, warna):
     if not conn: return
     c = conn.cursor()
     c.execute("INSERT INTO market_histories (market, tanggal, waktu, warna, created_at, updated_at) VALUES (%s, %s, %s, %s, NOW(), NOW())",
-             (market, tanggal, waktu, warna))
+            (market, tanggal, waktu, warna))
 
     if warna == "Hijau":
         c.execute("UPDATE market_states SET total_trade = total_trade + 1, total_hijau = total_hijau + 1 WHERE market = %s", (market,))
@@ -102,7 +102,7 @@ def save_trade_db(tanggal, waktu, market, warna, amount):
     if not conn: return
     c = conn.cursor()
     c.execute("INSERT INTO trade_histories (tanggal, waktu, market, warna, amount, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, NOW(), NOW())",
-             (tanggal, waktu, market, warna, amount))
+            (tanggal, waktu, market, warna, amount))
     conn.commit()
     c.close()
     conn.close()
