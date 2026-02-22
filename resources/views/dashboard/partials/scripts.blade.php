@@ -1,3 +1,5 @@
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
 <script>
     let dashboardInterval, detailInterval, historyInterval, rodisInterval;
     let currentMarket = "";
@@ -197,6 +199,246 @@
             currency: 'USD'
         }).format(amount);
     }
+
+    // ================================================================
+    // FITUR PEMBUAT GRAFIK LOKAL (MODEL CANDLESTICK SENDIRI)
+    // ================================================================
+    let localChartInstance = null;
+    let currentChartTimeframe = '1M';
+
+    function changeChartTimeframe(tf, btnElement) {
+        currentChartTimeframe = tf;
+
+        document.querySelectorAll('.tf-btn').forEach(btn => {
+            btn.classList.remove('bg-gray-100', 'text-gray-800');
+            btn.classList.add('text-gray-500');
+        });
+        btnElement.classList.remove('text-gray-500');
+        btnElement.classList.add('bg-gray-100', 'text-gray-800');
+
+        if (currentMarket) renderLocalChart(currentDetailHistory, currentMarket);
+    }
+
+    // ALGORITMA DETERMINISTIK: Menghasilkan ukuran body candle yg sama untuk waktu yg sama,
+    // agar grafik tidak bergetar aneh saat refresh interval.
+    function getDeterministicSize(strSeed) {
+        let hash = 0;
+        for (let i = 0; i < strSeed.length; i++) {
+            hash = strSeed.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        let x = Math.abs(Math.sin(hash) * 10000);
+        return x - Math.floor(x);
+    }
+
+    function renderLocalChart(historyData, marketName) {
+        if (typeof ApexCharts === 'undefined') {
+            setTimeout(() => renderLocalChart(historyData, marketName), 500);
+            return;
+        }
+
+        const marketLabel = document.getElementById('local-chart-market');
+        if (marketLabel) marketLabel.innerText = `${marketName} (${currentChartTimeframe})`;
+
+        if (!historyData || historyData.length === 0) {
+            if (localChartInstance) {
+                localChartInstance.destroy();
+                localChartInstance = null;
+            }
+            document.getElementById('local-chart-container').innerHTML =
+                '<div class="flex h-full items-center justify-center text-gray-400 font-bold text-xs sm:text-base py-20">Menunggu bot merekam data pergerakan...</div>';
+            return;
+        }
+
+        let candleCount = 60;
+        if (currentChartTimeframe === '5M') candleCount = 40;
+        if (currentChartTimeframe === '15M') candleCount = 20;
+
+        let chartData = [...historyData].slice(0, candleCount).reverse();
+
+        let basePrice = 1000.50;
+        let candlestickData = [];
+        let maData = [];
+
+        // Membangun Candlestick
+        chartData.forEach((item) => {
+            let isGreen = item.warna === 'Hijau';
+            let rnd = getDeterministicSize(item.tanggal + item.waktu);
+
+            let bodySize = (rnd * 8) + 3;
+            let wickTop = ((rnd * 13) % 4) + 1;
+            let wickBot = ((rnd * 17) % 4) + 1;
+
+            let open = basePrice;
+            let close, high, low;
+
+            if (isGreen) {
+                close = open + bodySize;
+                high = close + wickTop;
+                low = open - wickBot;
+            } else {
+                close = open - bodySize;
+                high = open + wickTop;
+                low = close - wickBot;
+            }
+
+            basePrice = close;
+
+            candlestickData.push({
+                x: item.waktu,
+                y: [open, high, low, close]
+            });
+        });
+
+        // Kalkulasi SMA 5
+        for (let i = 0; i < candlestickData.length; i++) {
+            if (i < 4) {
+                maData.push({
+                    x: candlestickData[i].x,
+                    y: null
+                });
+            } else {
+                let sum = 0;
+                for (let j = 0; j < 5; j++) {
+                    sum += candlestickData[i - j].y[3]; // Close price
+                }
+                maData.push({
+                    x: candlestickData[i].x,
+                    y: sum / 5
+                });
+            }
+        }
+
+        let isMobile = window.innerWidth < 640;
+
+        let options = {
+            series: [{
+                    name: 'Candle Harga',
+                    type: 'candlestick',
+                    data: candlestickData
+                },
+                {
+                    name: 'SMA (5)',
+                    type: 'line',
+                    data: maData
+                }
+            ],
+            chart: {
+                height: isMobile ? 300 : 380, // Tinggi lebih kecil di HP agar tidak makan tempat
+                width: '100%', // FORCE WIDTH AGAR RESPONSIF
+                type: 'candlestick',
+                fontFamily: 'inherit',
+                toolbar: {
+                    show: false
+                },
+                animations: {
+                    enabled: false
+                }, // Matikan animasi agar mulus saat live refresh
+                redrawOnParentResize: true // RENDER ULANG SAAT LAYAR BERUBAH
+            },
+            plotOptions: {
+                candlestick: {
+                    colors: {
+                        upward: '#22c55e', // Hijau
+                        downward: '#ef4444' // Merah
+                    },
+                    wick: {
+                        useFillColor: true
+                    }
+                }
+            },
+            colors: ['#000000', '#f59e0b'], // index 1 untuk SMA (Kuning)
+            stroke: {
+                width: [1, 2], // 1 wick, 2 garis SMA
+                curve: 'smooth'
+            },
+            xaxis: {
+                type: 'category', // SANGAT PENTING: Mencegah grafik error karena format waktu
+                labels: {
+                    rotate: -45,
+                    style: {
+                        fontSize: isMobile ? '8px' : '10px',
+                        colors: '#94a3b8'
+                    },
+                    hideOverlappingLabels: true, // Sembunyikan label yang bertumpuk di HP
+                    trim: true
+                },
+                tickAmount: isMobile ? 8 : 15, // Jumlah label X lebih sedikit di HP
+                tooltip: {
+                    enabled: false
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        fontSize: isMobile ? '9px' : '11px',
+                        fontWeight: '600',
+                        colors: '#64748b'
+                    },
+                    formatter: function(val) {
+                        return val ? val.toFixed(2) : val;
+                    }
+                },
+                tickAmount: isMobile ? 4 : 6 // Jumlah label Y lebih sedikit di HP
+            },
+            grid: {
+                borderColor: '#e2e8f0',
+                strokeDashArray: 4,
+                padding: {
+                    left: 5,
+                    right: 5,
+                    bottom: 0
+                }
+            },
+            tooltip: {
+                shared: true,
+                intersect: false,
+                theme: 'light',
+                y: {
+                    formatter: function(val) {
+                        return val ? val.toFixed(2) : val;
+                    }
+                }
+            },
+            legend: {
+                position: 'top',
+                horizontalAlign: isMobile ? 'center' : 'right',
+                fontSize: isMobile ? '10px' : '12px'
+            }
+        };
+
+        if (!localChartInstance) {
+            document.getElementById('local-chart-container').innerHTML = '';
+            localChartInstance = new ApexCharts(document.querySelector("#local-chart-container"), options);
+            localChartInstance.render();
+        } else {
+            // Update chart dynamically
+            localChartInstance.updateOptions({
+                xaxis: {
+                    categories: categories
+                },
+                chart: {
+                    height: isMobile ? 300 : 380
+                } // Update height if resizing
+            });
+            localChartInstance.updateSeries([{
+                    name: 'Candle Harga',
+                    data: candlestickData
+                },
+                {
+                    name: 'SMA (5)',
+                    data: maData
+                }
+            ]);
+        }
+    }
+
+    // Listener otomatis jika layar di-rotate / diubah ukuran
+    window.addEventListener('resize', () => {
+        if (currentMarket && currentDetailHistory.length > 0) {
+            renderLocalChart(currentDetailHistory, currentMarket);
+        }
+    });
+    // ================================================================
 
     window.onload = function() {
         fetch(`${API_BASE}/get_settings`).then(res => res.json()).then(data => {
@@ -443,6 +685,13 @@
                         `🔄 [RESET MANUAL] Data market ${currentMarket} telah dibersihkan. Memulai penghitungan target dari 0 kembali.`,
                         "#fbbf24");
                 }
+
+                if (localChartInstance) {
+                    localChartInstance.destroy();
+                    localChartInstance = null;
+                    document.getElementById('local-chart-container').innerHTML = '';
+                }
+
                 refreshDetailData();
                 alert(`✅ Berhasil! Semua data analisis untuk market ${currentMarket} telah direset dari awal.`);
             } else {
@@ -659,7 +908,6 @@
                 }
             });
 
-            // Sort keys descending (terbaru ke terlama)
             let sortedKeys = Object.keys(blocks).sort((a, b) => b.localeCompare(a));
 
             for (let k of sortedKeys) {
@@ -668,7 +916,7 @@
                     if (b.c1 !== b.c2) {
                         sigLoss++;
                     } else {
-                        break; // Reset ke 0 jika mendeteksi ada TRUE (warna sama)
+                        break;
                     }
                 }
             }
@@ -761,7 +1009,6 @@
                 else card.classList.remove('is-active');
             });
 
-            // Update Status Badge 27 Market & Sinyal Massal
             let botCountEl = document.getElementById('lbl-bot-count');
             let tgCountEl = document.getElementById('lbl-tg-count');
             if (botCountEl) botCountEl.innerText = `${activeMarketsList.length}/27`;
@@ -821,6 +1068,14 @@
     function openMarketDetail(marketName) {
         currentMarket = marketName;
         document.getElementById('detail-market-name').innerText = marketName;
+
+        if (localChartInstance) {
+            localChartInstance.destroy();
+            localChartInstance = null;
+            document.getElementById('local-chart-container').innerHTML =
+                '<div class="flex h-full items-center justify-center text-gray-400 font-bold text-xs sm:text-base py-20">Memproses Data Histori...</div>';
+        }
+
         showView('detail');
     }
 
@@ -1020,9 +1275,12 @@
             }
 
             currentDetailHistory = data.history || [];
+
+            renderLocalChart(currentDetailHistory, currentMarket);
+
             if (!data.is_running && currentDetailHistory.length === 0) {
                 document.getElementById('table-body').innerHTML =
-                    `<tr><td colspan="3" class="py-20 text-center text-gray-500">Silakan klik "Hubungkan Bot" terlebih dahulu.</td></tr>`;
+                    `<tr><td colspan="3" class="py-20 text-center text-gray-500 text-xs sm:text-sm">Silakan klik "Hubungkan Bot" terlebih dahulu.</td></tr>`;
                 document.getElementById('detail-pagination-controls').innerHTML = '';
             } else {
                 renderDetailTable();
@@ -1047,12 +1305,12 @@
 
                 tbody.innerHTML += `
             <tr class="hover:bg-gray-50/50">
-                <td class="py-4 px-8">
-                    <div class="text-base font-bold text-dark">${item.waktu}</div>
-                    <div class="text-xs text-gray-400 mt-0.5">${item.tanggal}</div>
+                <td class="py-4 px-4 sm:px-8">
+                    <div class="text-xs sm:text-base font-bold text-dark">${item.waktu}</div>
+                    <div class="text-[10px] sm:text-xs text-gray-400 mt-0.5">${item.tanggal}</div>
                 </td>
-                <td class="py-4 px-8 font-bold text-dark">${marketName}</td>
-                <td class="py-4 px-8"><span class="pill ${pillClass}">${label}</span></td>
+                <td class="py-4 px-4 sm:px-8 font-bold text-dark text-xs sm:text-base">${marketName}</td>
+                <td class="py-4 px-4 sm:px-8"><span class="pill ${pillClass} text-[10px] sm:text-xs">${label}</span></td>
             </tr>`;
             });
         }
@@ -1068,7 +1326,7 @@
         const prevDisabled = detailCurrentPage === 1 ? 'opacity-50 cursor-not-allowed' :
             'hover:bg-gray-100 cursor-pointer';
         container.innerHTML +=
-            `<button onclick="changeDetailPage(${detailCurrentPage - 1})" class="px-3 py-1 bg-white border rounded-lg text-xs font-bold ${prevDisabled}">Prev</button>`;
+            `<button onclick="changeDetailPage(${detailCurrentPage - 1})" class="px-2 sm:px-3 py-1 bg-white border rounded-lg text-[10px] sm:text-xs font-bold ${prevDisabled}">Prev</button>`;
 
         let startPage = Math.max(1, detailCurrentPage - 2);
         let endPage = Math.min(totalPages, detailCurrentPage + 2);
@@ -1076,13 +1334,13 @@
             const activeClass = i === detailCurrentPage ? 'bg-gojek text-white' :
                 'bg-white text-gray-600 hover:bg-gray-100 cursor-pointer';
             container.innerHTML +=
-                `<button onclick="changeDetailPage(${i})" class="w-8 h-8 border rounded-lg text-xs font-bold ${activeClass}">${i}</button>`;
+                `<button onclick="changeDetailPage(${i})" class="w-6 h-6 sm:w-8 sm:h-8 border rounded-lg text-[10px] sm:text-xs font-bold ${activeClass}">${i}</button>`;
         }
 
         const nextDisabled = detailCurrentPage === totalPages ? 'opacity-50 cursor-not-allowed' :
             'hover:bg-gray-100 cursor-pointer';
         container.innerHTML +=
-            `<button onclick="changeDetailPage(${detailCurrentPage + 1})" class="px-3 py-1 bg-white border rounded-lg text-xs font-bold ${nextDisabled}">Next</button>`;
+            `<button onclick="changeDetailPage(${detailCurrentPage + 1})" class="px-2 sm:px-3 py-1 bg-white border rounded-lg text-[10px] sm:text-xs font-bold ${nextDisabled}">Next</button>`;
     }
 
     function changeDetailPage(page) {

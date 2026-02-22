@@ -84,31 +84,93 @@
         </div>
     </div>
 
+    <div
+        class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6 flex flex-col relative w-full">
+        <div
+            class="p-3 sm:p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50/50 gap-3 w-full">
+            <div class="flex items-center gap-2">
+                <h3 class="text-sm font-extrabold text-dark flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_#3b82f6]"></span>
+                    Live Market Chart
+                </h3>
+                <span
+                    class="text-[9px] sm:text-[10px] font-bold text-gray-500 bg-white px-2 py-1 rounded border border-gray-200 shadow-sm"
+                    id="local-chart-market">Memuat Market...</span>
+            </div>
+
+            <div
+                class="flex bg-white rounded-lg p-0.5 border border-gray-200 shadow-sm w-full sm:w-auto justify-between">
+                <button onclick="changeChartTimeframe('1M', this)"
+                    class="tf-btn flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded bg-gray-100 text-gray-800 transition-colors">1M</button>
+                <button onclick="changeChartTimeframe('5M', this)"
+                    class="tf-btn flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded text-gray-500 hover:text-gray-800 transition-colors">5M</button>
+                <button onclick="changeChartTimeframe('15M', this)"
+                    class="tf-btn flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded text-gray-500 hover:text-gray-800 transition-colors">15M</button>
+            </div>
+        </div>
+        <div class="p-1 sm:p-4 bg-white w-full overflow-hidden">
+            <div id="local-chart-container" class="w-full min-h-[300px] sm:min-h-[380px]">
+                <div class="flex h-full items-center justify-center text-gray-400 font-bold py-20 text-xs sm:text-base">
+                    Menyiapkan Mesin Grafik...</div>
+            </div>
+        </div>
+        <div
+            class="px-3 sm:px-5 py-2 sm:py-3 bg-blue-50/50 text-[10px] sm:text-xs font-medium text-blue-800 border-t border-blue-100 flex items-start gap-2 sm:gap-3 w-full">
+            <span class="text-sm sm:text-base">ℹ️</span>
+            <p class="leading-relaxed">Grafik <b>Candlestick Simulasi</b> ini dibuat akurat berdasarkan histori warna
+                candle dari bot Anda. Warna Hijau menandakan candle naik (TRUE), Warna Merah menandakan candle turun
+                (FALSE). Garis kuning adalah tren SMA.</p>
+        </div>
+    </div>
+
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-h-[300px]">
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto w-full custom-scrollbar">
             <table class="w-full text-left border-collapse" id="log-table">
                 <thead>
                     <tr>
                         <th
-                            class="py-4 px-8 bg-gray-50 text-xs font-bold text-gray-400 uppercase border-b border-gray-100">
+                            class="py-4 px-4 sm:px-8 bg-gray-50 text-[10px] sm:text-xs font-bold text-gray-400 uppercase border-b border-gray-100 whitespace-nowrap">
                             Waktu Candle</th>
                         <th
-                            class="py-4 px-8 bg-gray-50 text-xs font-bold text-gray-400 uppercase border-b border-gray-100">
+                            class="py-4 px-4 sm:px-8 bg-gray-50 text-[10px] sm:text-xs font-bold text-gray-400 uppercase border-b border-gray-100 whitespace-nowrap">
                             Market</th>
                         <th
-                            class="py-4 px-8 bg-gray-50 text-xs font-bold text-gray-400 uppercase border-b border-gray-100">
+                            class="py-4 px-4 sm:px-8 bg-gray-50 text-[10px] sm:text-xs font-bold text-gray-400 uppercase border-b border-gray-100 whitespace-nowrap">
                             Arah / Warna</th>
                     </tr>
                 </thead>
                 <tbody id="table-body" class="divide-y divide-gray-100">
                     <tr>
-                        <td colspan="3" class="py-20 text-center text-gray-500">Silakan klik "Hubungkan Bot" terlebih
-                            dahulu.</td>
+                        <td colspan="3" class="py-20 text-center text-gray-500 text-xs sm:text-sm">Silakan klik
+                            "Hubungkan Bot" terlebih dahulu.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
         <div id="detail-pagination-controls"
-            class="flex justify-center items-center gap-2 p-4 border-t border-gray-100 flex-wrap"></div>
+            class="flex justify-center items-center gap-1 sm:gap-2 p-3 sm:p-4 border-t border-gray-100 flex-wrap"></div>
     </div>
 </div>
+
+<style>
+    .tf-btn.bg-gray-100 {
+        background-color: #f1f5f9;
+        color: #1e293b;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Scrollbar minimalis khusus tabel detail agar rapi di HP */
+    .custom-scrollbar::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f8fafc;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+</style>
