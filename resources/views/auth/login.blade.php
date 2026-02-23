@@ -9,7 +9,7 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         body {
-            background-image: url('{{ asset(' assets/images/naruto-bg.jpg') }}');
+            background-image: url('{{ asset('assets/images/naruto-bg.jpg') }}');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
