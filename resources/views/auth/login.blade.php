@@ -9,7 +9,7 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         body {
-            background-image: url('{{ asset('assets/images/naruto-bg.jpg') }}');
+            background-image: url('{{ asset(' assets/images/naruto-bg.jpg') }}');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -34,7 +34,7 @@
                     class="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-black outline-none bg-white/90"
                     required autofocus>
                 @error('username')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
             <div class="mb-4">
@@ -47,7 +47,7 @@
                 <div class="g-recaptcha" data-sitekey="{{ env('RECAPTCHA_SITE_KEY') }}"></div>
             </div>
             @error('g-recaptcha-response')
-                <p class="text-red-500 text-xs text-center mb-4">{{ $message }}</p>
+            <p class="text-red-500 text-xs text-center mb-4">{{ $message }}</p>
             @enderror
             <button type="submit"
                 class="w-full bg-black text-white p-2 rounded hover:bg-gray-800 transition font-bold shadow-md">

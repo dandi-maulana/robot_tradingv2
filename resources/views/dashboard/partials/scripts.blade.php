@@ -582,81 +582,263 @@
         });
     }
 
+    function syncPlayStopButton() {
+
+        const playBtn = document.getElementById('btn-play');
+        const stopBtn = document.getElementById('btn-stop');
+
+        if (!playBtn || !stopBtn) return;
+
+        const totalMarket = allMarkets.length;
+        const activeCount = activeMarketsList.length;
+
+        const connected = (activeCount > 0);
+
+        // =========================
+        // CONNECTED MODE
+        // =========================
+        if (connected) {
+
+            // PLAY disabled
+            playBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            playBtn.disabled = true;
+
+            // STOP enabled
+            stopBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            stopBtn.disabled = false;
+
+        }
+        // =========================
+        // DISCONNECTED MODE
+        // =========================
+        else {
+
+            playBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            playBtn.disabled = false;
+
+            stopBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            stopBtn.disabled = true;
+        }
+    }
+
+    function showPopup(message, type = "success") {
+
+        const container = document.getElementById("popup-container");
+
+        const color =
+            type === "success" ?
+            "bg-emerald-500" :
+            "bg-red-500";
+
+        const popup = document.createElement("div");
+
+        popup.className = `
+        ${color}
+        text-white
+        px-5 py-3
+        rounded-xl
+        shadow-lg
+        animate-popup
+        text-sm font-bold
+    `;
+
+        popup.innerText = message;
+
+        container.appendChild(popup);
+
+        setTimeout(() => {
+            popup.style.opacity = "0";
+            popup.style.transform = "translateX(40px)";
+            setTimeout(() => popup.remove(), 400);
+        }, 2500);
+    }
+
+    function showConfirm(message, onYes) {
+
+        // overlay
+        const overlay = document.createElement("div");
+        overlay.className = `
+        fixed inset-0
+        bg-black/40 backdrop-blur-sm
+        flex items-center justify-center
+        z-[9999]
+        animate-fadeIn
+    `;
+
+        // modal box
+        const modal = document.createElement("div");
+        modal.className = `
+        bg-white
+        rounded-2xl
+        shadow-2xl
+        p-6
+        w-[90%] max-w-md
+        animate-scaleIn
+    `;
+
+        modal.innerHTML = `
+        <div class="text-gray-800 font-semibold text-sm mb-5">
+            ${message}
+        </div>
+
+        <div class="flex justify-end gap-3">
+            <button id="confirm-cancel"
+                class="px-4 py-2 rounded-lg
+                bg-gray-200 hover:bg-gray-300
+                font-semibold text-sm">
+                Batal
+            </button>
+
+            <button id="confirm-yes"
+                class="px-4 py-2 rounded-lg
+                bg-red-500 hover:bg-red-600
+                text-white font-bold text-sm">
+                Ya, Reset
+            </button>
+        </div>
+    `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // EVENTS (INI YANG TADI BELUM ADA)
+        modal.querySelector("#confirm-cancel").onclick = () => {
+            overlay.remove();
+        };
+
+        modal.querySelector("#confirm-yes").onclick = () => {
+            overlay.remove();
+            onYes();
+        };
+
+        // klik luar = batal
+        overlay.onclick = (e) => {
+            if (e.target === overlay) overlay.remove();
+        };
+    }
+
     function startAllMarkets() {
+
         const token = document.getElementById('token').value;
         const accountId = document.getElementById('account-id').value;
-        if (!token || !accountId) return alert(
-            "Harap isi Access Token & Target Account ID di Pusat Kendali terlebih dahulu!");
+        if (!token || !accountId) {
+            showPopup(
+                "⚠️ Harap isi Access Token & Target Account ID terlebih dahulu!",
+                "error"
+            );
+            return;
+        }
 
         const btn = event.target;
         let originalText = btn.innerHTML;
-        btn.innerHTML = '⏳ Menghubungkan...';
+
+        btn.innerHTML = '⏳ Starting...';
         btn.disabled = true;
 
         fetch(`${API_BASE}/start_all`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                token: token,
-                account_id: accountId
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    token: token,
+                    account_id: accountId
+                })
             })
-        }).then(res => res.json()).then(data => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            alert(`✅ ${data.message}`);
-            refreshDashboardStatus();
-        }).catch(err => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        });
-    }
+            .then(res => res.json())
+            .then(data => {
 
-    function resetAllMarkets() {
-        if (!confirm(
-                "Apakah Anda yakin ingin MERESET SEMUA data history market? Semua hitungan candle akan dimulai dari 0 kembali."
-            )) return;
-        fetch(`${API_BASE}/reset_all`, {
-                method: 'POST'
-            })
-            .then(res => res.json()).then(data => {
-                alert(`✅ ${data.message}`);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // ✅ POPUP SUCCESS
+                showPopup(`✅ ${data.message}`, "success");
+
                 refreshDashboardStatus();
+            })
+            .catch(err => {
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // ✅ POPUP ERROR
+                showPopup("❌ Gagal menghubungkan market", "error");
+
+                console.error(err);
             });
     }
 
+    function resetAllMarkets() {
+
+        showConfirm(
+            "Apakah Anda yakin ingin MERESET SEMUA data history market?",
+            () => {
+
+                fetch(`${API_BASE}/reset_all`, {
+                        method: 'POST'
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+
+                        showPopup(
+                            `🔄 ${data.message}`,
+                            "success"
+                        );
+
+                        refreshDashboardStatus();
+                    })
+                    .catch(() => {
+                        showPopup("❌ Gagal mereset data market", "error");
+                    });
+
+            }
+        );
+    }
+
     function activateMassTelegram(event) {
+
         const targetLoss = document.getElementById('mass-tg-loss').value;
-        if (!confirm(`Aktifkan Telegram otomatis di SEMUA market aktif dengan Target False ${targetLoss}?`)) return;
 
         const btn = event.currentTarget;
         const originalText = btn.innerHTML;
+
         btn.innerHTML = '⏳ Memproses...';
         btn.disabled = true;
 
         fetch(`${API_BASE}/toggle_telegram_all`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                target_loss: targetLoss
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    target_loss: targetLoss
+                })
             })
-        }).then(res => res.json()).then(data => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            if (data.status === 'success') {
-                alert(`✅ ${data.message}`);
-                refreshDashboardStatus();
-            } else {
-                alert(`❌ ${data.message}`);
-            }
-        }).catch(err => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            alert("Gagal terhubung ke server.");
-        });
+            .then(res => res.json())
+            .then(data => {
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                if (data.status === 'success') {
+
+                    // ✅ POPUP SUCCESS
+                    showPopup(`📲 ${data.message}`, "success");
+
+                    refreshDashboardStatus();
+
+                } else {
+                    showPopup(`❌ ${data.message}`, "error");
+                }
+            })
+            .catch(err => {
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                showPopup("❌ Gagal terhubung ke server", "error");
+                console.error(err);
+            });
     }
 
     function resetCurrentMarket() {
@@ -924,19 +1106,25 @@
         return sigLoss;
     }
 
+    // function renderMarketCards() {
+    //     const start = (currentPage - 1) * itemsPerPage;
+    //     const container = document.getElementById('market-grid-container');
+    //     container.innerHTML = '';
+    //     allMarkets.slice(start, start + itemsPerPage).forEach(market => {
+    //         const isActive = activeMarketsList.includes(market.id) ? 'is-active' : '';
+    //         const catBadge = market.cat === "24 Jam FTT" ?
+    //             `<span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md shadow-sm">${market.cat}</span>` :
+    //             market.cat;
+    //         container.innerHTML +=
+    //             `<div onclick="openMarketDetail('${market.id}')" data-market="${market.id}" class="market-card ${isActive} bg-white rounded-2xl p-6 shadow-sm flex flex-col items-center"><div class="active-badge w-3 h-3 bg-gojek rounded-full animate-pulse shadow-[0_0_8px_#00aa13]"></div><div class="text-4xl mb-3">${market.icon}</div><h4 class="font-bold text-dark text-center text-sm">${market.name}</h4><p class="text-[10px] text-gray-400 font-bold uppercase mt-1">${catBadge}</p></div>`;
+    //     });
+    //     renderPagination();
+    // }
+
     function renderMarketCards() {
-        const start = (currentPage - 1) * itemsPerPage;
+        // MARKET GRID DISABLED
         const container = document.getElementById('market-grid-container');
-        container.innerHTML = '';
-        allMarkets.slice(start, start + itemsPerPage).forEach(market => {
-            const isActive = activeMarketsList.includes(market.id) ? 'is-active' : '';
-            const catBadge = market.cat === "24 Jam FTT" ?
-                `<span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md shadow-sm">${market.cat}</span>` :
-                market.cat;
-            container.innerHTML +=
-                `<div onclick="openMarketDetail('${market.id}')" data-market="${market.id}" class="market-card ${isActive} bg-white rounded-2xl p-6 shadow-sm flex flex-col items-center"><div class="active-badge w-3 h-3 bg-gojek rounded-full animate-pulse shadow-[0_0_8px_#00aa13]"></div><div class="text-4xl mb-3">${market.icon}</div><h4 class="font-bold text-dark text-center text-sm">${market.name}</h4><p class="text-[10px] text-gray-400 font-bold uppercase mt-1">${catBadge}</p></div>`;
-        });
-        renderPagination();
+        if (container) container.innerHTML = '';
     }
 
     function renderTradeMarkets() {
@@ -1003,6 +1191,7 @@
                 .innerText = formatCurrency(data.balance);
 
             activeMarketsList = data.active_markets || [];
+            syncPlayStopButton();
             document.querySelectorAll('.market-card').forEach(card => {
                 if (activeMarketsList.includes(card.getAttribute('data-market'))) card.classList.add(
                     'is-active');
@@ -1024,43 +1213,147 @@
                 }
             }
 
+            // =====================================================
+            // LIVE FALSE STREAK - PREMIUM FINAL VERSION
+            // =====================================================
+
             const streakContainer = document.getElementById('live-streak-container');
             const streakList = document.getElementById('streak-list');
 
             if (streakContainer && streakList) {
-                if (activeMarketsList.length > 0 && data.market_streaks) {
-                    streakContainer.classList.remove('hidden');
-                    streakList.innerHTML = '';
 
-                    let sortedMarkets = Object.keys(data.market_streaks).sort((a, b) => data.market_streaks[b] -
-                        data.market_streaks[a]);
+                // container selalu clean putih
+                streakContainer.classList.remove('hidden');
+                streakContainer.classList.add('bg-white');
 
-                    sortedMarkets.forEach(mkt => {
-                        let streak = data.market_streaks[mkt];
+                // jika tidak ada market aktif
+                if (
+                    !data.market_streaks ||
+                    Object.keys(data.market_streaks).length === 0
+                ) {
 
-                        let colorClass = 'bg-gray-50 text-gray-500 border-gray-200';
-                        if (streak >= 7) colorClass =
-                            'bg-red-100 text-red-700 border-red-300 font-extrabold shadow-md';
-                        else if (streak >= 5) colorClass =
-                            'bg-orange-100 text-orange-700 border-orange-300 font-bold shadow-sm';
-                        else if (streak >= 3) colorClass =
-                            'bg-yellow-100 text-yellow-700 border-yellow-300 font-bold';
-                        else if (streak >= 1) colorClass = 'bg-blue-50 text-blue-600 border-blue-200';
+                    streakList.innerHTML = `
+                <span class="text-xs text-gray-400 italic">
+                    Semua market berhenti
+                </span>
+                `;
 
-                        let mktObj = allMarkets.find(x => x.id === mkt);
-                        let mktName = mktObj ? mktObj.name : mkt;
-                        let mktIcon = mktObj ? mktObj.icon : '📊';
-
-                        streakList.innerHTML += `
-                            <div class="px-3 py-1.5 rounded-lg border text-xs flex items-center gap-2 ${colorClass} transition-all">
-                                <span>${mktIcon} ${mktName}</span>
-                                <span class="bg-white/90 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider border border-white/50">False: ${streak}</span>
-                            </div>
-                        `;
-                    });
-                } else {
-                    streakContainer.classList.add('hidden');
+                    return;
                 }
+
+                streakList.innerHTML = '';
+
+                // ==============================
+                // SYSTEM STATE
+                // ==============================
+                const totalMarket = allMarkets.length;
+                const activeCount = activeMarketsList.length;
+
+                const allConnected =
+                    (activeCount === totalMarket && totalMarket > 0);
+
+                // ==============================
+                // SORT MARKET (TERTINGGI DI ATAS)
+                // ==============================
+                let sortedMarkets = Object.keys(data.market_streaks)
+                    .sort((a, b) => data.market_streaks[b] - data.market_streaks[a]);
+
+                const highestStreak =
+                    sortedMarkets.length > 0 ?
+                    data.market_streaks[sortedMarkets[0]] :
+                    0;
+
+                // ==============================
+                // RENDER LIST
+                // ==============================
+                sortedMarkets.forEach(mkt => {
+
+                    let streak = data.market_streaks[mkt];
+
+                    // cari nama market
+                    let mktObj = allMarkets.find(x => x.id === mkt);
+                    let mktName = mktObj ? mktObj.name : mkt;
+
+                    // ==========================
+                    // COLOR ENGINE
+                    // ==========================
+                    let colorClass =
+                        'bg-gray-50 text-gray-500 border-gray-200';
+
+                    if (streak >= 7)
+                        colorClass =
+                        'bg-red-100 text-red-700 border-red-300 font-extrabold';
+
+                    else if (streak >= 5)
+                        colorClass =
+                        'bg-orange-100 text-orange-700 border-orange-300 font-bold';
+
+                    else if (streak >= 3)
+                        colorClass =
+                        'bg-yellow-100 text-yellow-700 border-yellow-300 font-bold';
+
+                    else if (streak >= 1)
+                        colorClass =
+                        'bg-blue-50 text-blue-600 border-blue-200';
+
+                    // ==========================
+                    // ALL CONNECTED MODE (HIJAU)
+                    // ==========================
+                    let connectedClass = '';
+
+                    if (allConnected) {
+                        connectedClass =
+                            'bg-green-100 text-green-800 border-green-300 font-bold';
+                    }
+
+                    // ==========================
+                    // DANGER MARKET HIGHLIGHT
+                    // ==========================
+                    let dangerGlow =
+                        (streak === highestStreak && streak >= 7) ?
+                        'danger-glow' :
+                        '';
+
+                    // ==========================
+                    // RENDER ITEM (ICON DIHAPUS)
+                    // ==========================
+                    streakList.innerHTML += `
+            <div onclick="openMarketDetail('${mkt}')"
+                class="
+                    w-full
+                    px-3 py-1.5
+                    rounded-lg
+                    border
+                    text-[11px]
+                    flex items-center justify-between
+                    ${colorClass}
+                    ${connectedClass}
+                    ${dangerGlow}
+                    transition-all duration-300
+                    cursor-pointer
+                    hover:scale-[1.04]
+                    hover:shadow-md
+                    active:scale-95
+                ">
+
+                <span class="truncate font-semibold">
+                    ${mktName}
+                </span>
+
+                <span class="
+                    bg-white/90
+                    px-2 py-0.5
+                    rounded
+                    text-[10px]
+                    uppercase
+                    tracking-wider
+                    border border-white/50">
+                    False: ${streak}
+                </span>
+
+            </div>
+        `;
+                });
             }
         });
     }
@@ -1351,51 +1644,83 @@
     }
 
     function stopAllMarkets(event) {
-        if (!confirm("Hentikan SEMUA bot market yang sedang berjalan?")) return;
-        const btn = event.currentTarget;
+
+        const btn = event.target;
         let originalText = btn.innerHTML;
-        btn.innerHTML = '⏳ Proses...';
+
+        btn.innerHTML = "⏳ Stopping...";
         btn.disabled = true;
 
         fetch(`${API_BASE}/stop_all`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then(res => res.json()).then(data => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            alert(`✅ ${data.message || 'Semua bot berhasil dihentikan.'}`);
-            refreshDashboardStatus();
-        }).catch(err => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            alert('❌ Gagal menghentikan bot.');
-        });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // ✅ POPUP SUCCESS STOP
+                showPopup(
+                    data.message || "🛑 Semua market berhasil dihentikan",
+                    "error"
+                );
+
+                refreshDashboardStatus();
+            })
+            .catch(err => {
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // ❌ POPUP ERROR
+                showPopup("❌ Gagal menghentikan market", "error");
+
+                console.error(err);
+            });
     }
 
     function deactivateMassTelegram(event) {
-        if (!confirm("Matikan sinyal Telegram otomatis di SEMUA market?")) return;
+
         const btn = event.currentTarget;
         let originalText = btn.innerHTML;
+
         btn.innerHTML = '⏳ Proses...';
         btn.disabled = true;
 
         fetch(`${API_BASE}/stop_telegram_all`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then(res => res.json()).then(data => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            alert(`✅ Sinyal Telegram massal berhasil dimatikan.`);
-            refreshDashboardStatus();
-        }).catch(err => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            alert("❌ Gagal terhubung ke server.");
-        });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // ✅ POPUP SUCCESS
+                showPopup(
+                    data.message || "🔕 Sinyal Telegram massal berhasil dimatikan",
+                    "success"
+                );
+
+                refreshDashboardStatus();
+            })
+            .catch(err => {
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // ❌ POPUP ERROR
+                showPopup("❌ Gagal terhubung ke server", "error");
+
+                console.error(err);
+            });
     }
 
     function startRealtimeClock() {

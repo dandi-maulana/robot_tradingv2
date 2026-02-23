@@ -78,6 +78,10 @@
 
     @include('dashboard.partials.footer')
 
+    <!-- ✅ GLOBAL POPUP CONTAINER -->
+    <div id="popup-container" class="fixed top-5 right-5 z-50 space-y-3 pointer-events-none">
+    </div>
+
     @yield('scripts')
 
 </body>
