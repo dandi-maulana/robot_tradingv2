@@ -26,201 +26,60 @@
         direction: ''
     };
 
-    const allMarkets = [{
-            id: "Asia Composite Index",
-            name: "Asia Index",
-            icon: "🌏",
-            cat: "24 Jam FTT"
-        },
-        {
-            id: "Europe Composite Index",
-            name: "Europe Index",
-            icon: "🌍",
-            cat: "24 Jam FTT"
-        },
-        {
-            id: "Commodity Composite",
-            name: "Commodity",
-            icon: "🌾",
-            cat: "24 Jam FTT"
-        },
-        {
-            id: "Crypto Composite Index",
-            name: "Crypto Index",
-            icon: "₿",
-            cat: "24 Jam FTT"
-        },
-        {
-            id: "EUR/USD OTC",
-            name: "EUR/USD OTC",
-            icon: "🇪🇺",
-            cat: "OTC"
-        },
-        {
-            id: "GBP/USD OTC",
-            name: "GBP/USD OTC",
-            icon: "🇬🇧",
-            cat: "OTC"
-        },
-        {
-            id: "USD/JPY OTC",
-            name: "USD/JPY OTC",
-            icon: "🇯🇵",
-            cat: "OTC"
-        },
-        {
-            id: "AUD/USD OTC",
-            name: "AUD/USD OTC",
-            icon: "🇦🇺",
-            cat: "OTC"
-        },
-        {
-            id: "NZD/USD OTC",
-            name: "NZD/USD OTC",
-            icon: "🇳🇿",
-            cat: "OTC"
-        },
-        {
-            id: "USD/CAD OTC",
-            name: "USD/CAD OTC",
-            icon: "🇨🇦",
-            cat: "OTC"
-        },
-        {
-            id: "USD/CHF OTC",
-            name: "USD/CHF OTC",
-            icon: "🇨🇭",
-            cat: "OTC"
-        },
-        {
-            id: "EUR/JPY OTC",
-            name: "EUR/JPY OTC",
-            icon: "💶",
-            cat: "OTC"
-        },
-        {
-            id: "GBP/JPY OTC",
-            name: "GBP/JPY OTC",
-            icon: "💷",
-            cat: "OTC"
-        },
-        {
-            id: "AUD/JPY OTC",
-            name: "AUD/JPY OTC",
-            icon: "🇦🇺",
-            cat: "OTC"
-        },
-        {
-            id: "CAD/JPY OTC",
-            name: "CAD/JPY OTC",
-            icon: "🇨🇦",
-            cat: "OTC"
-        },
-        {
-            id: "NZD/JPY OTC",
-            name: "NZD/JPY OTC",
-            icon: "🇳🇿",
-            cat: "OTC"
-        },
-        {
-            id: "CHF/JPY OTC",
-            name: "CHF/JPY OTC",
-            icon: "🇨🇭",
-            cat: "OTC"
-        },
-        {
-            id: "EUR/GBP OTC",
-            name: "EUR/GBP OTC",
-            icon: "💶",
-            cat: "OTC"
-        },
-        {
-            id: "EUR/AUD OTC",
-            name: "EUR/AUD OTC",
-            icon: "💶",
-            cat: "OTC"
-        },
-        {
-            id: "EUR/CAD OTC",
-            name: "EUR/CAD OTC",
-            icon: "💶",
-            cat: "OTC"
-        },
-        {
-            id: "EUR/CHF OTC",
-            name: "EUR/CHF OTC",
-            icon: "💶",
-            cat: "OTC"
-        },
-        {
-            id: "GBP/AUD OTC",
-            name: "GBP/AUD OTC",
-            icon: "💷",
-            cat: "OTC"
-        },
-        {
-            id: "GBP/CAD OTC",
-            name: "GBP/CAD OTC",
-            icon: "💷",
-            cat: "OTC"
-        },
-        {
-            id: "GBP/CHF OTC",
-            name: "GBP/CHF OTC",
-            icon: "💷",
-            cat: "OTC"
-        },
-        {
-            id: "AUD/CAD OTC",
-            name: "AUD/CAD OTC",
-            icon: "🇦🇺",
-            cat: "OTC"
-        },
-        {
-            id: "AUD/CHF OTC",
-            name: "AUD/CHF OTC",
-            icon: "🇦🇺",
-            cat: "OTC"
-        },
-        {
-            id: "CAD/CHF OTC",
-            name: "CAD/CHF OTC",
-            icon: "🇨🇦",
-            cat: "OTC"
-        },
+    const allMarkets = [
+        { id: "Asia Composite Index",   name: "Asia Index",   icon: "🌏", cat: "24 Jam FTT" },
+        { id: "Europe Composite Index", name: "Europe Index", icon: "🌍", cat: "24 Jam FTT" },
+        { id: "Commodity Composite",    name: "Commodity",    icon: "🌾", cat: "24 Jam FTT" },
+        { id: "Crypto Composite Index", name: "Crypto Index", icon: "₿",  cat: "24 Jam FTT" },
+        { id: "EUR/USD OTC", name: "EUR/USD OTC", icon: "🇪🇺", cat: "OTC" },
+        { id: "GBP/USD OTC", name: "GBP/USD OTC", icon: "🇬🇧", cat: "OTC" },
+        { id: "USD/JPY OTC", name: "USD/JPY OTC", icon: "🇯🇵", cat: "OTC" },
+        { id: "AUD/USD OTC", name: "AUD/USD OTC", icon: "🇦🇺", cat: "OTC" },
+        { id: "NZD/USD OTC", name: "NZD/USD OTC", icon: "🇳🇿", cat: "OTC" },
+        { id: "USD/CAD OTC", name: "USD/CAD OTC", icon: "🇨🇦", cat: "OTC" },
+        { id: "USD/CHF OTC", name: "USD/CHF OTC", icon: "🇨🇭", cat: "OTC" },
+        { id: "EUR/JPY OTC", name: "EUR/JPY OTC", icon: "💶", cat: "OTC" },
+        { id: "GBP/JPY OTC", name: "GBP/JPY OTC", icon: "💷", cat: "OTC" },
+        { id: "AUD/JPY OTC", name: "AUD/JPY OTC", icon: "🇦🇺", cat: "OTC" },
+        { id: "CAD/JPY OTC", name: "CAD/JPY OTC", icon: "🇨🇦", cat: "OTC" },
+        { id: "NZD/JPY OTC", name: "NZD/JPY OTC", icon: "🇳🇿", cat: "OTC" },
+        { id: "CHF/JPY OTC", name: "CHF/JPY OTC", icon: "🇨🇭", cat: "OTC" },
+        { id: "EUR/GBP OTC", name: "EUR/GBP OTC", icon: "💶", cat: "OTC" },
+        { id: "EUR/AUD OTC", name: "EUR/AUD OTC", icon: "💶", cat: "OTC" },
+        { id: "EUR/CAD OTC", name: "EUR/CAD OTC", icon: "💶", cat: "OTC" },
+        { id: "EUR/CHF OTC", name: "EUR/CHF OTC", icon: "💶", cat: "OTC" },
+        { id: "GBP/AUD OTC", name: "GBP/AUD OTC", icon: "💷", cat: "OTC" },
+        { id: "GBP/CAD OTC", name: "GBP/CAD OTC", icon: "💷", cat: "OTC" },
+        { id: "GBP/CHF OTC", name: "GBP/CHF OTC", icon: "💷", cat: "OTC" },
+        { id: "AUD/CAD OTC", name: "AUD/CAD OTC", icon: "🇦🇺", cat: "OTC" },
+        { id: "AUD/CHF OTC", name: "AUD/CHF OTC", icon: "🇦🇺", cat: "OTC" },
+        { id: "CAD/CHF OTC", name: "CAD/CHF OTC", icon: "🇨🇦", cat: "OTC" },
     ];
 
     let currentPage = 1;
     const itemsPerPage = 8;
 
     function formatCurrency(amount) {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-        }).format(amount);
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
     }
 
     // ================================================================
-    // FITUR PEMBUAT GRAFIK LOKAL (MODEL CANDLESTICK SENDIRI)
+    // CHART (CANDLESTICK LOCAL)
     // ================================================================
     let localChartInstance = null;
     let currentChartTimeframe = '1M';
 
     function changeChartTimeframe(tf, btnElement) {
         currentChartTimeframe = tf;
-
         document.querySelectorAll('.tf-btn').forEach(btn => {
             btn.classList.remove('bg-gray-100', 'text-gray-800');
             btn.classList.add('text-gray-500');
         });
         btnElement.classList.remove('text-gray-500');
         btnElement.classList.add('bg-gray-100', 'text-gray-800');
-
         if (currentMarket) renderLocalChart(currentDetailHistory, currentMarket);
     }
 
-    // ALGORITMA DETERMINISTIK: Menghasilkan ukuran body candle yg sama untuk waktu yg sama,
-    // agar grafik tidak bergetar aneh saat refresh interval.
     function getDeterministicSize(strSeed) {
         let hash = 0;
         for (let i = 0; i < strSeed.length; i++) {
@@ -240,169 +99,106 @@
         if (marketLabel) marketLabel.innerText = `${marketName} (${currentChartTimeframe})`;
 
         if (!historyData || historyData.length === 0) {
-            if (localChartInstance) {
-                localChartInstance.destroy();
-                localChartInstance = null;
-            }
+            if (localChartInstance) { localChartInstance.destroy(); localChartInstance = null; }
             document.getElementById('local-chart-container').innerHTML =
                 '<div class="flex h-full items-center justify-center text-gray-400 font-bold text-xs sm:text-base py-20">Menunggu bot merekam data pergerakan...</div>';
             return;
         }
 
         let candleCount = 60;
-        if (currentChartTimeframe === '5M') candleCount = 40;
+        if (currentChartTimeframe === '5M')  candleCount = 40;
         if (currentChartTimeframe === '15M') candleCount = 20;
 
         let chartData = [...historyData].slice(0, candleCount).reverse();
-
         let basePrice = 1000.50;
         let candlestickData = [];
         let maData = [];
 
-        // Membangun Candlestick
         chartData.forEach((item) => {
             let isGreen = item.warna === 'Hijau';
             let rnd = getDeterministicSize(item.tanggal + item.waktu);
-
             let bodySize = (rnd * 8) + 3;
             let wickTop = ((rnd * 13) % 4) + 1;
             let wickBot = ((rnd * 17) % 4) + 1;
-
             let open = basePrice;
             let close, high, low;
-
-            if (isGreen) {
-                close = open + bodySize;
-                high = close + wickTop;
-                low = open - wickBot;
-            } else {
-                close = open - bodySize;
-                high = open + wickTop;
-                low = close - wickBot;
-            }
-
+            if (isGreen) { close = open + bodySize; high = close + wickTop; low = open - wickBot; }
+            else          { close = open - bodySize; high = open + wickTop;  low = close - wickBot; }
             basePrice = close;
-
-            candlestickData.push({
-                x: item.waktu,
-                y: [open, high, low, close]
-            });
+            candlestickData.push({ x: item.waktu, y: [open, high, low, close] });
         });
 
-        // Kalkulasi SMA 5
         for (let i = 0; i < candlestickData.length; i++) {
-            if (i < 4) {
-                maData.push({
-                    x: candlestickData[i].x,
-                    y: null
-                });
-            } else {
+            if (i < 4) { maData.push({ x: candlestickData[i].x, y: null }); }
+            else {
                 let sum = 0;
-                for (let j = 0; j < 5; j++) {
-                    sum += candlestickData[i - j].y[3]; // Close price
-                }
-                maData.push({
-                    x: candlestickData[i].x,
-                    y: sum / 5
-                });
+                for (let j = 0; j < 5; j++) sum += candlestickData[i - j].y[3];
+                maData.push({ x: candlestickData[i].x, y: sum / 5 });
             }
         }
 
+        // Detect dark mode for chart theme
+        const isDark = document.documentElement.classList.contains('dark');
         let isMobile = window.innerWidth < 640;
 
         let options = {
-            series: [{
-                    name: 'Candle Harga',
-                    type: 'candlestick',
-                    data: candlestickData
-                },
-                {
-                    name: 'SMA (5)',
-                    type: 'line',
-                    data: maData
-                }
+            series: [
+                { name: 'Candle Harga', type: 'candlestick', data: candlestickData },
+                { name: 'SMA (5)',       type: 'line',         data: maData }
             ],
             chart: {
-                height: isMobile ? 300 : 380, // Tinggi lebih kecil di HP agar tidak makan tempat
-                width: '100%', // FORCE WIDTH AGAR RESPONSIF
+                height: isMobile ? 300 : 380,
+                width: '100%',
                 type: 'candlestick',
                 fontFamily: 'inherit',
-                toolbar: {
-                    show: false
-                },
-                animations: {
-                    enabled: false
-                }, // Matikan animasi agar mulus saat live refresh
-                redrawOnParentResize: true // RENDER ULANG SAAT LAYAR BERUBAH
+                toolbar: { show: false },
+                animations: { enabled: false },
+                redrawOnParentResize: true,
+                background: isDark ? '#0d1117' : '#ffffff',
             },
+            theme: { mode: isDark ? 'dark' : 'light' },
             plotOptions: {
                 candlestick: {
-                    colors: {
-                        upward: '#22c55e', // Hijau
-                        downward: '#ef4444' // Merah
-                    },
-                    wick: {
-                        useFillColor: true
-                    }
+                    colors: { upward: '#22c55e', downward: '#ef4444' },
+                    wick: { useFillColor: true }
                 }
             },
-            colors: ['#000000', '#f59e0b'], // index 1 untuk SMA (Kuning)
-            stroke: {
-                width: [1, 2], // 1 wick, 2 garis SMA
-                curve: 'smooth'
-            },
+            colors: ['#000000', '#f59e0b'],
+            stroke: { width: [1, 2], curve: 'smooth' },
             xaxis: {
-                type: 'category', // SANGAT PENTING: Mencegah grafik error karena format waktu
+                type: 'category',
                 labels: {
                     rotate: -45,
-                    style: {
-                        fontSize: isMobile ? '8px' : '10px',
-                        colors: '#94a3b8'
-                    },
-                    hideOverlappingLabels: true, // Sembunyikan label yang bertumpuk di HP
+                    style: { fontSize: isMobile ? '8px' : '10px', colors: isDark ? '#8b949e' : '#94a3b8' },
+                    hideOverlappingLabels: true,
                     trim: true
                 },
-                tickAmount: isMobile ? 8 : 15, // Jumlah label X lebih sedikit di HP
-                tooltip: {
-                    enabled: false
-                }
+                tickAmount: isMobile ? 8 : 15,
+                tooltip: { enabled: false }
             },
             yaxis: {
                 labels: {
-                    style: {
-                        fontSize: isMobile ? '9px' : '11px',
-                        fontWeight: '600',
-                        colors: '#64748b'
-                    },
-                    formatter: function(val) {
-                        return val ? val.toFixed(2) : val;
-                    }
+                    style: { fontSize: isMobile ? '9px' : '11px', fontWeight: '600', colors: isDark ? '#8b949e' : '#64748b' },
+                    formatter: function(val) { return val ? val.toFixed(2) : val; }
                 },
-                tickAmount: isMobile ? 4 : 6 // Jumlah label Y lebih sedikit di HP
+                tickAmount: isMobile ? 4 : 6
             },
             grid: {
-                borderColor: '#e2e8f0',
+                borderColor: isDark ? '#21262d' : '#e2e8f0',
                 strokeDashArray: 4,
-                padding: {
-                    left: 5,
-                    right: 5,
-                    bottom: 0
-                }
+                padding: { left: 5, right: 5, bottom: 0 }
             },
             tooltip: {
                 shared: true,
                 intersect: false,
-                theme: 'light',
-                y: {
-                    formatter: function(val) {
-                        return val ? val.toFixed(2) : val;
-                    }
-                }
+                theme: isDark ? 'dark' : 'light',
+                y: { formatter: function(val) { return val ? val.toFixed(2) : val; } }
             },
             legend: {
                 position: 'top',
                 horizontalAlign: isMobile ? 'center' : 'right',
-                fontSize: isMobile ? '10px' : '12px'
+                fontSize: isMobile ? '10px' : '12px',
+                labels: { colors: isDark ? '#c9d1d9' : '#374151' }
             }
         };
 
@@ -411,43 +207,90 @@
             localChartInstance = new ApexCharts(document.querySelector("#local-chart-container"), options);
             localChartInstance.render();
         } else {
-            // Update chart dynamically
             localChartInstance.updateOptions({
-                xaxis: {
-                    categories: categories
-                },
-                chart: {
-                    height: isMobile ? 300 : 380
-                } // Update height if resizing
+                chart: { height: isMobile ? 300 : 380, background: isDark ? '#0d1117' : '#ffffff' },
+                theme: { mode: isDark ? 'dark' : 'light' },
+                grid: { borderColor: isDark ? '#21262d' : '#e2e8f0' }
             });
-            localChartInstance.updateSeries([{
-                    name: 'Candle Harga',
-                    data: candlestickData
-                },
-                {
-                    name: 'SMA (5)',
-                    data: maData
-                }
+            localChartInstance.updateSeries([
+                { name: 'Candle Harga', data: candlestickData },
+                { name: 'SMA (5)',      data: maData }
             ]);
         }
     }
 
-    // Listener otomatis jika layar di-rotate / diubah ukuran
     window.addEventListener('resize', () => {
         if (currentMarket && currentDetailHistory.length > 0) {
             renderLocalChart(currentDetailHistory, currentMarket);
         }
     });
+
+    // ================================================================
+    // DARK / LIGHT MODE TOGGLE
     // ================================================================
 
+    /**
+     * Sync icon emoji to both desktop & mobile toggle buttons
+     */
+    function syncThemeIcons(isDark) {
+        const icon    = document.getElementById('theme-icon');
+        const iconMob = document.getElementById('theme-icon-mob');
+        const emoji   = isDark ? '☀️' : '🌙';
+        if (icon)    icon.textContent    = emoji;
+        if (iconMob) iconMob.textContent = emoji;
+    }
+
+    /**
+     * Apply theme to <html> and re-render chart if active
+     */
+    function applyTheme(theme) {
+        const isDark = (theme === 'dark');
+        if (isDark) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        syncThemeIcons(isDark);
+        localStorage.setItem('theme', theme);
+
+        // Re-render chart with correct colors
+        if (localChartInstance && currentMarket && currentDetailHistory.length > 0) {
+            renderLocalChart(currentDetailHistory, currentMarket);
+        }
+    }
+
+    /**
+     * Toggle current theme
+     */
+    function toggleTheme() {
+        const isDark = document.documentElement.classList.contains('dark');
+        applyTheme(isDark ? 'light' : 'dark');
+    }
+
+    // Load saved theme on page load (before DOMContentLoaded flicker)
+    (function () {
+        const saved = localStorage.getItem('theme') || 'light';
+        applyTheme(saved);
+    })();
+
+    // Wire up desktop & mobile toggle buttons
+    document.addEventListener('DOMContentLoaded', function () {
+        const btnDesktop = document.getElementById('theme-toggle');
+        const btnMobile  = document.getElementById('theme-toggle-mob');
+        if (btnDesktop) btnDesktop.addEventListener('click', toggleTheme);
+        if (btnMobile)  btnMobile.addEventListener('click', toggleTheme);
+    });
+
+    // ================================================================
+    // WINDOW ONLOAD
+    // ================================================================
     window.onload = function() {
         fetch(`${API_BASE}/get_settings`).then(res => res.json()).then(data => {
-            if (data.token) document.getElementById('token').value = data.token;
+            if (data.token)      document.getElementById('token').value = data.token;
             if (data.account_id) {
                 const select = document.getElementById('account-id');
                 if (!select.querySelector(`option[value="${data.account_id}"]`)) {
-                    select.innerHTML +=
-                        `<option value="${data.account_id}">ID: ${data.account_id} (Tersimpan)</option>`;
+                    select.innerHTML += `<option value="${data.account_id}">ID: ${data.account_id} (Tersimpan)</option>`;
                 }
                 select.value = data.account_id;
             }
@@ -468,10 +311,13 @@
         }
     }
 
+    // ================================================================
+    // VIEW MANAGEMENT
+    // ================================================================
     function clearAllIntervals() {
         if (dashboardInterval) clearInterval(dashboardInterval);
-        if (detailInterval) clearInterval(detailInterval);
-        if (historyInterval) clearInterval(historyInterval);
+        if (detailInterval)    clearInterval(detailInterval);
+        if (historyInterval)   clearInterval(historyInterval);
     }
 
     function showView(viewName) {
@@ -480,33 +326,23 @@
         document.getElementById('view-trade').classList.add('hidden');
         document.getElementById('view-history').classList.add('hidden');
         document.getElementById('view-rodis').classList.add('hidden');
-
         document.getElementById('view-' + viewName).classList.remove('hidden');
 
-        const navIds = ['nav-link-dashboard', 'nav-link-trade', 'nav-link-history', 'nav-link-rodis',
-            'nav-link-dashboard-mob', 'nav-link-trade-mob', 'nav-link-history-mob', 'nav-link-rodis-mob'
+        const navIds = [
+            'nav-link-dashboard','nav-link-trade','nav-link-history','nav-link-rodis',
+            'nav-link-dashboard-mob','nav-link-trade-mob','nav-link-history-mob','nav-link-rodis-mob'
         ];
         navIds.forEach(id => {
             let el = document.getElementById(id);
-            if (el) {
-                el.classList.remove('text-indigo-600', 'text-gojek');
-                el.classList.add('text-gray-500');
-            }
+            if (el) { el.classList.remove('text-indigo-600', 'text-gojek'); el.classList.add('text-gray-500'); }
         });
 
-        let activeBase = viewName === 'detail' ? 'dashboard' : viewName;
-        let deskNav = document.getElementById('nav-link-' + activeBase);
-        let mobNav = document.getElementById('nav-link-' + activeBase + '-mob');
-
-        let colorClass = viewName === 'rodis' ? 'text-indigo-600' : 'text-gojek';
-        if (deskNav) {
-            deskNav.classList.remove('text-gray-500');
-            deskNav.classList.add(colorClass);
-        }
-        if (mobNav) {
-            mobNav.classList.remove('text-gray-500');
-            mobNav.classList.add(colorClass);
-        }
+        let activeBase  = viewName === 'detail' ? 'dashboard' : viewName;
+        let deskNav     = document.getElementById('nav-link-' + activeBase);
+        let mobNav      = document.getElementById('nav-link-' + activeBase + '-mob');
+        let colorClass  = viewName === 'rodis' ? 'text-indigo-600' : 'text-gojek';
+        if (deskNav) { deskNav.classList.remove('text-gray-500'); deskNav.classList.add(colorClass); }
+        if (mobNav)  { mobNav.classList.remove('text-gray-500');  mobNav.classList.add(colorClass); }
 
         clearAllIntervals();
 
@@ -519,8 +355,8 @@
             detailInterval = setInterval(refreshDetailData, 1500);
         } else if (viewName === 'trade') {
             fetch(`${API_BASE}/status_all`).then(res => res.json()).then(data => {
-                if (data.balance !== undefined && data.balance !== null) document.getElementById('nav-balance')
-                    .innerText = formatCurrency(data.balance);
+                if (data.balance !== undefined && data.balance !== null)
+                    document.getElementById('nav-balance').innerText = formatCurrency(data.balance);
                 activeMarketsList = data.active_markets || [];
                 renderTradeMarkets();
             });
@@ -533,16 +369,19 @@
                 activeMarketsList = data.active_markets || [];
                 const select = document.getElementById('rodis-market-select');
                 select.innerHTML = '';
-                if (activeMarketsList.length === 0) select.innerHTML =
-                    `<option value="">(Belum ada market aktif)</option>`;
-                else activeMarketsList.forEach(m => {
-                    select.innerHTML +=
-                        `<option value="${m}" ${m === rodisState.market ? 'selected' : ''}>${m}</option>`;
-                });
+                if (activeMarketsList.length === 0)
+                    select.innerHTML = `<option value="">(Belum ada market aktif)</option>`;
+                else
+                    activeMarketsList.forEach(m => {
+                        select.innerHTML += `<option value="${m}" ${m === rodisState.market ? 'selected' : ''}>${m}</option>`;
+                    });
             });
         }
     }
 
+    // ================================================================
+    // ACCOUNT CHECK
+    // ================================================================
     function checkAccounts() {
         const token = document.getElementById('token').value;
         if (!token) return alert('Silakan isi Access Token!');
@@ -551,24 +390,20 @@
         btn.disabled = true;
         fetch(`${API_BASE}/check_accounts`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                token: token
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token })
         }).then(res => res.json()).then(data => {
             btn.innerHTML = '🔍 Cek Akun';
-            btn.disabled = false;
+            btn.disabled  = false;
             if (data.status === 'success') {
                 const select = document.getElementById('account-id');
                 const oldVal = select.value;
                 select.innerHTML = '<option value="">-- Pilih Akun --</option>';
                 data.accounts.forEach(acc => {
                     const typeLabel = acc.type === 'Demo' ? '🎮 Demo' : '💼 Real';
-                    const option = document.createElement('option');
-                    option.value = acc.id;
-                    option.text = `${typeLabel} - ${acc.id} (${formatCurrency(acc.balance)})`;
+                    const option    = document.createElement('option');
+                    option.value    = acc.id;
+                    option.text     = `${typeLabel} - ${acc.id} (${formatCurrency(acc.balance)})`;
                     select.appendChild(option);
                 });
                 if (oldVal) select.value = oldVal;
@@ -576,304 +411,144 @@
             } else {
                 alert(data.message);
             }
-        }).catch(err => {
+        }).catch(() => {
             btn.innerHTML = '🔍 Cek Akun';
-            btn.disabled = false;
+            btn.disabled  = false;
         });
     }
 
+    // ================================================================
+    // PLAY / STOP SYNC
+    // ================================================================
     function syncPlayStopButton() {
-
         const playBtn = document.getElementById('btn-play');
         const stopBtn = document.getElementById('btn-stop');
-
         if (!playBtn || !stopBtn) return;
-
-        const totalMarket = allMarkets.length;
-        const activeCount = activeMarketsList.length;
-
-        const connected = (activeCount > 0);
-
-        // =========================
-        // CONNECTED MODE
-        // =========================
+        const connected = (activeMarketsList.length > 0);
         if (connected) {
-
-            // PLAY disabled
-            playBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            playBtn.disabled = true;
-
-            // STOP enabled
-            stopBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            stopBtn.disabled = false;
-
-        }
-        // =========================
-        // DISCONNECTED MODE
-        // =========================
-        else {
-
-            playBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            playBtn.disabled = false;
-
-            stopBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            stopBtn.disabled = true;
+            playBtn.classList.add('opacity-50', 'cursor-not-allowed');    playBtn.disabled = true;
+            stopBtn.classList.remove('opacity-50', 'cursor-not-allowed'); stopBtn.disabled = false;
+        } else {
+            playBtn.classList.remove('opacity-50', 'cursor-not-allowed'); playBtn.disabled = false;
+            stopBtn.classList.add('opacity-50', 'cursor-not-allowed');    stopBtn.disabled = true;
         }
     }
 
+    // ================================================================
+    // POPUP & CONFIRM
+    // ================================================================
     function showPopup(message, type = "success") {
-
         const container = document.getElementById("popup-container");
-
-        const color =
-            type === "success" ?
-            "bg-emerald-500" :
-            "bg-red-500";
-
+        const color = type === "success" ? "bg-emerald-500" : "bg-red-500";
         const popup = document.createElement("div");
-
-        popup.className = `
-        ${color}
-        text-white
-        px-5 py-3
-        rounded-xl
-        shadow-lg
-        animate-popup
-        text-sm font-bold
-    `;
-
+        popup.className = `${color} text-white px-5 py-3 rounded-xl shadow-lg animate-popup text-sm font-bold`;
         popup.innerText = message;
-
         container.appendChild(popup);
-
         setTimeout(() => {
-            popup.style.opacity = "0";
+            popup.style.opacity   = "0";
             popup.style.transform = "translateX(40px)";
             setTimeout(() => popup.remove(), 400);
         }, 2500);
     }
 
     function showConfirm(message, onYes) {
-
-        // overlay
         const overlay = document.createElement("div");
-        overlay.className = `
-        fixed inset-0
-        bg-black/40 backdrop-blur-sm
-        flex items-center justify-center
-        z-[9999]
-        animate-fadeIn
-    `;
-
-        // modal box
+        overlay.className = "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] animate-fadeIn";
         const modal = document.createElement("div");
-        modal.className = `
-        bg-white
-        rounded-2xl
-        shadow-2xl
-        p-6
-        w-[90%] max-w-md
-        animate-scaleIn
-    `;
-
+        modal.className = "bg-white rounded-2xl shadow-2xl p-6 w-[90%] max-w-md animate-scaleIn";
         modal.innerHTML = `
-        <div class="text-gray-800 font-semibold text-sm mb-5">
-            ${message}
-        </div>
-
-        <div class="flex justify-end gap-3">
-            <button id="confirm-cancel"
-                class="px-4 py-2 rounded-lg
-                bg-gray-200 hover:bg-gray-300
-                font-semibold text-sm">
-                Batal
-            </button>
-
-            <button id="confirm-yes"
-                class="px-4 py-2 rounded-lg
-                bg-red-500 hover:bg-red-600
-                text-white font-bold text-sm">
-                Ya, Reset
-            </button>
-        </div>
-    `;
-
+            <div class="text-gray-800 font-semibold text-sm mb-5">${message}</div>
+            <div class="flex justify-end gap-3">
+                <button id="confirm-cancel" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 font-semibold text-sm">Batal</button>
+                <button id="confirm-yes"    class="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-bold text-sm">Ya, Reset</button>
+            </div>`;
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
-
-        // EVENTS (INI YANG TADI BELUM ADA)
-        modal.querySelector("#confirm-cancel").onclick = () => {
-            overlay.remove();
-        };
-
-        modal.querySelector("#confirm-yes").onclick = () => {
-            overlay.remove();
-            onYes();
-        };
-
-        // klik luar = batal
-        overlay.onclick = (e) => {
-            if (e.target === overlay) overlay.remove();
-        };
+        modal.querySelector("#confirm-cancel").onclick = () => overlay.remove();
+        modal.querySelector("#confirm-yes").onclick    = () => { overlay.remove(); onYes(); };
+        overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
     }
 
+    // ================================================================
+    // MARKET ACTIONS
+    // ================================================================
     function startAllMarkets() {
-
-        const token = document.getElementById('token').value;
+        const token     = document.getElementById('token').value;
         const accountId = document.getElementById('account-id').value;
-        if (!token || !accountId) {
-            showPopup(
-                "⚠️ Harap isi Access Token & Target Account ID terlebih dahulu!",
-                "error"
-            );
-            return;
-        }
-
+        if (!token || !accountId) { showPopup("⚠️ Harap isi Access Token & Target Account ID terlebih dahulu!", "error"); return; }
         const btn = event.target;
         let originalText = btn.innerHTML;
-
         btn.innerHTML = '⏳ Starting...';
-        btn.disabled = true;
-
+        btn.disabled  = true;
         fetch(`${API_BASE}/start_all`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    token: token,
-                    account_id: accountId
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-
-                // ✅ POPUP SUCCESS
-                showPopup(`✅ ${data.message}`, "success");
-
-                refreshDashboardStatus();
-            })
-            .catch(err => {
-
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-
-                // ✅ POPUP ERROR
-                showPopup("❌ Gagal menghubungkan market", "error");
-
-                console.error(err);
-            });
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token, account_id: accountId })
+        }).then(res => res.json()).then(data => {
+            btn.innerHTML = originalText;
+            btn.disabled  = false;
+            showPopup(`✅ ${data.message}`, "success");
+            refreshDashboardStatus();
+        }).catch(() => {
+            btn.innerHTML = originalText;
+            btn.disabled  = false;
+            showPopup("❌ Gagal menghubungkan market", "error");
+        });
     }
 
     function resetAllMarkets() {
-
-        showConfirm(
-            "Apakah Anda yakin ingin MERESET SEMUA data history market?",
-            () => {
-
-                fetch(`${API_BASE}/reset_all`, {
-                        method: 'POST'
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-
-                        showPopup(
-                            `🔄 ${data.message}`,
-                            "success"
-                        );
-
-                        refreshDashboardStatus();
-                    })
-                    .catch(() => {
-                        showPopup("❌ Gagal mereset data market", "error");
-                    });
-
-            }
-        );
+        showConfirm("Apakah Anda yakin ingin MERESET SEMUA data history market?", () => {
+            fetch(`${API_BASE}/reset_all`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => { showPopup(`🔄 ${data.message}`, "success"); refreshDashboardStatus(); })
+                .catch(() => showPopup("❌ Gagal mereset data market", "error"));
+        });
     }
 
     function activateMassTelegram(event) {
-
         const targetLoss = document.getElementById('mass-tg-loss').value;
-
         const btn = event.currentTarget;
         const originalText = btn.innerHTML;
-
         btn.innerHTML = '⏳ Memproses...';
-        btn.disabled = true;
-
+        btn.disabled  = true;
         fetch(`${API_BASE}/toggle_telegram_all`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    target_loss: targetLoss
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-
-                if (data.status === 'success') {
-
-                    // ✅ POPUP SUCCESS
-                    showPopup(`📲 ${data.message}`, "success");
-
-                    refreshDashboardStatus();
-
-                } else {
-                    showPopup(`❌ ${data.message}`, "error");
-                }
-            })
-            .catch(err => {
-
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-
-                showPopup("❌ Gagal terhubung ke server", "error");
-                console.error(err);
-            });
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target_loss: targetLoss })
+        }).then(res => res.json()).then(data => {
+            btn.innerHTML = originalText;
+            btn.disabled  = false;
+            if (data.status === 'success') { showPopup(`📲 ${data.message}`, "success"); refreshDashboardStatus(); }
+            else showPopup(`❌ ${data.message}`, "error");
+        }).catch(() => {
+            btn.innerHTML = originalText;
+            btn.disabled  = false;
+            showPopup("❌ Gagal terhubung ke server", "error");
+        });
     }
 
     function resetCurrentMarket() {
         if (!currentMarket) return;
-        if (!confirm(
-                `Apakah Anda yakin ingin mereset semua data analisis untuk market ${currentMarket}?\nData historis candle dan perhitungan akan diulang dari nol.`
-            )) return;
-
+        if (!confirm(`Apakah Anda yakin ingin mereset semua data analisis untuk market ${currentMarket}?\nData historis candle dan perhitungan akan diulang dari nol.`)) return;
         fetch(`${API_BASE}/reset_market`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                market: currentMarket
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ market: currentMarket })
         }).then(res => res.json()).then(data => {
             if (data.status === 'success') {
                 if (rodisState.active && rodisState.market === currentMarket) {
                     rodisState.tradeCounter = 0;
                     rodisState.lastProcessedCandle = null;
                     rodisState.phase = 'IDLE';
-                    document.getElementById('rodis-target-op').innerText = '0';
-                    document.getElementById('rodis-current-loss').innerText = '0';
-                    logRodis(
-                        `🔄 [RESET MANUAL] Data market ${currentMarket} telah dibersihkan. Memulai penghitungan target dari 0 kembali.`,
-                        "#fbbf24");
+                    document.getElementById('rodis-target-op').innerText     = '0';
+                    document.getElementById('rodis-current-loss').innerText  = '0';
+                    logRodis(`🔄 [RESET MANUAL] Data market ${currentMarket} telah dibersihkan. Memulai penghitungan target dari 0 kembali.`, "#fbbf24");
                 }
-
                 if (localChartInstance) {
                     localChartInstance.destroy();
                     localChartInstance = null;
                     document.getElementById('local-chart-container').innerHTML = '';
                 }
-
                 refreshDetailData();
                 alert(`✅ Berhasil! Semua data analisis untuk market ${currentMarket} telah direset dari awal.`);
             } else {
@@ -887,13 +562,8 @@
         const inLoss = document.getElementById('tg-target-loss').value;
         fetch(`${API_BASE}/toggle_telegram`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                market: currentMarket,
-                target_loss: inLoss
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ market: currentMarket, target_loss: inLoss })
         }).then(res => res.json()).then(data => {
             if (data.status === 'success') {
                 refreshDetailData();
@@ -904,61 +574,50 @@
         });
     }
 
+    // ================================================================
+    // RODIS BOT
+    // ================================================================
     function logRodis(msg, color = "#4ade80") {
-        const term = document.getElementById('rodis-terminal');
-        let timeStr = new Date().toLocaleTimeString('id-ID');
+        const term    = document.getElementById('rodis-terminal');
+        let timeStr   = new Date().toLocaleTimeString('id-ID');
         term.innerHTML =
-            `<div style="margin-bottom:6px;"><span style="color:#64748b;font-size:0.75rem;">[${timeStr}]</span> <span style="color:${color}">${msg}</span></div>` +
-            term.innerHTML;
+            `<div style="margin-bottom:6px;"><span style="color:#64748b;font-size:0.75rem;">[${timeStr}]</span> <span style="color:${color}">${msg}</span></div>`
+            + term.innerHTML;
     }
 
     function toggleRodisBot() {
-        const btn = document.getElementById('btn-rodis-toggle');
+        const btn    = document.getElementById('btn-rodis-toggle');
         const selMkt = document.getElementById('rodis-market-select');
         const inLoss = document.getElementById('rodis-target-loss');
-        const inAmt = document.getElementById('rodis-amount');
-        const inDur = document.getElementById('rodis-duration');
+        const inAmt  = document.getElementById('rodis-amount');
+        const inDur  = document.getElementById('rodis-duration');
 
         if (!rodisState.active) {
             if (!selMkt.value) return alert("Silakan hubungkan minimal 1 market di menu Monitor!");
-
-            rodisState.active = true;
-            rodisState.market = selMkt.value;
+            rodisState.active     = true;
+            rodisState.market     = selMkt.value;
             rodisState.targetLoss = parseInt(inLoss.value) || 7;
-            rodisState.amount = parseFloat(inAmt.value) || 10;
-            rodisState.duration = parseInt(inDur.value) || 60;
-            rodisState.phase = 'IDLE';
-
-            selMkt.disabled = true;
-            inLoss.disabled = true;
-            inAmt.disabled = true;
-            inDur.disabled = true;
+            rodisState.amount     = parseFloat(inAmt.value) || 10;
+            rodisState.duration   = parseInt(inDur.value) || 60;
+            rodisState.phase      = 'IDLE';
+            selMkt.disabled = inLoss.disabled = inAmt.disabled = inDur.disabled = true;
             btn.innerHTML = '⏹ MATIKAN RODIS';
             btn.classList.replace('bg-indigo-500', 'bg-red-500');
             btn.classList.replace('hover:bg-indigo-400', 'hover:bg-red-400');
             btn.classList.replace('shadow-[0_0_20px_rgba(99,102,241,0.4)]', 'shadow-[0_0_20px_rgba(239,68,68,0.4)]');
-
-            logRodis(`🚀 RODIS DIAKTIFKAN! Memantau ${rodisState.market}. Target False: ${rodisState.targetLoss}.`,
-                "#22c55e");
-
-            fetch(`${API_BASE}/data?market=${encodeURIComponent(rodisState.market)}`).then(res => res.json()).then(
-                data => {
-                    let sl = calculateSigLoss(data.history);
-                    rodisState.tradeCounter = Math.floor(sl / rodisState.targetLoss);
-                    document.getElementById('rodis-current-loss').innerText = sl;
-                    document.getElementById('rodis-target-op').innerText = rodisState.tradeCounter + 1;
-                    logRodis(
-                        `Sistem bersiaga membaca lilin. Target selanjutnya: False ke-${(rodisState.tradeCounter * rodisState.targetLoss) + rodisState.targetLoss}.`,
-                        "#60a5fa");
-                    rodisInterval = setInterval(runRodisLoop, 2000);
-                });
+            logRodis(`🚀 RODIS DIAKTIFKAN! Memantau ${rodisState.market}. Target False: ${rodisState.targetLoss}.`, "#22c55e");
+            fetch(`${API_BASE}/data?market=${encodeURIComponent(rodisState.market)}`).then(res => res.json()).then(data => {
+                let sl = calculateSigLoss(data.history);
+                rodisState.tradeCounter = Math.floor(sl / rodisState.targetLoss);
+                document.getElementById('rodis-current-loss').innerText = sl;
+                document.getElementById('rodis-target-op').innerText    = rodisState.tradeCounter + 1;
+                logRodis(`Sistem bersiaga membaca lilin. Target selanjutnya: False ke-${(rodisState.tradeCounter * rodisState.targetLoss) + rodisState.targetLoss}.`, "#60a5fa");
+                rodisInterval = setInterval(runRodisLoop, 2000);
+            });
         } else {
             rodisState.active = false;
             clearInterval(rodisInterval);
-            selMkt.disabled = false;
-            inLoss.disabled = false;
-            inAmt.disabled = false;
-            inDur.disabled = false;
+            selMkt.disabled = inLoss.disabled = inAmt.disabled = inDur.disabled = false;
             btn.innerHTML = '▶ NYALAKAN RODIS';
             btn.classList.replace('bg-red-500', 'bg-indigo-500');
             btn.classList.replace('hover:bg-red-400', 'hover:bg-indigo-400');
@@ -972,16 +631,13 @@
         fetch(`${API_BASE}/data?market=${encodeURIComponent(rodisState.market)}`)
             .then(res => res.json()).then(data => {
                 if (!data.is_running) return;
-
                 let sigLoss = calculateSigLoss(data.history);
                 document.getElementById('rodis-current-loss').innerText = sigLoss;
-
                 if (data.history && data.history.length > 0) {
                     let latestC = data.history.filter(item => item.warna === "Hijau" || item.warna === "Merah")[0];
                     if (latestC) {
-                        let mm = parseInt(latestC.waktu.split(':')[1]);
+                        let mm       = parseInt(latestC.waktu.split(':')[1]);
                         let candleId = latestC.tanggal + "_" + latestC.waktu;
-
                         if (rodisState.lastProcessedCandle !== candleId) {
                             if (rodisState.phase === 'IDLE' && (mm % 5 === 2)) {
                                 let expectedTrades = Math.floor(sigLoss / rodisState.targetLoss);
@@ -991,87 +647,42 @@
                                     rodisState.lastProcessedCandle = candleId;
                                     document.getElementById('rodis-target-op').innerText = rodisState.tradeCounter;
                                     let nextMin = (mm + 3).toString().padStart(2, '0');
-                                    logRodis(
-                                        `⏳ [STANDBY] Target False ke-${sigLoss} tercapai! Membaca arah di penutupan menit ${nextMin}...`,
-                                        "#fbbf24");
-                                    let msg =
-                                        `⏳ *RODIS AUTO-TRADE: STANDBY* ⏳\n\n📈 *Market:* ${rodisState.market}\n🗓 *Waktu:* ${latestC.tanggal} | ${latestC.waktu} WIB\n\nSistem mendeteksi bahwa *Target Signal False ke-${sigLoss}* telah tercapai!\nRODIS saat ini sedang bersiaga (loading) membaca arah market.\nEksekusi Open Posisi akan ditentukan pada penutupan candle menit ke-${nextMin}.\n\nMohon bersabar, sistem berjalan otomatis... 🤖`;
-                                    fetch(`${API_BASE}/send_wa`, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify({
-                                            message: msg
-                                        })
-                                    });
+                                    logRodis(`⏳ [STANDBY] Target False ke-${sigLoss} tercapai! Membaca arah di penutupan menit ${nextMin}...`, "#fbbf24");
+                                    let msg = `⏳ *RODIS AUTO-TRADE: STANDBY* ⏳\n\n📈 *Market:* ${rodisState.market}\n🗓 *Waktu:* ${latestC.tanggal} | ${latestC.waktu} WIB\n\nSistem mendeteksi bahwa *Target Signal False ke-${sigLoss}* telah tercapai!\nRODIS saat ini sedang bersiaga (loading) membaca arah market.\nEksekusi Open Posisi akan ditentukan pada penutupan candle menit ke-${nextMin}.\n\nMohon bersabar, sistem berjalan otomatis... 🤖`;
+                                    fetch(`${API_BASE}/send_wa`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg }) });
                                 }
                             } else if (rodisState.phase === 'WAIT_CONF' && (mm % 5 === 0)) {
-                                rodisState.phase = 'WAIT_RES';
+                                rodisState.phase     = 'WAIT_RES';
                                 rodisState.direction = (latestC.warna === 'Hijau') ? 'up' : 'down';
                                 rodisState.lastProcessedCandle = candleId;
-                                let dirStr = (latestC.warna === 'Hijau') ? 'BUY NAIK 🟢' : 'SELL TURUN 🔴';
+                                let dirStr  = (latestC.warna === 'Hijau') ? 'BUY NAIK 🟢' : 'SELL TURUN 🔴';
                                 let nextMin = (mm + 2).toString().padStart(2, '0');
-                                logRodis(
-                                    `🔥 [EKSEKUSI] Candle penentu menit ${mm} berwarna ${latestC.warna.toUpperCase()}. RODIS otomatis mengeksekusi order: ${dirStr}! Menunggu hasil...`,
-                                    "#c084fc");
-                                let msg =
-                                    `🚀 *RODIS AUTO-TRADE: EKSEKUSI* 🚀\n\n📈 *Market:* ${rodisState.market}\n🗓 *Waktu:* ${latestC.tanggal} | ${latestC.waktu} WIB\n\nCandle penentu telah selesai dengan warna *${latestC.warna.toUpperCase()}*.\nRODIS secara otomatis mengeksekusi order:\n👉 *${dirStr}* senilai $${rodisState.amount}\n\nSistem sedang memproses (loading) hasil trading. Hasil akan diumumkan setelah penutupan candle menit ke-${nextMin}.`;
-                                fetch(`${API_BASE}/send_wa`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({
-                                        message: msg
-                                    })
-                                });
-
-                                fetch(`${API_BASE}/manual_trade`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({
-                                        market: rodisState.market,
-                                        direction: rodisState.direction,
-                                        amount: rodisState.amount,
-                                        duration: rodisState.duration
-                                    })
-                                });
+                                logRodis(`🔥 [EKSEKUSI] Candle penentu menit ${mm} berwarna ${latestC.warna.toUpperCase()}. RODIS otomatis mengeksekusi order: ${dirStr}! Menunggu hasil...`, "#c084fc");
+                                let msg = `🚀 *RODIS AUTO-TRADE: EKSEKUSI* 🚀\n\n📈 *Market:* ${rodisState.market}\n🗓 *Waktu:* ${latestC.tanggal} | ${latestC.waktu} WIB\n\nCandle penentu telah selesai dengan warna *${latestC.warna.toUpperCase()}*.\nRODIS secara otomatis mengeksekusi order:\n👉 *${dirStr}* senilai $${rodisState.amount}\n\nSistem sedang memproses (loading) hasil trading. Hasil akan diumumkan setelah penutupan candle menit ke-${nextMin}.`;
+                                fetch(`${API_BASE}/send_wa`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg }) });
+                                fetch(`${API_BASE}/manual_trade`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ market: rodisState.market, direction: rodisState.direction, amount: rodisState.amount, duration: rodisState.duration }) });
                             } else if (rodisState.phase === 'WAIT_RES' && (mm % 5 === 2)) {
                                 rodisState.phase = 'IDLE';
                                 rodisState.lastProcessedCandle = candleId;
                                 let requiredColor = rodisState.direction === 'up' ? 'Hijau' : 'Merah';
-                                let isWin = (latestC.warna === requiredColor);
+                                let isWin  = (latestC.warna === requiredColor);
                                 let resMsg = isWin ? 'TRUE ✅' : 'FALSE ❌';
                                 let resColor = isWin ? '#22c55e' : '#f87171';
-                                let nextTargetLoss = (rodisState.tradeCounter * rodisState.targetLoss) + rodisState
-                                    .targetLoss;
-
-                                logRodis(
-                                    `🎯 [HASIL] Auto-Trade ke-${rodisState.tradeCounter} selesai. Hasil Akhir: ${resMsg}. Kembali bersiaga menunggu False ke-${nextTargetLoss}.`,
-                                    resColor);
+                                let nextTargetLoss = (rodisState.tradeCounter * rodisState.targetLoss) + rodisState.targetLoss;
+                                logRodis(`🎯 [HASIL] Auto-Trade ke-${rodisState.tradeCounter} selesai. Hasil Akhir: ${resMsg}. Kembali bersiaga menunggu False ke-${nextTargetLoss}.`, resColor);
                                 document.getElementById('rodis-target-op').innerText = rodisState.tradeCounter + 1;
-
-                                let msg =
-                                    `🎯 *RODIS AUTO-TRADE: HASIL* 🎯\n\nTarget Open Posisi Ke: ${rodisState.tradeCounter}\n📈 *Market:* ${rodisState.market}\n🗓 *Waktu:* ${latestC.tanggal} | ${latestC.waktu} WIB\n\nArah Eksekusi Tadi: *${rodisState.direction === 'up' ? 'BUY 🟢' : 'SELL 🔴'}*\nWarna Candle Hasil: *${latestC.warna.toUpperCase()}*\n\nStatus Hasil Akhir: *${resMsg}*\n\nRODIS kembali bersiaga memantau market untuk Target Open Posisi ke-${rodisState.tradeCounter + 1} (Menunggu False ke-${nextTargetLoss}).`;
-                                fetch(`${API_BASE}/send_wa`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({
-                                        message: msg
-                                    })
-                                });
+                                let msg = `🎯 *RODIS AUTO-TRADE: HASIL* 🎯\n\nTarget Open Posisi Ke: ${rodisState.tradeCounter}\n📈 *Market:* ${rodisState.market}\n🗓 *Waktu:* ${latestC.tanggal} | ${latestC.waktu} WIB\n\nArah Eksekusi Tadi: *${rodisState.direction === 'up' ? 'BUY 🟢' : 'SELL 🔴'}*\nWarna Candle Hasil: *${latestC.warna.toUpperCase()}*\n\nStatus Hasil Akhir: *${resMsg}*\n\nRODIS kembali bersiaga memantau market untuk Target Open Posisi ke-${rodisState.tradeCounter + 1} (Menunggu False ke-${nextTargetLoss}).`;
+                                fetch(`${API_BASE}/send_wa`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg }) });
                             }
                         }
                     }
                 }
-            }).catch(err => {});
+            }).catch(() => {});
     }
 
+    // ================================================================
+    // CALCULATE SIG LOSS
+    // ================================================================
     function calculateSigLoss(historyArr) {
         let sigLoss = 0;
         if (historyArr && historyArr.length > 0) {
@@ -1079,50 +690,32 @@
             let blocks = {};
             candles.forEach(c => {
                 if (c.waktu && c.waktu.includes(':')) {
-                    let parts = c.waktu.split(':');
-                    let hh = parts[0];
-                    let mm = parseInt(parts[1]);
+                    let parts  = c.waktu.split(':');
+                    let hh     = parts[0];
+                    let mm     = parseInt(parts[1]);
                     let baseMm = Math.floor(mm / 5) * 5;
-                    let key = c.tanggal + '_' + hh + ':' + baseMm.toString().padStart(2, '0');
+                    let key    = c.tanggal + '_' + hh + ':' + baseMm.toString().padStart(2, '0');
                     if (!blocks[key]) blocks[key] = {};
                     if (mm % 5 === 0) blocks[key].c1 = c.warna;
                     if (mm % 5 === 2) blocks[key].c2 = c.warna;
                 }
             });
-
             let sortedKeys = Object.keys(blocks).sort((a, b) => b.localeCompare(a));
-
             for (let k of sortedKeys) {
                 let b = blocks[k];
                 if (b.c1 && b.c2) {
-                    if (b.c1 !== b.c2) {
-                        sigLoss++;
-                    } else {
-                        break;
-                    }
+                    if (b.c1 !== b.c2) sigLoss++;
+                    else break;
                 }
             }
         }
         return sigLoss;
     }
 
-    // function renderMarketCards() {
-    //     const start = (currentPage - 1) * itemsPerPage;
-    //     const container = document.getElementById('market-grid-container');
-    //     container.innerHTML = '';
-    //     allMarkets.slice(start, start + itemsPerPage).forEach(market => {
-    //         const isActive = activeMarketsList.includes(market.id) ? 'is-active' : '';
-    //         const catBadge = market.cat === "24 Jam FTT" ?
-    //             `<span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md shadow-sm">${market.cat}</span>` :
-    //             market.cat;
-    //         container.innerHTML +=
-    //             `<div onclick="openMarketDetail('${market.id}')" data-market="${market.id}" class="market-card ${isActive} bg-white rounded-2xl p-6 shadow-sm flex flex-col items-center"><div class="active-badge w-3 h-3 bg-gojek rounded-full animate-pulse shadow-[0_0_8px_#00aa13]"></div><div class="text-4xl mb-3">${market.icon}</div><h4 class="font-bold text-dark text-center text-sm">${market.name}</h4><p class="text-[10px] text-gray-400 font-bold uppercase mt-1">${catBadge}</p></div>`;
-    //     });
-    //     renderPagination();
-    // }
-
+    // ================================================================
+    // MARKET CARDS & TRADE
+    // ================================================================
     function renderMarketCards() {
-        // MARKET GRID DISABLED
         const container = document.getElementById('market-grid-container');
         if (container) container.innerHTML = '';
     }
@@ -1131,22 +724,14 @@
         const container = document.getElementById('trade-market-container');
         container.innerHTML = '';
         if (activeMarketsList.length === 0) {
-            container.innerHTML =
-                `<div class="col-span-full text-center text-gray-400 py-10 font-bold">⚠️ Belum ada market aktif.</div>`;
+            container.innerHTML = `<div class="col-span-full text-center text-gray-400 py-10 font-bold">⚠️ Belum ada market aktif.</div>`;
             document.getElementById('trade-panel').classList.add('hidden');
             return;
         }
         activeMarketsList.forEach(m => {
-            const marketObj = allMarkets.find(x => x.id === m) || {
-                id: m,
-                name: m,
-                icon: '📈',
-                cat: 'Aktif'
-            };
-            const isSelected = (selectedTradeMarket === m) ? 'border-gojek bg-green-50 shadow-md' :
-                'border-gray-100 bg-white hover:border-gray-300';
-            container.innerHTML +=
-                `<div onclick="selectTradeMarket('${m}')" class="cursor-pointer border-2 rounded-2xl p-4 flex flex-col items-center transition-all ${isSelected}"><div class="text-3xl mb-2">${marketObj.icon}</div><h4 class="font-bold text-dark text-sm">${marketObj.name}</h4><div class="w-2 h-2 bg-gojek rounded-full mt-2 shadow-[0_0_8px_#00aa13] animate-pulse"></div></div>`;
+            const marketObj   = allMarkets.find(x => x.id === m) || { id: m, name: m, icon: '📈', cat: 'Aktif' };
+            const isSelected  = (selectedTradeMarket === m) ? 'border-gojek bg-green-50 shadow-md' : 'border-gray-100 bg-white hover:border-gray-300';
+            container.innerHTML += `<div onclick="selectTradeMarket('${m}')" class="cursor-pointer border-2 rounded-2xl p-4 flex flex-col items-center transition-all ${isSelected}"><div class="text-3xl mb-2">${marketObj.icon}</div><h4 class="font-bold text-dark text-sm">${marketObj.name}</h4><div class="w-2 h-2 bg-gojek rounded-full mt-2 shadow-[0_0_8px_#00aa13] animate-pulse"></div></div>`;
         });
     }
 
@@ -1159,19 +744,16 @@
 
     function renderPagination() {
         const totalPages = Math.ceil(allMarkets.length / itemsPerPage);
-        const container = document.getElementById('pagination-controls');
+        const container  = document.getElementById('pagination-controls');
         container.innerHTML = '';
         const prevDisabled = currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100';
-        container.innerHTML +=
-            `<button onclick="changePage(${currentPage - 1})" class="px-4 py-2 bg-white border rounded-xl text-sm font-bold ${prevDisabled}">Prev</button>`;
+        container.innerHTML += `<button onclick="changePage(${currentPage - 1})" class="px-4 py-2 bg-white border rounded-xl text-sm font-bold ${prevDisabled}">Prev</button>`;
         for (let i = 1; i <= totalPages; i++) {
             const activeClass = i === currentPage ? 'bg-gojek text-white' : 'bg-white text-dark hover:bg-gray-100';
-            container.innerHTML +=
-                `<button onclick="changePage(${i})" class="w-10 h-10 border rounded-xl text-sm font-bold ${activeClass}">${i}</button>`;
+            container.innerHTML += `<button onclick="changePage(${i})" class="w-10 h-10 border rounded-xl text-sm font-bold ${activeClass}">${i}</button>`;
         }
         const nextDisabled = currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100';
-        container.innerHTML +=
-            `<button onclick="changePage(${currentPage + 1})" class="px-4 py-2 bg-white border rounded-xl text-sm font-bold ${nextDisabled}">Next</button>`;
+        container.innerHTML += `<button onclick="changePage(${currentPage + 1})" class="px-4 py-2 bg-white border rounded-xl text-sm font-bold ${nextDisabled}">Next</button>`;
     }
 
     function changePage(page) {
@@ -1180,6 +762,9 @@
         renderMarketCards();
     }
 
+    // ================================================================
+    // DASHBOARD POLLING
+    // ================================================================
     function startDashboardPolling() {
         refreshDashboardStatus();
         dashboardInterval = setInterval(refreshDashboardStatus, 3000);
@@ -1187,248 +772,122 @@
 
     function refreshDashboardStatus() {
         fetch(`${API_BASE}/status_all`).then(res => res.json()).then(data => {
-            if (data.balance !== undefined && data.balance !== null) document.getElementById('nav-balance')
-                .innerText = formatCurrency(data.balance);
+            if (data.balance !== undefined && data.balance !== null)
+                document.getElementById('nav-balance').innerText = formatCurrency(data.balance);
 
             activeMarketsList = data.active_markets || [];
             syncPlayStopButton();
+
             document.querySelectorAll('.market-card').forEach(card => {
-                if (activeMarketsList.includes(card.getAttribute('data-market'))) card.classList.add(
-                    'is-active');
+                if (activeMarketsList.includes(card.getAttribute('data-market'))) card.classList.add('is-active');
                 else card.classList.remove('is-active');
             });
 
             let botCountEl = document.getElementById('lbl-bot-count');
-            let tgCountEl = document.getElementById('lbl-tg-count');
+            let tgCountEl  = document.getElementById('lbl-tg-count');
             if (botCountEl) botCountEl.innerText = `${activeMarketsList.length}/27`;
-
             if (tgCountEl) {
                 let tgCount = data.tg_active_count || 0;
-                if (tgCount > 0) {
-                    tgCountEl.innerText = `ON (${tgCount} Market)`;
-                    tgCountEl.className = 'text-blue-600 font-extrabold';
-                } else {
-                    tgCountEl.innerText = 'OFF';
-                    tgCountEl.className = 'text-gray-400 font-bold';
-                }
+                if (tgCount > 0) { tgCountEl.innerText = `ON (${tgCount} Market)`; tgCountEl.className = 'text-blue-600 font-extrabold'; }
+                else             { tgCountEl.innerText = 'OFF'; tgCountEl.className = 'text-gray-400 font-bold'; }
             }
 
-            // =====================================================
-            // LIVE FALSE STREAK - PREMIUM FINAL VERSION
-            // =====================================================
-
+            // LIVE STREAK
             const streakContainer = document.getElementById('live-streak-container');
-            const streakList = document.getElementById('streak-list');
-
+            const streakList      = document.getElementById('streak-list');
             if (streakContainer && streakList) {
-
-                // container selalu clean putih
                 streakContainer.classList.remove('hidden');
                 streakContainer.classList.add('bg-white');
-
-                // jika tidak ada market aktif
-                if (
-                    !data.market_streaks ||
-                    Object.keys(data.market_streaks).length === 0
-                ) {
-
-                    streakList.innerHTML = `
-                <span class="text-xs text-gray-400 italic">
-                    Semua market berhenti
-                </span>
-                `;
-
+                if (!data.market_streaks || Object.keys(data.market_streaks).length === 0) {
+                    streakList.innerHTML = `<span class="text-xs text-gray-400 italic">Semua market berhenti</span>`;
                     return;
                 }
-
                 streakList.innerHTML = '';
+                const totalMarket  = allMarkets.length;
+                const activeCount  = activeMarketsList.length;
+                const allConnected = (activeCount === totalMarket && totalMarket > 0);
+                let sortedMarkets  = Object.keys(data.market_streaks).sort((a, b) => data.market_streaks[b] - data.market_streaks[a]);
+                const highestStreak = sortedMarkets.length > 0 ? data.market_streaks[sortedMarkets[0]] : 0;
 
-                // ==============================
-                // SYSTEM STATE
-                // ==============================
-                const totalMarket = allMarkets.length;
-                const activeCount = activeMarketsList.length;
-
-                const allConnected =
-                    (activeCount === totalMarket && totalMarket > 0);
-
-                // ==============================
-                // SORT MARKET (TERTINGGI DI ATAS)
-                // ==============================
-                let sortedMarkets = Object.keys(data.market_streaks)
-                    .sort((a, b) => data.market_streaks[b] - data.market_streaks[a]);
-
-                const highestStreak =
-                    sortedMarkets.length > 0 ?
-                    data.market_streaks[sortedMarkets[0]] :
-                    0;
-
-                // ==============================
-                // RENDER LIST
-                // ==============================
                 sortedMarkets.forEach(mkt => {
-
-                    let streak = data.market_streaks[mkt];
-
-                    // cari nama market
-                    let mktObj = allMarkets.find(x => x.id === mkt);
+                    let streak  = data.market_streaks[mkt];
+                    let mktObj  = allMarkets.find(x => x.id === mkt);
                     let mktName = mktObj ? mktObj.name : mkt;
-
-                    // ==========================
-                    // COLOR ENGINE
-                    // ==========================
-                    let colorClass =
-                        'bg-gray-50 text-gray-500 border-gray-200';
-
-                    if (streak >= 7)
-                        colorClass =
-                        'bg-red-100 text-red-700 border-red-300 font-extrabold';
-
-                    else if (streak >= 5)
-                        colorClass =
-                        'bg-orange-100 text-orange-700 border-orange-300 font-bold';
-
-                    else if (streak >= 3)
-                        colorClass =
-                        'bg-yellow-100 text-yellow-700 border-yellow-300 font-bold';
-
-                    else if (streak >= 1)
-                        colorClass =
-                        'bg-blue-50 text-blue-600 border-blue-200';
-
-                    // ==========================
-                    // ALL CONNECTED MODE (HIJAU)
-                    // ==========================
-                    let connectedClass = '';
-
-                    if (allConnected) {
-                        connectedClass =
-                            'bg-green-100 text-green-800 border-green-300 font-bold';
-                    }
-
-                    // ==========================
-                    // DANGER MARKET HIGHLIGHT
-                    // ==========================
-                    let dangerGlow =
-                        (streak === highestStreak && streak >= 7) ?
-                        'danger-glow' :
-                        '';
-
-                    // ==========================
-                    // RENDER ITEM (ICON DIHAPUS)
-                    // ==========================
+                    let colorClass = 'bg-gray-50 text-gray-500 border-gray-200';
+                    if (streak >= 7) colorClass = 'bg-red-100 text-red-700 border-red-300 font-extrabold';
+                    else if (streak >= 5) colorClass = 'bg-orange-100 text-orange-700 border-orange-300 font-bold';
+                    else if (streak >= 3) colorClass = 'bg-yellow-100 text-yellow-700 border-yellow-300 font-bold';
+                    else if (streak >= 1) colorClass = 'bg-blue-50 text-blue-600 border-blue-200';
+                    let connectedClass = allConnected ? 'bg-green-100 text-green-800 border-green-300 font-bold' : '';
+                    let dangerGlow     = (streak === highestStreak && streak >= 7) ? 'danger-glow' : '';
                     streakList.innerHTML += `
-            <div onclick="openMarketDetail('${mkt}')"
-                class="
-                    w-full
-                    px-3 py-1.5
-                    rounded-lg
-                    border
-                    text-[11px]
-                    flex items-center justify-between
-                    ${colorClass}
-                    ${connectedClass}
-                    ${dangerGlow}
-                    transition-all duration-300
-                    cursor-pointer
-                    hover:scale-[1.04]
-                    hover:shadow-md
-                    active:scale-95
-                ">
-
-                <span class="truncate font-semibold">
-                    ${mktName}
-                </span>
-
-                <span class="
-                    bg-white/90
-                    px-2 py-0.5
-                    rounded
-                    text-[10px]
-                    uppercase
-                    tracking-wider
-                    border border-white/50">
-                    False: ${streak}
-                </span>
-
-            </div>
-        `;
+                        <div onclick="openMarketDetail('${mkt}')"
+                            class="w-full px-3 py-1.5 rounded-lg border text-[11px] flex items-center justify-between
+                                   ${colorClass} ${connectedClass} ${dangerGlow}
+                                   transition-all duration-300 cursor-pointer hover:scale-[1.04] hover:shadow-md active:scale-95">
+                            <span class="truncate font-semibold">${mktName}</span>
+                            <span class="bg-white/90 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider border border-white/50">False: ${streak}</span>
+                        </div>`;
                 });
             }
         });
     }
 
+    // ================================================================
+    // DETAIL VIEW
+    // ================================================================
     function openMarketDetail(marketName) {
         currentMarket = marketName;
         document.getElementById('detail-market-name').innerText = marketName;
-
         if (localChartInstance) {
             localChartInstance.destroy();
             localChartInstance = null;
             document.getElementById('local-chart-container').innerHTML =
                 '<div class="flex h-full items-center justify-center text-gray-400 font-bold text-xs sm:text-base py-20">Memproses Data Histori...</div>';
         }
-
         showView('detail');
     }
 
     function startCurrentMarketBot() {
-        const token = document.getElementById('token').value;
+        const token     = document.getElementById('token').value;
         const accountId = document.getElementById('account-id').value;
         if (!token || !accountId) return alert("Harap isi Access Token & Target Account ID di Pusat Kendali!");
-        document.getElementById('table-body').innerHTML =
-            `<tr><td colspan="3" class="py-20 text-center">⏳ Membangun koneksi ke broker...</td></tr>`;
+        document.getElementById('table-body').innerHTML = `<tr><td colspan="3" class="py-20 text-center">⏳ Membangun koneksi ke broker...</td></tr>`;
         fetch(`${API_BASE}/start`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                token: token,
-                market: currentMarket,
-                account_id: accountId
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token, market: currentMarket, account_id: accountId })
         }).then(res => res.json()).then(data => {
-            if (data.status === 'error') {
-                alert(data.message);
-                showView('dashboard');
-            } else refreshDetailData();
+            if (data.status === 'error') { alert(data.message); showView('dashboard'); }
+            else refreshDetailData();
         });
     }
 
     function stopCurrentMarketBot() {
         fetch(`${API_BASE}/stop`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                market: currentMarket
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ market: currentMarket })
         }).then(() => refreshDetailData());
     }
 
     function executeTradeFromPanel(direction) {
         if (!selectedTradeMarket) return alert('Pilih market yang aktif terlebih dahulu!');
-        const amount = document.getElementById('trade-amount').value;
+        const amount   = document.getElementById('trade-amount').value;
         const duration = document.getElementById('trade-duration').value;
         fetch(`${API_BASE}/manual_trade`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                market: selectedTradeMarket,
-                direction: direction,
-                amount: amount,
-                duration: duration
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ market: selectedTradeMarket, direction: direction, amount: amount, duration: duration })
         }).then(res => res.json()).then(data => {
             if (data.status === 'error') alert(`❌ ${data.message}`);
             else alert(`✅ Perintah dikirim! Cek Riwayat.`);
         });
     }
 
+    // ================================================================
+    // HISTORY
+    // ================================================================
     function refreshHistoryData() {
         fetch(`${API_BASE}/trade_history`).then(res => res.json()).then(data => {
             currentTradeHistory = data.trade_history || [];
@@ -1437,58 +896,41 @@
     }
 
     function renderHistoryTable() {
-        const tbody = document.getElementById('history-table-body');
-        const start = (historyCurrentPage - 1) * historyItemsPerPage;
+        const tbody    = document.getElementById('history-table-body');
+        const start    = (historyCurrentPage - 1) * historyItemsPerPage;
         const paginated = currentTradeHistory.slice(start, start + historyItemsPerPage);
-
         tbody.innerHTML = '';
         if (paginated.length > 0) {
             paginated.forEach(item => {
                 let pillClass = "pill-abu";
-                let label = item.warna;
-                if (item.warna.includes("GAGAL")) pillClass = "pill-error";
-                else if (item.warna.includes("UP")) {
-                    pillClass = "pill-manual-up";
-                    label = "BUY NAIK";
-                } else if (item.warna.includes("DOWN")) {
-                    pillClass = "pill-manual-down";
-                    label = "SELL TURUN";
-                }
+                let label     = item.warna;
+                if (item.warna.includes("GAGAL"))       { pillClass = "pill-error"; }
+                else if (item.warna.includes("UP"))     { pillClass = "pill-manual-up";   label = "BUY NAIK"; }
+                else if (item.warna.includes("DOWN"))   { pillClass = "pill-manual-down"; label = "SELL TURUN"; }
                 let amountStr = item.amount ? `$${item.amount}` : '-';
-                tbody.innerHTML +=
-                    `<tr class="hover:bg-gray-50/50"><td class="py-4 px-8"><span class="text-base font-bold text-dark">${item.waktu}</span><span class="block text-xs text-gray-400">${item.tanggal}</span></td><td class="py-4 px-8 font-bold text-dark">${item.market}</td><td class="py-4 px-8 font-bold text-indigo-600">${amountStr}</td><td class="py-4 px-8"><span class="pill ${pillClass}">${label}</span></td></tr>`;
+                tbody.innerHTML += `<tr class="hover:bg-gray-50/50"><td class="py-4 px-8"><span class="text-base font-bold text-dark">${item.waktu}</span><span class="block text-xs text-gray-400">${item.tanggal}</span></td><td class="py-4 px-8 font-bold text-dark">${item.market}</td><td class="py-4 px-8 font-bold text-indigo-600">${amountStr}</td><td class="py-4 px-8"><span class="pill ${pillClass}">${label}</span></td></tr>`;
             });
         } else {
-            tbody.innerHTML =
-                `<tr><td colspan="4" class="py-20 text-center text-gray-500">Belum ada riwayat trade.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" class="py-20 text-center text-gray-500">Belum ada riwayat trade.</td></tr>`;
         }
         renderHistoryPagination();
     }
 
     function renderHistoryPagination() {
-        const container = document.getElementById('history-pagination-controls');
+        const container  = document.getElementById('history-pagination-controls');
         container.innerHTML = '';
         if (currentTradeHistory.length === 0) return;
         const totalPages = Math.ceil(currentTradeHistory.length / historyItemsPerPage) || 1;
-
-        const prevDisabled = historyCurrentPage === 1 ? 'opacity-50 cursor-not-allowed' :
-            'hover:bg-gray-100 cursor-pointer';
-        container.innerHTML +=
-            `<button onclick="changeHistoryPage(${historyCurrentPage - 1})" class="px-3 py-1 bg-white border rounded-lg text-xs font-bold ${prevDisabled}">Prev</button>`;
-
+        const prevDisabled = historyCurrentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100 cursor-pointer';
+        container.innerHTML += `<button onclick="changeHistoryPage(${historyCurrentPage - 1})" class="px-3 py-1 bg-white border rounded-lg text-xs font-bold ${prevDisabled}">Prev</button>`;
         let startPage = Math.max(1, historyCurrentPage - 2);
-        let endPage = Math.min(totalPages, historyCurrentPage + 2);
+        let endPage   = Math.min(totalPages, historyCurrentPage + 2);
         for (let i = startPage; i <= endPage; i++) {
-            const activeClass = i === historyCurrentPage ? 'bg-indigo-600 text-white' :
-                'bg-white text-gray-600 hover:bg-gray-100 cursor-pointer';
-            container.innerHTML +=
-                `<button onclick="changeHistoryPage(${i})" class="w-8 h-8 border rounded-lg text-xs font-bold ${activeClass}">${i}</button>`;
+            const activeClass = i === historyCurrentPage ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100 cursor-pointer';
+            container.innerHTML += `<button onclick="changeHistoryPage(${i})" class="w-8 h-8 border rounded-lg text-xs font-bold ${activeClass}">${i}</button>`;
         }
-
-        const nextDisabled = historyCurrentPage === totalPages ? 'opacity-50 cursor-not-allowed' :
-            'hover:bg-gray-100 cursor-pointer';
-        container.innerHTML +=
-            `<button onclick="changeHistoryPage(${historyCurrentPage + 1})" class="px-3 py-1 bg-white border rounded-lg text-xs font-bold ${nextDisabled}">Next</button>`;
+        const nextDisabled = historyCurrentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100 cursor-pointer';
+        container.innerHTML += `<button onclick="changeHistoryPage(${historyCurrentPage + 1})" class="px-3 py-1 bg-white border rounded-lg text-xs font-bold ${nextDisabled}">Next</button>`;
     }
 
     function changeHistoryPage(page) {
@@ -1498,24 +940,26 @@
         renderHistoryTable();
     }
 
+    // ================================================================
+    // DETAIL DATA & TABLE
+    // ================================================================
     function refreshDetailData() {
         if (!currentMarket) return;
         fetch(`${API_BASE}/data?market=${encodeURIComponent(currentMarket)}`).then(res => res.json()).then(data => {
-            if (data.balance !== undefined && data.balance !== null) document.getElementById('nav-balance')
-                .innerText = formatCurrency(data.balance);
+            if (data.balance !== undefined && data.balance !== null)
+                document.getElementById('nav-balance').innerText = formatCurrency(data.balance);
+
             if (data.is_running) {
                 document.getElementById('btn-start-bot').classList.add('hidden');
                 document.getElementById('btn-stop-bot').classList.remove('hidden');
-                document.getElementById('detail-status').innerHTML =
-                    `<span class="text-gojek font-bold">🟢 Bot Aktif.</span> Memonitor pergerakan harga.`;
+                document.getElementById('detail-status').innerHTML = `<span class="text-gojek font-bold">🟢 Bot Aktif.</span> Memonitor pergerakan harga.`;
             } else {
                 document.getElementById('btn-start-bot').classList.remove('hidden');
                 document.getElementById('btn-stop-bot').classList.add('hidden');
-                document.getElementById('detail-status').innerHTML =
-                    `<span class="text-red font-bold">🔴 Offline.</span> Bot terhenti.`;
+                document.getElementById('detail-status').innerHTML = `<span class="text-red font-bold">🔴 Offline.</span> Bot terhenti.`;
             }
-            document.getElementById('val-total').innerText = data.stats.total_trade;
 
+            document.getElementById('val-total').innerText = data.stats.total_trade;
             let sigLoss = calculateSigLoss(data.history);
             document.getElementById('val-sig-loss').innerText = sigLoss;
 
@@ -1525,11 +969,11 @@
                 let blocks = {};
                 candles.forEach(c => {
                     if (c.waktu && c.waktu.includes(':')) {
-                        let parts = c.waktu.split(':');
-                        let hh = parts[0];
-                        let mm = parseInt(parts[1]);
+                        let parts  = c.waktu.split(':');
+                        let hh     = parts[0];
+                        let mm     = parseInt(parts[1]);
                         let baseMm = Math.floor(mm / 5) * 5;
-                        let key = c.tanggal + '_' + hh + ':' + baseMm.toString().padStart(2, '0');
+                        let key    = c.tanggal + '_' + hh + ':' + baseMm.toString().padStart(2, '0');
                         if (!blocks[key]) blocks[key] = {};
                         if (mm % 5 === 0) blocks[key].c1 = c.warna;
                         if (mm % 5 === 2) blocks[key].c2 = c.warna;
@@ -1540,12 +984,12 @@
                     if (b.c1 && b.c2 && b.c1 === b.c2) sigWin++;
                 }
             }
-            document.getElementById('val-sig-win').innerText = sigWin;
-            document.getElementById('val-hijau').innerText = data.stats.total_hijau;
-            document.getElementById('val-merah').innerText = data.stats.total_merah;
+            document.getElementById('val-sig-win').innerText  = sigWin;
+            document.getElementById('val-hijau').innerText    = data.stats.total_hijau;
+            document.getElementById('val-merah').innerText    = data.stats.total_merah;
 
             if (data.telegram) {
-                const btn = document.getElementById('btn-tg-toggle');
+                const btn    = document.getElementById('btn-tg-toggle');
                 const stText = document.getElementById('tg-status-text');
                 const inLoss = document.getElementById('tg-target-loss');
                 if (data.telegram.active) {
@@ -1555,8 +999,7 @@
                     stText.classList.replace('text-gray-500', 'text-gojek');
                     if (document.activeElement !== inLoss) inLoss.value = data.telegram.target_loss;
                     inLoss.disabled = true;
-                    if (sigLoss > 0) document.getElementById('val-target-op').innerText = data.telegram
-                        .trade_counter + 1;
+                    if (sigLoss > 0) document.getElementById('val-target-op').innerText = data.telegram.trade_counter + 1;
                 } else {
                     btn.classList.replace('bg-red-600', 'bg-blue-600');
                     btn.innerText = 'Aktifkan Telegram';
@@ -1568,12 +1011,10 @@
             }
 
             currentDetailHistory = data.history || [];
-
             renderLocalChart(currentDetailHistory, currentMarket);
 
             if (!data.is_running && currentDetailHistory.length === 0) {
-                document.getElementById('table-body').innerHTML =
-                    `<tr><td colspan="3" class="py-20 text-center text-gray-500 text-xs sm:text-sm">Silakan klik "Hubungkan Bot" terlebih dahulu.</td></tr>`;
+                document.getElementById('table-body').innerHTML = `<tr><td colspan="3" class="py-20 text-center text-gray-500 text-xs sm:text-sm">Silakan klik "Hubungkan Bot" terlebih dahulu.</td></tr>`;
                 document.getElementById('detail-pagination-controls').innerHTML = '';
             } else {
                 renderDetailTable();
@@ -1582,58 +1023,46 @@
     }
 
     function renderDetailTable() {
-        const tbody = document.getElementById('table-body');
-        const start = (detailCurrentPage - 1) * detailItemsPerPage;
+        const tbody     = document.getElementById('table-body');
+        const start     = (detailCurrentPage - 1) * detailItemsPerPage;
         const paginated = currentDetailHistory.slice(start, start + detailItemsPerPage);
-
         tbody.innerHTML = '';
         if (paginated.length > 0) {
             paginated.forEach(item => {
-                let pillClass = "pill-abu";
-                let label = item.warna;
+                let pillClass  = "pill-abu";
+                let label      = item.warna;
                 if (item.warna.includes("Hijau")) pillClass = "pill-hijau";
                 else if (item.warna.includes("Merah")) pillClass = "pill-merah";
-
                 let marketName = item.market ? item.market : currentMarket;
-
                 tbody.innerHTML += `
-            <tr class="hover:bg-gray-50/50">
-                <td class="py-4 px-4 sm:px-8">
-                    <div class="text-xs sm:text-base font-bold text-dark">${item.waktu}</div>
-                    <div class="text-[10px] sm:text-xs text-gray-400 mt-0.5">${item.tanggal}</div>
-                </td>
-                <td class="py-4 px-4 sm:px-8 font-bold text-dark text-xs sm:text-base">${marketName}</td>
-                <td class="py-4 px-4 sm:px-8"><span class="pill ${pillClass} text-[10px] sm:text-xs">${label}</span></td>
-            </tr>`;
+                    <tr class="hover:bg-gray-50/50">
+                        <td class="py-4 px-4 sm:px-8">
+                            <div class="text-xs sm:text-base font-bold text-dark">${item.waktu}</div>
+                            <div class="text-[10px] sm:text-xs text-gray-400 mt-0.5">${item.tanggal}</div>
+                        </td>
+                        <td class="py-4 px-4 sm:px-8 font-bold text-dark text-xs sm:text-base">${marketName}</td>
+                        <td class="py-4 px-4 sm:px-8"><span class="pill ${pillClass} text-[10px] sm:text-xs">${label}</span></td>
+                    </tr>`;
             });
         }
         renderDetailPagination();
     }
 
     function renderDetailPagination() {
-        const container = document.getElementById('detail-pagination-controls');
+        const container  = document.getElementById('detail-pagination-controls');
         container.innerHTML = '';
         if (currentDetailHistory.length === 0) return;
         const totalPages = Math.ceil(currentDetailHistory.length / detailItemsPerPage) || 1;
-
-        const prevDisabled = detailCurrentPage === 1 ? 'opacity-50 cursor-not-allowed' :
-            'hover:bg-gray-100 cursor-pointer';
-        container.innerHTML +=
-            `<button onclick="changeDetailPage(${detailCurrentPage - 1})" class="px-2 sm:px-3 py-1 bg-white border rounded-lg text-[10px] sm:text-xs font-bold ${prevDisabled}">Prev</button>`;
-
+        const prevDisabled = detailCurrentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100 cursor-pointer';
+        container.innerHTML += `<button onclick="changeDetailPage(${detailCurrentPage - 1})" class="px-2 sm:px-3 py-1 bg-white border rounded-lg text-[10px] sm:text-xs font-bold ${prevDisabled}">Prev</button>`;
         let startPage = Math.max(1, detailCurrentPage - 2);
-        let endPage = Math.min(totalPages, detailCurrentPage + 2);
+        let endPage   = Math.min(totalPages, detailCurrentPage + 2);
         for (let i = startPage; i <= endPage; i++) {
-            const activeClass = i === detailCurrentPage ? 'bg-gojek text-white' :
-                'bg-white text-gray-600 hover:bg-gray-100 cursor-pointer';
-            container.innerHTML +=
-                `<button onclick="changeDetailPage(${i})" class="w-6 h-6 sm:w-8 sm:h-8 border rounded-lg text-[10px] sm:text-xs font-bold ${activeClass}">${i}</button>`;
+            const activeClass = i === detailCurrentPage ? 'bg-gojek text-white' : 'bg-white text-gray-600 hover:bg-gray-100 cursor-pointer';
+            container.innerHTML += `<button onclick="changeDetailPage(${i})" class="w-6 h-6 sm:w-8 sm:h-8 border rounded-lg text-[10px] sm:text-xs font-bold ${activeClass}">${i}</button>`;
         }
-
-        const nextDisabled = detailCurrentPage === totalPages ? 'opacity-50 cursor-not-allowed' :
-            'hover:bg-gray-100 cursor-pointer';
-        container.innerHTML +=
-            `<button onclick="changeDetailPage(${detailCurrentPage + 1})" class="px-2 sm:px-3 py-1 bg-white border rounded-lg text-[10px] sm:text-xs font-bold ${nextDisabled}">Next</button>`;
+        const nextDisabled = detailCurrentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100 cursor-pointer';
+        container.innerHTML += `<button onclick="changeDetailPage(${detailCurrentPage + 1})" class="px-2 sm:px-3 py-1 bg-white border rounded-lg text-[10px] sm:text-xs font-bold ${nextDisabled}">Next</button>`;
     }
 
     function changeDetailPage(page) {
@@ -1643,96 +1072,59 @@
         renderDetailTable();
     }
 
+    // ================================================================
+    // STOP ALL / DEACTIVATE MASS TELEGRAM
+    // ================================================================
     function stopAllMarkets(event) {
-
         const btn = event.target;
         let originalText = btn.innerHTML;
-
         btn.innerHTML = "⏳ Stopping...";
-        btn.disabled = true;
-
-        fetch(`${API_BASE}/stop_all`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-
+        btn.disabled  = true;
+        fetch(`${API_BASE}/stop_all`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+            .then(res => res.json()).then(data => {
                 btn.innerHTML = originalText;
-                btn.disabled = false;
-
-                // ✅ POPUP SUCCESS STOP
-                showPopup(
-                    data.message || "🛑 Semua market berhasil dihentikan",
-                    "error"
-                );
-
+                btn.disabled  = false;
+                showPopup(data.message || "🛑 Semua market berhasil dihentikan", "error");
                 refreshDashboardStatus();
-            })
-            .catch(err => {
-
+            }).catch(() => {
                 btn.innerHTML = originalText;
-                btn.disabled = false;
-
-                // ❌ POPUP ERROR
+                btn.disabled  = false;
                 showPopup("❌ Gagal menghentikan market", "error");
-
-                console.error(err);
             });
     }
 
     function deactivateMassTelegram(event) {
-
         const btn = event.currentTarget;
         let originalText = btn.innerHTML;
-
         btn.innerHTML = '⏳ Proses...';
-        btn.disabled = true;
-
-        fetch(`${API_BASE}/stop_telegram_all`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-
+        btn.disabled  = true;
+        fetch(`${API_BASE}/stop_telegram_all`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+            .then(res => res.json()).then(data => {
                 btn.innerHTML = originalText;
-                btn.disabled = false;
-
-                // ✅ POPUP SUCCESS
-                showPopup(
-                    data.message || "🔕 Sinyal Telegram massal berhasil dimatikan",
-                    "success"
-                );
-
+                btn.disabled  = false;
+                showPopup(data.message || "🔕 Sinyal Telegram massal berhasil dimatikan", "success");
                 refreshDashboardStatus();
-            })
-            .catch(err => {
-
+            }).catch(() => {
                 btn.innerHTML = originalText;
-                btn.disabled = false;
-
-                // ❌ POPUP ERROR
+                btn.disabled  = false;
                 showPopup("❌ Gagal terhubung ke server", "error");
-
-                console.error(err);
             });
     }
 
+    // ================================================================
+    // REALTIME CLOCK
+    // ================================================================
     function startRealtimeClock() {
         setInterval(() => {
             const clockEl = document.getElementById('realtime-clock');
             if (clockEl) {
                 const now = new Date();
-                const hh = String(now.getHours()).padStart(2, '0');
-                const mm = String(now.getMinutes()).padStart(2, '0');
-                const ss = String(now.getSeconds()).padStart(2, '0');
+                const hh  = String(now.getHours()).padStart(2, '0');
+                const mm  = String(now.getMinutes()).padStart(2, '0');
+                const ss  = String(now.getSeconds()).padStart(2, '0');
                 clockEl.innerText = `${hh}:${mm}:${ss} WIB`;
             }
         }, 1000);
     }
+
 </script>
