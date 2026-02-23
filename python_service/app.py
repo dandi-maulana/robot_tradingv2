@@ -72,19 +72,53 @@ def init_market_state(market_name):
     c.close()
     conn.close()
 
-def save_analysis_db(market, tanggal, waktu, warna):
+# --- FUNGSI BARU LOGIKA WARNA & DOJI ---
+def get_candle_color(o, h, l, c):
+    """Logika sesuai dokumen: Menentukan warna berdasarkan OHLC dan deteksi Doji"""
+    body = abs(c - o)
+    total_range = h - l
+    
+    # 1. Deteksi Doji (Badan < 10% dari total range)
+    is_doji = False
+    if total_range > 0:
+        is_doji = (body / total_range) < 0.10
+    elif body == 0:
+        is_doji = True
+
+    # 2. Tentukan Warna Dasar
+    if c > o:
+        base_color = "Hijau"
+    elif c < o:
+        base_color = "Merah"
+    else:
+        # Open == Close (Doji murni) -> Lihat dominasi ekor
+        upper_wick = h - max(o, c)
+        lower_wick = min(o, c) - l
+        base_color = "Hijau" if upper_wick >= lower_wick else "Merah"
+
+    return f"Doji/{base_color}" if is_doji else base_color
+
+# --- UPDATE: FUNGSI SIMPAN ANALISIS DENGAN OHLC ---
+def save_analysis_db(market, tanggal, waktu, warna, o=0.0, h=0.0, l=0.0, c_pr=0.0, vol=0):
     conn = get_db_connection()
     if not conn: return
-    c = conn.cursor()
-    c.execute("INSERT INTO market_histories (market, tanggal, waktu, warna, created_at, updated_at) VALUES (%s, %s, %s, %s, NOW(), NOW())",
-            (market, tanggal, waktu, warna))
+    cursor = conn.cursor()
+    
+    # Simpan ke market_histories dengan detail lengkap OHLCV
+    sql = """INSERT INTO market_histories 
+             (market, tanggal, waktu, warna, open_price, high_price, low_price, close_price, tick_volume, created_at, updated_at) 
+             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())"""
+    cursor.execute(sql, (market, tanggal, waktu, warna, o, h, l, c_pr, vol))
 
-    if warna == "Hijau":
-        c.execute("UPDATE market_states SET total_trade = total_trade + 1, total_hijau = total_hijau + 1 WHERE market = %s", (market,))
+    # Update state (tetap gunakan warna dasar untuk data statistik dashboard)
+    base_color = "Hijau" if "Hijau" in warna else "Merah"
+    if base_color == "Hijau":
+        cursor.execute("UPDATE market_states SET total_trade = total_trade + 1, total_hijau = total_hijau + 1 WHERE market = %s", (market,))
     else:
-        c.execute("UPDATE market_states SET total_trade = total_trade + 1, total_merah = total_merah + 1 WHERE market = %s", (market,))
+        cursor.execute("UPDATE market_states SET total_trade = total_trade + 1, total_merah = total_merah + 1 WHERE market = %s", (market,))
+    
     conn.commit()
-    c.close()
+    cursor.close()
     conn.close()
 
 def get_history_db(market, limit=100):
@@ -120,6 +154,7 @@ ASSET_MAPPING = {
     "AUD/CHF OTC": "AUDCHF_OTC", "CAD/CHF OTC": "CADCHF_OTC",
 }
 
+# --- UPDATE: TELEGRAM DENGAN USER AGENT UNTUK VPS ---
 def send_telegram_internal(message):
     def send_task():
         bot_token = "7863925068:AAFb8sDZFpBaczKXCtyh6SHwyQ693xejNQo"
@@ -127,9 +162,12 @@ def send_telegram_internal(message):
         try:
             encoded_msg = urllib.parse.quote(message)
             url = f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={chat_id}&text={encoded_msg}&parse_mode=Markdown"
-            urllib.request.urlopen(url, timeout=5)
+            
+            # Tambahkan Header User-Agent agar tidak dianggap bot ilegal oleh Cloudflare/Telegram
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+            urllib.request.urlopen(req, timeout=10)
         except Exception as e:
-            print(f"❌ Gagal mengirim internal Telegram: {e}")
+            print(f"❌ Gagal mengirim Telegram di VPS: {e}")
 
     threading.Thread(target=send_task, daemon=True).start()
 
@@ -151,7 +189,11 @@ def calc_sig_loss(history_list):
     for k in sorted_keys:
         b = blocks[k]
         if 'c1' in b and 'c2' in b:
-            if b['c1'] != b['c2']:
+            # Karena format warna sekarang bisa berisi Doji/Hijau, kita ambil base_color nya saja
+            c1_base = "Hijau" if "Hijau" in b['c1'] else "Merah"
+            c2_base = "Hijau" if "Hijau" in b['c2'] else "Merah"
+            
+            if c1_base != c2_base:
                 sig_loss += 1
             else:
                 break # Reset ke 0 jika mendeteksi ada 1 TRUE (Win)
@@ -181,6 +223,31 @@ async def fetch_accounts(token):
         elif hasattr(client, 'disconnect'): await client.disconnect()
     except Exception: pass
     return accounts_info
+
+# --- FUNGSI BARU: UPDATE PROFITABILITAS KE DATABASE ---
+async def update_profitability_db(client, account_id):
+    """Mengambil data profit dari API dan simpan ke MySQL"""
+    try:
+        if not account_id: return
+        profits = await client.market.get_profitability(account_id)
+        if profits:
+            conn = get_db_connection()
+            if not conn: return
+            cursor = conn.cursor()
+            for item in profits:
+                pair = item.get('pair')
+                payout = item.get('payout', 0)
+                if pair and payout:
+                    cursor.execute("""
+                        INSERT INTO asset_profitabilities (market, payout, updated_at) 
+                        VALUES (%s, %s, NOW()) 
+                        ON DUPLICATE KEY UPDATE payout=%s, updated_at=NOW()
+                    """, (pair, payout, payout))
+            conn.commit()
+            cursor.close()
+            conn.close()
+    except Exception as e:
+        print(f"Error update profitability: {e}")
 
 async def async_bot_task(market_name, token, user_account_id):
     global global_demo_balance
@@ -253,6 +320,12 @@ async def async_bot_task(market_name, token, user_account_id):
                 amt = locals().get('amount_int', 0)
                 save_trade_db(now.strftime("%Y-%m-%d"), now.strftime("%H:%M:%S"), market_name, f"GAGAL: Script Error", amt)
 
+        # TRIGGER UPDATE PROFITABILITAS PER 5 MENIT
+        if now.minute % 5 == 0 and now.second < 2:
+            try:
+                await update_profitability_db(client, target_account_id)
+            except Exception: pass
+
         # PING SERVER
         if now.second % 15 == 0 and now.microsecond < 500000:
             try: await client.send_message({"e": 98, "d": []})
@@ -274,10 +347,20 @@ async def async_bot_task(market_name, token, user_account_id):
                 if len(last_raw_candles) > 0:
                     last_minute_checked = now.minute
                     target_candle = last_raw_candles[1] if len(last_raw_candles) >= 2 else last_raw_candles[0]
-                    op, cp = float(target_candle.get('open', 0)), float(target_candle.get('close', 0))
-                    warna = "Hijau" if cp > op else "Merah"
+                    
+                    # --- EKSTRAKSI DATA OHLC & VOL BARU ---
+                    o_pr = float(target_candle.get('open', 0))
+                    h_pr = float(target_candle.get('high', 0))
+                    l_pr = float(target_candle.get('low', 0))
+                    c_pr = float(target_candle.get('close', 0))
+                    vol  = int(target_candle.get('vol', 0))
+                    
+                    # --- TENTUKAN WARNA LOGIKA DOJI ---
+                    warna_label = get_candle_color(o_pr, h_pr, l_pr, c_pr)
+                    base_warna = "Hijau" if "Hijau" in warna_label else "Merah"
 
-                    save_analysis_db(market_name, now.strftime("%Y-%m-%d"), waktu_laporan, warna)
+                    # Simpan data dengan lengkap
+                    save_analysis_db(market_name, now.strftime("%Y-%m-%d"), waktu_laporan, warna_label, o_pr, h_pr, l_pr, c_pr, vol)
 
                     # LOGIKA TELEGRAM SERVER
                     if state['tg_active']:
@@ -295,7 +378,7 @@ async def async_bot_task(market_name, token, user_account_id):
                                 if state["tg_target_loss"] > 0:
                                     expected_trades = sig_loss // state["tg_target_loss"]
 
-                                    # LOGIKA PINTAR AUTO-RESET SIKLUS (Mencegah bot nyangkut/kacau)
+                                    # LOGIKA PINTAR AUTO-RESET SIKLUS
                                     if expected_trades < tg_trade_counter:
                                         tg_trade_counter = expected_trades
                                         c.execute("UPDATE market_states SET tg_trade_counter=%s WHERE market=%s", (tg_trade_counter, market_name))
@@ -310,7 +393,8 @@ async def async_bot_task(market_name, token, user_account_id):
 
                             elif tg_phase == "WAIT_CONF" and (mm % 5 == 0):
                                 tg_phase = "WAIT_RES"
-                                tg_direction = "BUY 🟢" if warna == "Hijau" else "SELL 🔴"
+                                # Menggunakan base_warna untuk signal (Buy bila hijau, Sell bila merah)
+                                tg_direction = "BUY 🟢" if base_warna == "Hijau" else "SELL 🔴"
                                 next_min = f"{(mm + 2) % 60:02d}"
                                 msg = f"🚀 *SERVER: SINYAL EKSEKUSI* 🚀\n\n📈 *Market:* {market_name}\n🗓 *Waktu:* {waktu_laporan} WIB\n\n🚨 Eksekusi Manual:\n👉 *{tg_direction}*\n🗓 *Hasil Menit {next_min}*\n"
                                 send_telegram_internal(msg)
@@ -319,10 +403,10 @@ async def async_bot_task(market_name, token, user_account_id):
                             elif tg_phase == "WAIT_RES" and (mm % 5 == 2):
                                 tg_phase = "IDLE"
                                 required_color = "Hijau" if "BUY" in tg_direction else "Merah"
-                                is_win = (warna == required_color)
+                                is_win = (base_warna == required_color)
                                 status_emoji = "✅" if is_win else "❌"
                                 hasil_teks = "TRUE" if is_win else "FALSE"
-                                msg = f"{status_emoji} *SERVER: HASIL TRADE* {status_emoji}\n\n📈 *Market:* {market_name}\nArah Tadi: *{tg_direction}*\nCandle Hasil: *{warna.upper()}*\nHasil Akhir: *{hasil_teks}*\n"
+                                msg = f"{status_emoji} *SERVER: HASIL TRADE* {status_emoji}\n\n📈 *Market:* {market_name}\nArah Tadi: *{tg_direction}*\nCandle Hasil: *{warna_label.upper()}*\nHasil Akhir: *{hasil_teks}*\n"
                                 send_telegram_internal(msg)
                                 c.execute("UPDATE market_states SET tg_phase=%s, tg_last_candle=%s WHERE market=%s", (tg_phase, candle_id, market_name))
                     conn.commit()
