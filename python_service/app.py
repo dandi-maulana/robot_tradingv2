@@ -25,7 +25,7 @@ global_demo_balance = 0.0
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': '',
+    'password': '@Nightmare02',
     'database': 'robot_trading'
 }
 
@@ -77,7 +77,7 @@ def get_candle_color(o, h, l, c):
     """Logika sesuai dokumen: Menentukan warna berdasarkan OHLC dan deteksi Doji"""
     body = abs(c - o)
     total_range = h - l
-    
+
     # 1. Deteksi Doji (Badan < 10% dari total range)
     is_doji = False
     if total_range > 0:
@@ -103,10 +103,10 @@ def save_analysis_db(market, tanggal, waktu, warna, o=0.0, h=0.0, l=0.0, c_pr=0.
     conn = get_db_connection()
     if not conn: return
     cursor = conn.cursor()
-    
+
     # Simpan ke market_histories dengan detail lengkap OHLCV
-    sql = """INSERT INTO market_histories 
-             (market, tanggal, waktu, warna, open_price, high_price, low_price, close_price, tick_volume, created_at, updated_at) 
+    sql = """INSERT INTO market_histories
+             (market, tanggal, waktu, warna, open_price, high_price, low_price, close_price, tick_volume, created_at, updated_at)
              VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())"""
     cursor.execute(sql, (market, tanggal, waktu, warna, o, h, l, c_pr, vol))
 
@@ -116,7 +116,7 @@ def save_analysis_db(market, tanggal, waktu, warna, o=0.0, h=0.0, l=0.0, c_pr=0.
         cursor.execute("UPDATE market_states SET total_trade = total_trade + 1, total_hijau = total_hijau + 1 WHERE market = %s", (market,))
     else:
         cursor.execute("UPDATE market_states SET total_trade = total_trade + 1, total_merah = total_merah + 1 WHERE market = %s", (market,))
-    
+
     conn.commit()
     cursor.close()
     conn.close()
@@ -162,7 +162,7 @@ def send_telegram_internal(message):
         try:
             encoded_msg = urllib.parse.quote(message)
             url = f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={chat_id}&text={encoded_msg}&parse_mode=Markdown"
-            
+
             # Tambahkan Header User-Agent agar tidak dianggap bot ilegal oleh Cloudflare/Telegram
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
             urllib.request.urlopen(req, timeout=10)
@@ -192,7 +192,7 @@ def calc_sig_loss(history_list):
             # Karena format warna sekarang bisa berisi Doji/Hijau, kita ambil base_color nya saja
             c1_base = "Hijau" if "Hijau" in b['c1'] else "Merah"
             c2_base = "Hijau" if "Hijau" in b['c2'] else "Merah"
-            
+
             if c1_base != c2_base:
                 sig_loss += 1
             else:
@@ -239,8 +239,8 @@ async def update_profitability_db(client, account_id):
                 payout = item.get('payout', 0)
                 if pair and payout:
                     cursor.execute("""
-                        INSERT INTO asset_profitabilities (market, payout, updated_at) 
-                        VALUES (%s, %s, NOW()) 
+                        INSERT INTO asset_profitabilities (market, payout, updated_at)
+                        VALUES (%s, %s, NOW())
                         ON DUPLICATE KEY UPDATE payout=%s, updated_at=NOW()
                     """, (pair, payout, payout))
             conn.commit()
@@ -347,14 +347,14 @@ async def async_bot_task(market_name, token, user_account_id):
                 if len(last_raw_candles) > 0:
                     last_minute_checked = now.minute
                     target_candle = last_raw_candles[1] if len(last_raw_candles) >= 2 else last_raw_candles[0]
-                    
+
                     # --- EKSTRAKSI DATA OHLC & VOL BARU ---
                     o_pr = float(target_candle.get('open', 0))
                     h_pr = float(target_candle.get('high', 0))
                     l_pr = float(target_candle.get('low', 0))
                     c_pr = float(target_candle.get('close', 0))
                     vol  = int(target_candle.get('vol', 0))
-                    
+
                     # --- TENTUKAN WARNA LOGIKA DOJI ---
                     warna_label = get_candle_color(o_pr, h_pr, l_pr, c_pr)
                     base_warna = "Hijau" if "Hijau" in warna_label else "Merah"
