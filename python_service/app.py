@@ -481,7 +481,10 @@ def start_bot():
     account_id = data.get('account_id')
     save_settings(token, account_id)
 
-    if market not in markets_data: markets_data[market] = {"manual_queue": []}
+    if market not in markets_data: 
+        markets_data[market] = {"manual_queue": []}
+    elif markets_data[market].get('is_running') == 1:
+        return jsonify({"status": "success", "message": f"{market} sudah berjalan!"})
 
     init_market_state(market)
     threading.Thread(target=run_trading_bot_thread, args=(market, token, account_id), daemon=True).start()
@@ -496,10 +499,15 @@ def start_all():
 
     def start_all_bg():
         for m in ASSET_MAPPING.keys():
-            if m not in markets_data: markets_data[m] = {"manual_queue": []}
+            if m not in markets_data: 
+                markets_data[m] = {"manual_queue": []}
+            elif markets_data[m].get('is_running') == 1:
+                continue # Skip if already running to prevent double threads
+                
             init_market_state(m)
             threading.Thread(target=run_trading_bot_thread, args=(m, token, account_id), daemon=True).start()
             time.sleep(1.5)
+            
     threading.Thread(target=start_all_bg, daemon=True).start()
     return jsonify({"status": "success", "message": f"Memulai {len(ASSET_MAPPING)} market secara bertahap!"})
 
