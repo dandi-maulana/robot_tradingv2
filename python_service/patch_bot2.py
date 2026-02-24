@@ -1,6 +1,6 @@
 import sys
 
-fpath = "d:/Robot Trading terbaru/robot_tradingv2/python_service/app.py"
+fpath = "D:\laragon\www\jokowi\robot_tradingv2\python_service\app.py"
 with open(fpath, "r", encoding="utf-8") as f:
     c = f.read()
 
