@@ -10,13 +10,19 @@ return new class extends Migration {
             $table->string('market', 100);
             $table->string('tanggal', 20);
             $table->string('waktu', 20);
-            $table->string('warna', 50);
+            $table->string('warna', 50); 
+            // Kolom Tambahan OHLCV
+            $table->float('open_price')->nullable();
+            $table->float('close_price')->nullable();
+            $table->float('high_price')->nullable();
+            $table->float('low_price')->nullable();
+            $table->integer('tick_volume')->default(0); 
             $table->timestamps();
             
-            // Index untuk mempercepat query pencarian data oleh Python
             $table->index(['market', 'id']); 
         });
     }
+
     public function down() {
         Schema::dropIfExists('market_histories');
     }
