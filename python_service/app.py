@@ -25,7 +25,7 @@ global_demo_balance = 0.0
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': '',
+    'password': '@Nightmare02',
     'database': 'robot_trading'
 }
 

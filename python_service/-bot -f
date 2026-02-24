@@ -1,0 +1,21 @@
+[0;1;32m●[0m rodis-bot.service - Rodis Trading Bot Python
+     Loaded: loaded (]8;;file://srv1403752/etc/systemd/system/rodis-bot.service/etc/systemd/system/rodis-bot.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: [0;1;32mactive (running)[0m since Mon 2026-02-23 15:51:41 WIB; 8s ago
+   Main PID: 506519 (python)
+      Tasks: 3 (limit: 9483)
+     Memory: 53.3M (peak: 53.8M)
+        CPU: 410ms
+     CGroup: /system.slice/rodis-bot.service
+             ├─[0;38;5;245m506519 /var/www/robot_tradingv2/python_service/venv/bin/python app.py[0m
+             └─[0;38;5;245m506520 /var/www/robot_tradingv2/python_service/venv/bin/python app.py[0m
+
+Feb 23 15:51:41 srv1403752 python[506519]:  * Serving Flask app 'app'
+Feb 23 15:51:41 srv1403752 python[506519]:  * Debug mode: on
+Feb 23 15:51:41 srv1403752 python[506519]: 2026-02-23 15:51:41,409 - werkzeug - INFO - WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+Feb 23 15:51:41 srv1403752 python[506519]:  * Running on all addresses (0.0.0.0)
+Feb 23 15:51:41 srv1403752 python[506519]:  * Running on http://127.0.0.1:5000
+Feb 23 15:51:41 srv1403752 python[506519]:  * Running on http://76.13.198.80:5000
+Feb 23 15:51:41 srv1403752 python[506519]: 2026-02-23 15:51:41,409 - werkzeug - INFO - Press CTRL+C to quit
+Feb 23 15:51:41 srv1403752 python[506519]: 2026-02-23 15:51:41,409 - werkzeug - INFO -  * Restarting with stat
+Feb 23 15:51:41 srv1403752 python[506520]: 2026-02-23 15:51:41,589 - werkzeug - WARNING -  * Debugger is active!
+Feb 23 15:51:41 srv1403752 python[506520]: 2026-02-23 15:51:41,592 - werkzeug - INFO -  * Debugger PIN: 568-472-759
