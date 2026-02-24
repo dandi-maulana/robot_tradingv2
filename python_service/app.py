@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 import asyncio
 import mysql.connector
+from mysql.connector import pooling
 import urllib.request
 import urllib.parse
 
@@ -61,15 +62,30 @@ def get_settings():
     return {"token": res[0], "account_id": res[1]} if res else {"token": "", "account_id": ""}
 
 def init_market_state(market_name):
+    if market_name not in markets_data: markets_data[market_name] = {"manual_queue": []}
     conn = get_db_connection()
     if not conn: return
-    c = conn.cursor()
-    c.execute("SELECT id FROM market_states WHERE market = %s", (market_name,))
-    if not c.fetchone():
-        c.execute("INSERT INTO market_states (market, created_at, updated_at) VALUES (%s, NOW(), NOW())", (market_name,))
-    c.execute("UPDATE market_states SET is_running = 1, updated_at = NOW() WHERE market = %s", (market_name,))
-    conn.commit()
+    c = conn.cursor(dictionary=True)
+    c.execute("SELECT is_running, tg_active, tg_target_loss, tg_phase, tg_trade_counter, tg_last_candle, tg_direction FROM market_states WHERE market = %s", (market_name,))
+    row = c.fetchone()
     c.close()
+    
+    if not row:
+        c = conn.cursor()
+        c.execute("INSERT INTO market_states (market, created_at, updated_at) VALUES (%s, NOW(), NOW())", (market_name,))
+        conn.commit(); c.close()
+        row = {'is_running': 1, 'tg_active': 0, 'tg_target_loss': 7, 'tg_phase': 'IDLE', 'tg_trade_counter': 0, 'tg_last_candle': '', 'tg_direction': ''}
+    else:
+        c = conn.cursor()
+        c.execute("UPDATE market_states SET is_running = 1, updated_at = NOW() WHERE market = %s", (market_name,))
+        conn.commit(); c.close(); row['is_running'] = 1
+        
+    markets_data[market_name].update({
+        'is_running': row.get('is_running', 1), 'tg_active': row.get('tg_active', 0),
+        'tg_target_loss': row.get('tg_target_loss', 7), 'tg_phase': row.get('tg_phase', 'IDLE'),
+        'tg_trade_counter': row.get('tg_trade_counter', 0), 'tg_last_candle': row.get('tg_last_candle', ''),
+        'tg_direction': row.get('tg_direction', '')
+    })
     conn.close()
 
 # --- FUNGSI BARU LOGIKA WARNA & DOJI ---
@@ -289,19 +305,12 @@ async def async_bot_task(market_name, token, user_account_id):
     last_minute_checked = -1
 
     while True:
-        conn = get_db_connection()
-        if not conn: break
-        c = conn.cursor(dictionary=True)
-        c.execute("SELECT is_running, tg_active, tg_target_loss, tg_phase, tg_trade_counter, tg_last_candle, tg_direction FROM market_states WHERE market = %s", (market_name,))
-        state = c.fetchone()
-
-        if not state or state['is_running'] == 0:
-            c.close()
-            conn.close()
+        if market_name not in markets_data: break
+        state = markets_data[market_name]
+        if state.get('is_running', 0) == 0:
             if hasattr(client, 'close'): await client.close()
             elif hasattr(client, 'disconnect'): await client.disconnect()
             break
-
         now = datetime.now()
 
         # EKSEKUSI MANUAL TRADE
@@ -329,7 +338,14 @@ async def async_bot_task(market_name, token, user_account_id):
         # PING SERVER
         if now.second % 15 == 0 and now.microsecond < 500000:
             try: await client.send_message({"e": 98, "d": []})
-            except Exception: pass
+            except Exception:
+                try:
+                    if hasattr(client, 'close'): await client.close()
+                    elif hasattr(client, 'disconnect'): await client.disconnect()
+                except: pass
+                await asyncio.sleep(1)
+                try: await client.start()
+                except: pass
 
         # ANALISIS CANDLE PER 5 MENIT DENGAN TOLERANSI VPS LAG (2-15 Detik)
         if 2 <= now.second <= 15 and last_minute_checked != now.minute:
@@ -381,41 +397,54 @@ async def async_bot_task(market_name, token, user_account_id):
                                     # LOGIKA PINTAR AUTO-RESET SIKLUS
                                     if expected_trades < tg_trade_counter:
                                         tg_trade_counter = expected_trades
-                                        c.execute("UPDATE market_states SET tg_trade_counter=%s WHERE market=%s", (tg_trade_counter, market_name))
+                                        state['tg_trade_counter'] = tg_trade_counter
+                                        conn2 = get_db_connection()
+                                        if conn2:
+                                            conn2.cursor().execute("UPDATE market_states SET tg_trade_counter=%s WHERE market=%s", (tg_trade_counter, market_name))
+                                            conn2.commit(); conn2.close()
 
                                     if expected_trades > tg_trade_counter and sig_loss > 0:
                                         tg_trade_counter += 1
                                         tg_phase = "WAIT_CONF"
+                                        state['tg_trade_counter'] = tg_trade_counter; state['tg_phase'] = tg_phase; state['tg_last_candle'] = candle_id
                                         next_min = f"{(mm + 3) % 60:02d}"
                                         msg = f"⚠️ *SERVER: PERSIAPAN OP* ⚠️\n\n📈 *Market:* {market_name}\n🗓 *Waktu:* {waktu_laporan} WIB\n\nTarget *FALSE ke-{sig_loss}* tercapai.\nStandby arah menit ke-{next_min}.\n"
                                         send_telegram_internal(msg)
-                                        c.execute("UPDATE market_states SET tg_trade_counter=%s, tg_phase=%s, tg_last_candle=%s WHERE market=%s", (tg_trade_counter, tg_phase, candle_id, market_name))
+                                        conn2 = get_db_connection()
+                                        if conn2:
+                                            conn2.cursor().execute("UPDATE market_states SET tg_trade_counter=%s, tg_phase=%s, tg_last_candle=%s WHERE market=%s", (tg_trade_counter, tg_phase, candle_id, market_name))
+                                            conn2.commit(); conn2.close()
 
                             elif tg_phase == "WAIT_CONF" and (mm % 5 == 0):
                                 tg_phase = "WAIT_RES"
-                                # Menggunakan base_warna untuk signal (Buy bila hijau, Sell bila merah)
-                                tg_direction = "BUY 🟢" if base_warna == "Hijau" else "SELL 🔴"
+                                state['tg_phase'] = tg_phase
+                                state['tg_direction'] = "BUY 🟢" if base_warna == "Hijau" else "SELL 🔴"
+                                state['tg_last_candle'] = candle_id
+                                tg_direction = state['tg_direction']
                                 next_min = f"{(mm + 2) % 60:02d}"
                                 msg = f"🚀 *SERVER: SINYAL EKSEKUSI* 🚀\n\n📈 *Market:* {market_name}\n🗓 *Waktu:* {waktu_laporan} WIB\n\n🚨 Eksekusi Manual:\n👉 *{tg_direction}*\n🗓 *Hasil Menit {next_min}*\n"
                                 send_telegram_internal(msg)
-                                c.execute("UPDATE market_states SET tg_phase=%s, tg_direction=%s, tg_last_candle=%s WHERE market=%s", (tg_phase, tg_direction, candle_id, market_name))
+                                conn2 = get_db_connection()
+                                if conn2:
+                                    conn2.cursor().execute("UPDATE market_states SET tg_phase=%s, tg_direction=%s, tg_last_candle=%s WHERE market=%s", (tg_phase, tg_direction, candle_id, market_name))
+                                    conn2.commit(); conn2.close()
 
                             elif tg_phase == "WAIT_RES" and (mm % 5 == 2):
                                 tg_phase = "IDLE"
+                                state['tg_phase'] = tg_phase; state['tg_last_candle'] = candle_id
                                 required_color = "Hijau" if "BUY" in tg_direction else "Merah"
                                 is_win = (base_warna == required_color)
                                 status_emoji = "✅" if is_win else "❌"
                                 hasil_teks = "TRUE" if is_win else "FALSE"
                                 msg = f"{status_emoji} *SERVER: HASIL TRADE* {status_emoji}\n\n📈 *Market:* {market_name}\nArah Tadi: *{tg_direction}*\nCandle Hasil: *{warna_label.upper()}*\nHasil Akhir: *{hasil_teks}*\n"
                                 send_telegram_internal(msg)
-                                c.execute("UPDATE market_states SET tg_phase=%s, tg_last_candle=%s WHERE market=%s", (tg_phase, candle_id, market_name))
-                    conn.commit()
+                                conn2 = get_db_connection()
+                                if conn2:
+                                    conn2.cursor().execute("UPDATE market_states SET tg_phase=%s, tg_last_candle=%s WHERE market=%s", (tg_phase, candle_id, market_name))
+                                    conn2.commit(); conn2.close()
             else:
-                # Kunci menit agar loop toleransi tidak menarik data berulang kali di detik 2-15
                 last_minute_checked = now.minute
 
-        c.close()
-        conn.close()
         await asyncio.sleep(0.5)
 
 def run_trading_bot_thread(market_name, token, account_id):
@@ -465,32 +494,32 @@ def start_all():
     account_id = data.get('account_id')
     save_settings(token, account_id)
 
-    started = 0
-    for market_name in ASSET_MAPPING.keys():
-        if market_name not in markets_data: markets_data[market_name] = {"manual_queue": []}
-        init_market_state(market_name)
-        threading.Thread(target=run_trading_bot_thread, args=(market_name, token, account_id), daemon=True).start()
-        started += 1
-    return jsonify({"status": "success", "message": f"Berhasil menghidupkan {started} market!"})
+    def start_all_bg():
+        for m in ASSET_MAPPING.keys():
+            if m not in markets_data: markets_data[m] = {"manual_queue": []}
+            init_market_state(m)
+            threading.Thread(target=run_trading_bot_thread, args=(m, token, account_id), daemon=True).start()
+            time.sleep(1.5)
+    threading.Thread(target=start_all_bg, daemon=True).start()
+    return jsonify({"status": "success", "message": f"Memulai {len(ASSET_MAPPING)} market secara bertahap!"})
 
 @app.route('/api/stop', methods=['POST'])
 def stop_bot():
     market = request.json.get('market')
+    if market in markets_data: markets_data[market]['is_running'] = 0
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("UPDATE market_states SET is_running = 0 WHERE market = %s", (market,))
-    conn.commit()
-    conn.close()
+    if conn:
+        conn.cursor().execute("UPDATE market_states SET is_running = 0 WHERE market = %s", (market,))
+        conn.commit(); conn.close()
     return jsonify({"status": "success"})
 
 @app.route('/api/stop_all', methods=['POST'])
 def stop_all():
+    for m in markets_data.values(): m['is_running'] = 0
     conn = get_db_connection()
     if not conn: return jsonify({"status": "error"})
-    c = conn.cursor()
-    c.execute("UPDATE market_states SET is_running = 0")
-    conn.commit()
-    conn.close()
+    conn.cursor().execute("UPDATE market_states SET is_running = 0")
+    conn.commit(); conn.close()
     return jsonify({"status": "success", "message": "Semua bot market berhasil dihentikan!"})
 
 @app.route('/api/reset_market', methods=['POST'])
@@ -520,15 +549,13 @@ def toggle_telegram():
     market = data.get('market')
     target_loss = int(data.get('target_loss', 7))
 
-    conn = get_db_connection()
-    c = conn.cursor(dictionary=True)
-    c.execute("SELECT tg_active FROM market_states WHERE market = %s", (market,))
-    state = c.fetchone()
-    if state:
-        new_active = 0 if state['tg_active'] else 1
-        c.execute("UPDATE market_states SET tg_active=%s, tg_target_loss=%s, tg_phase='IDLE' WHERE market=%s", (new_active, target_loss, market))
-        conn.commit()
-        conn.close()
+    if market in markets_data:
+        new_active = 0 if markets_data[market]['tg_active'] else 1
+        markets_data[market].update({'tg_active': new_active, 'tg_target_loss': target_loss, 'tg_phase': 'IDLE'})
+        conn = get_db_connection()
+        if conn:
+            conn.cursor().execute("UPDATE market_states SET tg_active=%s, tg_target_loss=%s, tg_phase='IDLE' WHERE market=%s", (new_active, target_loss, market))
+            conn.commit(); conn.close()
         return jsonify({"status": "success", "active": bool(new_active)})
     return jsonify({"status": "error", "message": "Market belum aktif!"})
 
@@ -536,33 +563,24 @@ def toggle_telegram():
 def toggle_telegram_all():
     data = request.json
     target_loss = int(data.get('target_loss', 7))
-
-    conn = get_db_connection()
-    c = conn.cursor(dictionary=True)
-    c.execute("SELECT market FROM market_states WHERE is_running = 1")
-    running_markets = c.fetchall()
-
-    if not running_markets:
-        conn.close()
-        return jsonify({"status": "error", "message": "Tidak ada market yang sedang berjalan."})
-
     active_count = 0
-    for row in running_markets:
-        c.execute("UPDATE market_states SET tg_active=1, tg_target_loss=%s, tg_phase='IDLE' WHERE market=%s", (target_loss, row['market']))
-        active_count += 1
-
-    conn.commit()
-    conn.close()
+    conn = get_db_connection()
+    c = conn.cursor()
+    for m, state in markets_data.items():
+        if state.get('is_running'):
+            state.update({'tg_active': 1, 'tg_target_loss': target_loss, 'tg_phase': 'IDLE'})
+            c.execute("UPDATE market_states SET tg_active=1, tg_target_loss=%s, tg_phase='IDLE' WHERE market=%s", (target_loss, m))
+            active_count += 1
+    conn.commit(); conn.close()
     return jsonify({"status": "success", "message": f"Sinyal Telegram DIAKTIFKAN di {active_count} market aktif!"})
 
 @app.route('/api/stop_telegram_all', methods=['POST'])
 def stop_telegram_all():
+    for state in markets_data.values():
+        state.update({'tg_active': 0, 'tg_phase': 'IDLE'})
     conn = get_db_connection()
-    if not conn: return jsonify({"status": "error"})
-    c = conn.cursor()
-    c.execute("UPDATE market_states SET tg_active = 0, tg_phase = 'IDLE'")
-    conn.commit()
-    conn.close()
+    conn.cursor().execute("UPDATE market_states SET tg_active=0, tg_phase='IDLE'")
+    conn.commit(); conn.close()
     return jsonify({"status": "success", "message": "Sinyal Telegram di SEMUA market berhasil dimatikan!"})
 
 @app.route('/api/manual_trade', methods=['POST'])
