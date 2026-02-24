@@ -326,11 +326,12 @@
         document.getElementById('view-trade').classList.add('hidden');
         document.getElementById('view-history').classList.add('hidden');
         document.getElementById('view-rodis').classList.add('hidden');
+        document.getElementById('view-doji')?.classList.add('hidden');
         document.getElementById('view-' + viewName).classList.remove('hidden');
 
         const navIds = [
-            'nav-link-dashboard','nav-link-trade','nav-link-history','nav-link-rodis',
-            'nav-link-dashboard-mob','nav-link-trade-mob','nav-link-history-mob','nav-link-rodis-mob'
+            'nav-link-dashboard','nav-link-trade','nav-link-history','nav-link-rodis', 'nav-link-doji',
+            'nav-link-dashboard-mob','nav-link-trade-mob','nav-link-history-mob','nav-link-rodis-mob', 'nav-link-doji-mob'
         ];
         navIds.forEach(id => {
             let el = document.getElementById(id);
