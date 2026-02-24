@@ -55,6 +55,8 @@
                     id="nav-link-trade">Trade Manual</a>
                 <a href="#" onclick="showView('rodis')" class="transition hover:text-gojek text-indigo-600"
                     id="nav-link-rodis">RODIS (Auto)</a>
+                <a href="#" onclick="showView('doji')" class="transition hover:text-gojek"
+                    id="nav-link-doji">Analisa Doji</a>
                 <a href="#" onclick="showView('history')" class="transition hover:text-gojek"
                     id="nav-link-history">Riwayat</a>
             </div>
@@ -66,6 +68,8 @@
                     id="nav-link-trade-mob">Manual</a>
                 <a href="#" onclick="showView('rodis')" class="text-indigo-600 whitespace-nowrap"
                     id="nav-link-rodis-mob">RODIS Auto</a>
+                <a href="#" onclick="showView('doji')" class="whitespace-nowrap"
+                    id="nav-link-doji-mob">Doji</a>
                 <a href="#" onclick="showView('history')" class="whitespace-nowrap"
                     id="nav-link-history-mob">Riwayat</a>
             </div>

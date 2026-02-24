@@ -830,6 +830,9 @@
                         </div>`;
                 });
             }
+
+            // DOJI ANALYTICS RENDER
+            renderDojiAnalytics(data.doji_analytics);
         });
     }
 
@@ -1125,6 +1128,82 @@
                 clockEl.innerText = `${hh}:${mm}:${ss} WIB`;
             }
         }, 1000);
+    }
+
+    // ================================================================
+    // DOJI ANALYTICS
+    // ================================================================
+    function renderDojiAnalytics(dojiData) {
+        const tbody = document.getElementById('doji-tbody');
+        if (!tbody) return;
+
+        if (!dojiData || dojiData.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center text-gray-400">
+                        <div class="flex flex-col items-center justify-center gap-3">
+                            <span class="bg-gray-50 p-4 rounded-full">
+                                <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                </svg>
+                            </span>
+                            <p class="text-sm font-bold text-gray-500">Menunggu Data Market...</p>
+                            <p class="text-[11px] text-gray-400">Tabel ini akan otomatis terisi saat market menyentuh 1 s/d 9 False berturut-turut.</p>
+                        </div>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        dojiData.forEach(item => {
+            const mktObj   = allMarkets.find(x => x.id === item.market) || { name: item.market, icon: '📈' };
+            const mktName  = mktObj.name;
+            const mktIcon  = mktObj.icon;
+            
+            // Pewarnaan Winrate
+            let wrColor = 'text-green-600 bg-green-50';
+            let wrTextClass = 'text-green-700';
+            if (item.winrate < 20) {
+                wrColor = 'text-red-600 bg-red-50';
+                wrTextClass = 'text-red-700';
+            } else if (item.winrate < 50) {
+                wrColor = 'text-orange-600 bg-orange-50';
+                wrTextClass = 'text-orange-700';
+            }
+
+            tbody.innerHTML += `
+                <tr class="hover:bg-gray-50/80 transition-colors group cursor-pointer" onclick="openMarketDetail('${item.market}')">
+                    <td class="px-6 py-4 flex gap-3 items-center">
+                        <span class="text-2xl">${mktIcon}</span>
+                        <div>
+                            <p class="font-extrabold text-dark tracking-tight text-sm">${mktName}</p>
+                            <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">${item.market}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="inline-flex items-center gap-1 bg-red-50 border border-red-100 text-red-600 px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            ${item.consecutive_false} False
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">${item.total_candles} Candle</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex flex-col items-center">
+                            <span class="text-lg font-black text-indigo-600">${item.doji_count}</span>
+                            <span class="text-[10px] font-bold text-indigo-400 uppercase">Doji</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="inline-flex flex-col items-center justify-center ${wrColor} px-4 py-2 rounded-xl border border-white/40 shadow-sm transition-transform group-hover:scale-105">
+                            <span class="text-lg font-black ${wrTextClass}">${item.winrate}%</span>
+                            <span class="text-[9px] uppercase font-bold tracking-wider opacity-80">Winrate Doji</span>
+                        </div>
+                    </td>
+                </tr>`;
+        });
     }
 
 </script>

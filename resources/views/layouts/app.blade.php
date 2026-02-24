@@ -38,13 +38,11 @@
         }
 
         // Deteksi IP/Domain VPS otomatis untuk menghubungi Python di port 5000
-        //const API_BASE = window.location.protocol + "//" + window.location.hostname + ":5000/api";
-        // const API_BASE = "/api";
-        // Deteksi API otomatis (tidak double declare)
-        window.API_BASE = window.API_BASE ||
-            (window.location.hostname === "127.0.0.1" ?
+        if (typeof API_BASE === 'undefined') {
+            var API_BASE = window.location.hostname === "127.0.0.1" ?
                 window.location.protocol + "//" + window.location.hostname + ":5000/api" :
-                "/api");
+                "/api";
+        }
     </script>
 
     <style>

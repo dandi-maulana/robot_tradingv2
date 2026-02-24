@@ -26,7 +26,7 @@ global_demo_balance = 0.0
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': '@Nightmare02',
+    'password': '',
     'database': 'robot_trading'
 }
 
@@ -618,7 +618,7 @@ def get_data():
 @app.route('/api/status_all', methods=['GET'])
 def status_all():
     conn = get_db_connection()
-    if not conn: return jsonify({"active_markets": [], "market_streaks": {}, "balance": global_demo_balance, "tg_active_count": 0})
+    if not conn: return jsonify({"active_markets": [], "market_streaks": {}, "doji_analytics": [], "balance": global_demo_balance, "tg_active_count": 0})
 
     c_dict = conn.cursor(dictionary=True)
     c_dict.execute("SELECT market, tg_active FROM market_states WHERE is_running = 1")
@@ -628,16 +628,46 @@ def status_all():
     tg_active_count = sum(1 for row in running_data if row['tg_active'] == 1)
 
     market_streaks = {}
+    doji_analytics = []
+    
     for mkt in active_markets:
-        c_dict.execute("SELECT market, tanggal, waktu, warna FROM market_histories WHERE market = %s ORDER BY id DESC LIMIT 50", (mkt,))
-        hist = c_dict.fetchall()
-        market_streaks[mkt] = calc_sig_loss(hist)
+        c_dict.execute("SELECT market, tanggal, waktu, warna FROM market_histories WHERE market = %s ORDER BY id DESC LIMIT 100", (mkt,))
+        raw_hist = c_dict.fetchall()
+        
+        # Hitung sig_loss normal
+        sig_loss = calc_sig_loss(raw_hist)
+        market_streaks[mkt] = sig_loss
+        
+        # LOGIKA ANALISA DOJI KETIKA FALSE MULAI 1 SAMPAI 9
+        if sig_loss >= 1 and sig_loss <= 9:
+            # Mengambil candle sejumlah (sig_loss * 5) dari raw_hist
+            # Contoh: Jika 9 False = 45 Candle, Jika 6 False = 30 Candle
+            candles_to_check = sig_loss * 5
+            hist_target = raw_hist[:candles_to_check]
+            doji_count = 0
+            for item in hist_target:
+                if item['warna'] and "Doji" in item['warna']:
+                    doji_count += 1
+            
+            # Hitung Winrate
+            winrate = 0.0
+            if candles_to_check > 0:
+                winrate = (doji_count / float(candles_to_check)) * 100
+            
+            doji_analytics.append({
+                "market": mkt,
+                "consecutive_false": sig_loss,
+                "doji_count": doji_count,
+                "total_candles": candles_to_check,
+                "winrate": round(winrate, 1) # contoh: 12.5%
+            })
 
     c_dict.close()
     conn.close()
     return jsonify({
         "active_markets": active_markets,
         "market_streaks": market_streaks,
+        "doji_analytics": doji_analytics,
         "balance": global_demo_balance,
         "tg_active_count": tg_active_count
     })
