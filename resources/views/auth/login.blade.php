@@ -10,11 +10,12 @@
 
     <style>
         body {
-            background-image: url('{{ asset('assets/images/Jkw1.jpeg') }}');
+            background-image: url("{{ asset('assets/images/Jkw1.jpeg') }}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            overflow-x: hidden; /* 🔥 Hilangkan geser kiri kanan */
+            overflow-x: hidden;
+            /* 🔥 Hilangkan geser kiri kanan */
         }
 
         /* Matikan fixed background di HP (biang scroll) */
@@ -48,8 +49,7 @@
     </div>
 
     <!-- MODAL LOGIN -->
-    <div id="loginModal"
-        class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center px-4">
+    <div id="loginModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center px-4">
 
         <div class="w-full max-w-md p-6 sm:p-8 rounded-xl shadow-lg border border-gray-200 login-box relative">
 
@@ -101,4 +101,5 @@
     </script>
 
 </body>
+
 </html>
