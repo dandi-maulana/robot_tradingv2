@@ -120,6 +120,13 @@ def save_analysis_db(market, tanggal, waktu, warna, o=0.0, h=0.0, l=0.0, c_pr=0.
     if not conn: return
     cursor = conn.cursor()
 
+    # Cek apakah data di menit ini sudah ada (Mencegah Duplicate Insert dari VPS / Multi-Worker)
+    cursor.execute("SELECT id FROM market_histories WHERE market=%s AND tanggal=%s AND waktu=%s", (market, tanggal, waktu))
+    if cursor.fetchone():
+        cursor.close()
+        conn.close()
+        return
+
     # Simpan ke market_histories dengan detail lengkap OHLCV
     sql = """INSERT INTO market_histories
              (market, tanggal, waktu, warna, open_price, high_price, low_price, close_price, tick_volume, created_at, updated_at)
