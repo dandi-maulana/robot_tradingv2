@@ -563,16 +563,57 @@ def toggle_telegram():
 def toggle_telegram_all():
     data = request.json
     target_loss = int(data.get('target_loss', 7))
-    active_count = 0
+
     conn = get_db_connection()
     c = conn.cursor()
-    for m, state in markets_data.items():
-        if state.get('is_running'):
-            state.update({'tg_active': 1, 'tg_target_loss': target_loss, 'tg_phase': 'IDLE'})
-            c.execute("UPDATE market_states SET tg_active=1, tg_target_loss=%s, tg_phase='IDLE' WHERE market=%s", (target_loss, m))
-            active_count += 1
-    conn.commit(); conn.close()
-    return jsonify({"status": "success", "message": f"Sinyal Telegram DIAKTIFKAN di {active_count} market aktif!"})
+
+    # 🔥 CEK STATUS SEKARANG DARI DB (BIAR VALID)
+    c.execute("SELECT COUNT(*) FROM market_states WHERE tg_active = 1")
+    active_now = c.fetchone()[0]
+
+    active_count = 0
+
+    if active_now > 0:
+        # 🔴 MODE: MATIKAN SEMUA
+        for state in markets_data.values():
+            state.update({'tg_active': 0, 'tg_phase': 'IDLE'})
+
+        c.execute("UPDATE market_states SET tg_active=0, tg_phase='IDLE'")
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "status": "success",
+            "message": "Sinyal Telegram DIMATIKAN di semua market!",
+            "active": False
+        })
+
+    else:
+        # 🟢 MODE: AKTIFKAN
+        for m, state in markets_data.items():
+            if state.get('is_running'):
+                state.update({
+                    'tg_active': 1,
+                    'tg_target_loss': target_loss,
+                    'tg_phase': 'IDLE'
+                })
+
+                c.execute(
+                    "UPDATE market_states SET tg_active=1, tg_target_loss=%s, tg_phase='IDLE' WHERE market=%s",
+                    (target_loss, m)
+                )
+
+                active_count += 1
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "status": "success",
+            "message": f"Sinyal Telegram DIAKTIFKAN di {active_count} market aktif!",
+            "active": True
+        })
 
 @app.route('/api/stop_telegram_all', methods=['POST'])
 def stop_telegram_all():
