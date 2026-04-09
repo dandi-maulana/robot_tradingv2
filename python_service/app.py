@@ -120,6 +120,13 @@ def save_analysis_db(market, tanggal, waktu, warna, o=0.0, h=0.0, l=0.0, c_pr=0.
     if not conn: return
     cursor = conn.cursor()
 
+    # Cek apakah data di menit ini sudah ada (Mencegah Duplicate Insert dari VPS / Multi-Worker)
+    cursor.execute("SELECT id FROM market_histories WHERE market=%s AND tanggal=%s AND waktu=%s", (market, tanggal, waktu))
+    if cursor.fetchone():
+        cursor.close()
+        conn.close()
+        return
+
     # Simpan ke market_histories dengan detail lengkap OHLCV
     sql = """INSERT INTO market_histories
              (market, tanggal, waktu, warna, open_price, high_price, low_price, close_price, tick_volume, created_at, updated_at)
@@ -481,7 +488,10 @@ def start_bot():
     account_id = data.get('account_id')
     save_settings(token, account_id)
 
-    if market not in markets_data: markets_data[market] = {"manual_queue": []}
+    if market not in markets_data: 
+        markets_data[market] = {"manual_queue": []}
+    elif markets_data[market].get('is_running') == 1:
+        return jsonify({"status": "success", "message": f"{market} sudah berjalan!"})
 
     init_market_state(market)
     threading.Thread(target=run_trading_bot_thread, args=(market, token, account_id), daemon=True).start()
@@ -496,10 +506,15 @@ def start_all():
 
     def start_all_bg():
         for m in ASSET_MAPPING.keys():
-            if m not in markets_data: markets_data[m] = {"manual_queue": []}
+            if m not in markets_data: 
+                markets_data[m] = {"manual_queue": []}
+            elif markets_data[m].get('is_running') == 1:
+                continue # Skip if already running to prevent double threads
+                
             init_market_state(m)
             threading.Thread(target=run_trading_bot_thread, args=(m, token, account_id), daemon=True).start()
             time.sleep(1.5)
+            
     threading.Thread(target=start_all_bg, daemon=True).start()
     return jsonify({"status": "success", "message": f"Memulai {len(ASSET_MAPPING)} market secara bertahap!"})
 
