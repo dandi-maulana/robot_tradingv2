@@ -10,12 +10,26 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Bikin 1 akun admin default
-        User::create([
-            'name' => 'RODIS',
-            'email' => 'rodis@localhost.com',
-            'username' => 'disini',
-            'password' => Hash::make('disana123'),
-        ]);
+        // Akun Admin (punya akses penuh ke dashboard kontrol)
+        User::updateOrCreate(
+            ['username' => 'disini'],
+            [
+                'name' => 'RODIS',
+                'email' => 'rodis@localhost.com',
+                'password' => Hash::make('disana123'),
+                'role' => 'admin',
+            ]
+        );
+
+        // Akun User (hanya bisa melihat hasil / read-only)
+        User::updateOrCreate(
+            ['username' => 'user'],
+            [
+                'name' => 'User Viewer',
+                'email' => 'user@localhost.com',
+                'password' => Hash::make('user123'),
+                'role' => 'user',
+            ]
+        );
     }
 }

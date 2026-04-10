@@ -10,7 +10,7 @@
 
     <style>
         body {
-            background-image: url("{{ asset('assets/images/Jkw1.jpeg') }}");
+            background-image: url("{{ asset('assets/images/tembokratapan-solo.png') }}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;

@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
         return view('auth.login');
     }
@@ -47,10 +49,34 @@ class AuthController extends Controller
             ]);
         }
 
-        if (Auth::attempt($request->only('username', 'password'), $request->boolean('remember'))) {
+        // ============================================================
+        // CEK KREDENSIAL SECARA MANUAL (bukan Auth::attempt)
+        // agar bisa memisahkan mekanisme admin vs user viewer
+        // ============================================================
+        $user = User::where('username', $request->input('username'))->first();
+
+        if ($user && Hash::check($request->input('password'), $user->password)) {
             RateLimiter::clear($throttleKey);
-            $request->session()->regenerate();
-            return redirect()->intended('/dashboard');
+
+            if ($user->role === 'admin') {
+                // ====================================================
+                // ADMIN: Login via session standar Laravel
+                // Cookie: laravel_session (default)
+                // ====================================================
+                Auth::login($user, $request->boolean('remember'));
+                $request->session()->regenerate();
+                return redirect()->intended('/dashboard');
+
+            } else {
+                // ====================================================
+                // USER VIEWER: Login via encrypted cookie TERPISAH
+                // Cookie: rodis_viewer (tidak menyentuh session auth)
+                // Jadi TIDAK bentrok dengan session admin!
+                // ====================================================
+                return redirect('/user/dashboard')->withCookie(
+                    cookie('rodis_viewer', $user->id, 120, '/', null, false, true)
+                );
+            }
         }
 
         RateLimiter::hit($throttleKey);
@@ -61,9 +87,16 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect('/login');
+        // Cek apakah ada session admin aktif → logout session
+        if (Auth::check()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        // Selalu hapus juga viewer cookie (biar bersih)
+        return redirect('/login')->withCookie(
+            cookie()->forget('rodis_viewer')
+        );
     }
 }

@@ -8,20 +8,60 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Grup untuk tamu (belum login)
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
-});
+// ============================================================
+// LOGIN — Tidak pakai middleware 'guest' agar bisa diakses
+// meskipun admin sudah login di tab lain
+// ============================================================
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
 
-// Grup untuk user yang sudah berhasil login
+// ============================================================
+// LOGOUT — Tanpa middleware 'auth' agar user viewer (yang
+// tidak pakai session auth) juga bisa logout
+// ============================================================
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// ============================================================
+// ADMIN DASHBOARD — Hanya bisa diakses lewat session auth
+// ============================================================
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
+        $user = auth()->user();
+        // Kalau yang login bukan admin, tendang ke user dashboard
+        if ($user->role !== 'admin') {
+            return redirect('/user/dashboard');
+        }
         return view('dashboard');
     })->name('dashboard');
-
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
+
+// ============================================================
+// USER VIEWER DASHBOARD — Pakai cookie 'rodis_viewer'
+// Tidak pakai session auth supaya TIDAK bentrok dengan admin
+// ============================================================
+Route::get('/user/dashboard', function (\Illuminate\Http\Request $request) {
+    $viewerId = $request->cookie('rodis_viewer');
+
+    if (!$viewerId) {
+        return redirect('/login');
+    }
+
+    try {
+        $user = \App\Models\User::find($viewerId);
+
+        if (!$user || $user->role !== 'user') {
+            return redirect('/login')->withCookie(
+                cookie()->forget('rodis_viewer')
+            );
+        }
+
+        return view('user.dashboard', ['user' => $user]);
+    } catch (\Exception $e) {
+        return redirect('/login')->withCookie(
+            cookie()->forget('rodis_viewer')
+        );
+    }
+})->name('user.dashboard');
 
 // Tangkap semua URL yang nggak terdaftar biar nggak error 404, arahkan kembali ke login
 Route::get('/{any}', function () {
