@@ -72,10 +72,17 @@ class AuthController extends Controller
                 // USER VIEWER: Login via encrypted cookie TERPISAH
                 // Cookie: rodis_viewer (tidak menyentuh session auth)
                 // Jadi TIDAK bentrok dengan session admin!
+                //
+                // SINGLE SESSION: Generate token unik setiap login.
+                // Token lama otomatis invalid → user sebelumnya tertendang.
                 // ====================================================
-                return redirect('/user/dashboard')->withCookie(
-                    cookie('rodis_viewer', $user->id, 120, '/', null, false, true)
-                );
+                $viewerToken = bin2hex(random_bytes(32));
+                $user->viewer_token = $viewerToken;
+                $user->save();
+
+                return redirect('/user/dashboard')
+                    ->withCookie(cookie('rodis_viewer', $user->id, 120, '/', null, false, true))
+                    ->withCookie(cookie('rodis_viewer_token', $viewerToken, 120, '/', null, false, true));
             }
         }
 
@@ -94,9 +101,19 @@ class AuthController extends Controller
             $request->session()->regenerateToken();
         }
 
-        // Selalu hapus juga viewer cookie (biar bersih)
-        return redirect('/login')->withCookie(
-            cookie()->forget('rodis_viewer')
-        );
+        // Hapus viewer_token dari DB jika ada cookie viewer
+        $viewerId = $request->cookie('rodis_viewer');
+        if ($viewerId) {
+            $viewer = User::find($viewerId);
+            if ($viewer && $viewer->role === 'user') {
+                $viewer->viewer_token = null;
+                $viewer->save();
+            }
+        }
+
+        // Selalu hapus juga viewer cookies (biar bersih)
+        return redirect('/login')
+            ->withCookie(cookie()->forget('rodis_viewer'))
+            ->withCookie(cookie()->forget('rodis_viewer_token'));
     }
 }

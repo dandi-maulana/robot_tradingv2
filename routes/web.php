@@ -41,8 +41,9 @@ Route::middleware('auth')->group(function () {
 // ============================================================
 Route::get('/user/dashboard', function (\Illuminate\Http\Request $request) {
     $viewerId = $request->cookie('rodis_viewer');
+    $viewerToken = $request->cookie('rodis_viewer_token');
 
-    if (!$viewerId) {
+    if (!$viewerId || !$viewerToken) {
         return redirect('/login');
     }
 
@@ -50,18 +51,52 @@ Route::get('/user/dashboard', function (\Illuminate\Http\Request $request) {
         $user = \App\Models\User::find($viewerId);
 
         if (!$user || $user->role !== 'user') {
-            return redirect('/login')->withCookie(
-                cookie()->forget('rodis_viewer')
-            );
+            return redirect('/login')
+                ->withCookie(cookie()->forget('rodis_viewer'))
+                ->withCookie(cookie()->forget('rodis_viewer_token'));
+        }
+
+        // SINGLE SESSION CHECK: Bandingkan token di cookie vs token di DB
+        // Jika tidak cocok, berarti ada login baru di tempat lain
+        if ($user->viewer_token !== $viewerToken) {
+            return redirect('/login')
+                ->withCookie(cookie()->forget('rodis_viewer'))
+                ->withCookie(cookie()->forget('rodis_viewer_token'))
+                ->withErrors(['username' => 'Sesi Anda telah berakhir karena akun ini login di perangkat lain.']);
         }
 
         return view('user.dashboard', ['user' => $user]);
     } catch (\Exception $e) {
-        return redirect('/login')->withCookie(
-            cookie()->forget('rodis_viewer')
-        );
+        return redirect('/login')
+            ->withCookie(cookie()->forget('rodis_viewer'))
+            ->withCookie(cookie()->forget('rodis_viewer_token'));
     }
 })->name('user.dashboard');
+
+// ============================================================
+// USER SESSION CHECK — Dipanggil secara periodik oleh JS
+// untuk mendeteksi apakah sesi masih valid (single session)
+// ============================================================
+Route::get('/user/check-session', function (\Illuminate\Http\Request $request) {
+    $viewerId = $request->cookie('rodis_viewer');
+    $viewerToken = $request->cookie('rodis_viewer_token');
+
+    if (!$viewerId || !$viewerToken) {
+        return response()->json(['valid' => false, 'reason' => 'no_cookie']);
+    }
+
+    $user = \App\Models\User::find($viewerId);
+
+    if (!$user || $user->role !== 'user') {
+        return response()->json(['valid' => false, 'reason' => 'invalid_user']);
+    }
+
+    if ($user->viewer_token !== $viewerToken) {
+        return response()->json(['valid' => false, 'reason' => 'session_replaced']);
+    }
+
+    return response()->json(['valid' => true]);
+});
 
 // Tangkap semua URL yang nggak terdaftar biar nggak error 404, arahkan kembali ke login
 Route::get('/{any}', function () {

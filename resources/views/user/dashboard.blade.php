@@ -531,11 +531,36 @@
     }
 
     // ============================================================
+    // SINGLE SESSION CHECK — Cek sesi setiap 5 detik
+    // Jika ada login baru di perangkat lain, langsung tendang
+    // ============================================================
+    function startSessionCheck() {
+        setInterval(() => {
+            fetch('/user/check-session', {
+                credentials: 'same-origin'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.valid) {
+                    // Sesi sudah tidak valid → redirect ke login
+                    clearInterval(pollingInterval);
+                    alert('⚠️ Sesi Anda telah berakhir karena akun ini login di perangkat lain.');
+                    window.location.href = '/login';
+                }
+            })
+            .catch(() => {
+                // Gagal cek sesi (network error) → abaikan, coba lagi nanti
+            });
+        }, 5000);
+    }
+
+    // ============================================================
     // INIT
     // ============================================================
     window.onload = function() {
         startRealtimeClock();
         startPolling();
+        startSessionCheck();
     };
     </script>
 </body>
