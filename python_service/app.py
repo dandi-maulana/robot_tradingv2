@@ -41,7 +41,7 @@ DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
     'password': '',
-    'database': 'robot_trading'
+    'database': 'robot_trading5'
 }
 
 def get_db_connection():
@@ -208,6 +208,7 @@ def send_telegram_internal(message):
 
     threading.Thread(target=send_task, daemon=True).start()
 
+# --- DIUBAH: LOGIKA FALSE/TRUE BLOK 5 MENIT ---
 def calc_sig_loss(history_list):
     sig_loss = 0
     blocks = {}
@@ -217,23 +218,31 @@ def calc_sig_loss(history_list):
             hh, mm = parts[0], int(parts[1])
             base_mm = (mm // 5) * 5
             key = f"{c['tanggal']}_{hh}:{base_mm:02d}"
+            
             if key not in blocks: blocks[key] = {}
-            if mm % 5 == 0: blocks[key]['c1'] = c['warna']
-            if mm % 5 == 2: blocks[key]['c2'] = c['warna']
+            offset = mm % 5
+            base_color = "Hijau" if "Hijau" in c['warna'] else "Merah"
+            blocks[key][f'c{offset}'] = base_color
 
     # Diurutkan agar deteksi reset ke 0 dari candle terbaru berjalan akurat
     sorted_keys = sorted(blocks.keys(), reverse=True)
     for k in sorted_keys:
         b = blocks[k]
-        if 'c1' in b and 'c2' in b:
-            # Karena format warna sekarang bisa berisi Doji/Hijau, kita ambil base_color nya saja
-            c1_base = "Hijau" if "Hijau" in b['c1'] else "Merah"
-            c2_base = "Hijau" if "Hijau" in b['c2'] else "Merah"
+        if 'c0' in b:
+            c0 = b['c0']
+            
+            # Kondisi TRUE: salah satu dari c2, c3, atau c4 SAMA dengan c0
+            is_true = False
+            if 'c2' in b and b['c2'] == c0: is_true = True
+            if 'c3' in b and b['c3'] == c0: is_true = True
+            if 'c4' in b and b['c4'] == c0: is_true = True
 
-            if c1_base != c2_base:
-                sig_loss += 1
-            else:
+            if is_true:
                 break # Reset ke 0 jika mendeteksi ada 1 TRUE (Win)
+                
+            # Kondisi FALSE: Siklus lengkap (0,2,3,4) tapi tidak ada yang sama
+            elif 'c2' in b and 'c3' in b and 'c4' in b:
+                sig_loss += 1
 
     return sig_loss
 
@@ -368,101 +377,106 @@ async def async_bot_task(market_name, token, user_account_id):
                 try: await client.start()
                 except: pass
 
-        # ANALISIS CANDLE PER 5 MENIT DENGAN TOLERANSI VPS LAG (2-15 Detik)
+        # --- DIUBAH: SIMPAN DATA SETIAP MENIT AGAR LOGIKA c0, c2, c3, c4 BEKERJA ---
         if 2 <= now.second <= 15 and last_minute_checked != now.minute:
             prev_minute = (now.minute - 1) % 60
+            waktu_laporan = f"{now.hour if now.minute != 0 else (now.hour - 1) % 24:02d}:{prev_minute:02d}"
+            
+            last_raw_candles = []
+            try:
+                await client.market.get_candles(actual_asset_id, 60, 2)
+                await asyncio.sleep(1)
+            except Exception:
+                pass
 
-            if prev_minute % 5 == 0 or prev_minute % 5 == 2:
-                waktu_laporan = f"{now.hour if now.minute != 0 else (now.hour - 1) % 24:02d}:{prev_minute:02d}"
-                last_raw_candles = []
-                try:
-                    await client.market.get_candles(actual_asset_id, 60, 2)
-                    await asyncio.sleep(1)
-                except Exception:
-                    pass
+            if len(last_raw_candles) > 0:
+                last_minute_checked = now.minute
+                target_candle = last_raw_candles[1] if len(last_raw_candles) >= 2 else last_raw_candles[0]
 
-                if len(last_raw_candles) > 0:
-                    last_minute_checked = now.minute
-                    target_candle = last_raw_candles[1] if len(last_raw_candles) >= 2 else last_raw_candles[0]
+                # --- EKSTRAKSI DATA OHLC & VOL BARU ---
+                o_pr = float(target_candle.get('open', 0))
+                h_pr = float(target_candle.get('high', 0))
+                l_pr = float(target_candle.get('low', 0))
+                c_pr = float(target_candle.get('close', 0))
+                vol  = int(target_candle.get('vol', 0))
 
-                    # --- EKSTRAKSI DATA OHLC & VOL BARU ---
-                    o_pr = float(target_candle.get('open', 0))
-                    h_pr = float(target_candle.get('high', 0))
-                    l_pr = float(target_candle.get('low', 0))
-                    c_pr = float(target_candle.get('close', 0))
-                    vol  = int(target_candle.get('vol', 0))
+                # --- TENTUKAN WARNA LOGIKA DOJI ---
+                warna_label = get_candle_color(o_pr, h_pr, l_pr, c_pr)
+                base_warna = "Hijau" if "Hijau" in warna_label else "Merah"
 
-                    # --- TENTUKAN WARNA LOGIKA DOJI ---
-                    warna_label = get_candle_color(o_pr, h_pr, l_pr, c_pr)
-                    base_warna = "Hijau" if "Hijau" in warna_label else "Merah"
+                # Simpan data dengan lengkap
+                save_analysis_db(market_name, now.strftime("%Y-%m-%d"), waktu_laporan, warna_label, o_pr, h_pr, l_pr, c_pr, vol)
 
-                    # Simpan data dengan lengkap
-                    save_analysis_db(market_name, now.strftime("%Y-%m-%d"), waktu_laporan, warna_label, o_pr, h_pr, l_pr, c_pr, vol)
+                # LOGIKA TELEGRAM SERVER
+                if state['tg_active']:
+                    hist = get_history_db(market_name, 100)
+                    sig_loss = calc_sig_loss(hist)
+                    mm = prev_minute
+                    candle_id = f"{now.strftime('%Y-%m-%d')}_{waktu_laporan}"
 
-                    # LOGIKA TELEGRAM SERVER
-                    if state['tg_active']:
-                        hist = get_history_db(market_name, 100)
-                        sig_loss = calc_sig_loss(hist)
-                        mm = prev_minute
-                        candle_id = f"{now.strftime('%Y-%m-%d')}_{waktu_laporan}"
+                    if state["tg_last_candle"] != candle_id:
+                        tg_phase = state['tg_phase']
+                        tg_trade_counter = state['tg_trade_counter']
+                        tg_direction = state['tg_direction']
 
-                        if state["tg_last_candle"] != candle_id:
-                            tg_phase = state['tg_phase']
-                            tg_trade_counter = state['tg_trade_counter']
+                        # --- FITUR TAMBAHAN: NOTIFIKASI STREAK TERDETEKSI (DI MENIT KE-4) ---
+                        if sig_loss == state['tg_target_loss'] and (mm % 5 == 4):
+                            msg_alert = f"🚨 *ALERT STREAK TERDETEKSI* 🚨\n\n📈 *Market:* {market_name}\n📊 *False Beruntun:* {sig_loss}x\n⚠️ Target tercapai! Silahkan pantau untuk Open Posisi selanjutnya."
+                            send_telegram_internal(msg_alert)
+                            state['tg_last_candle'] = candle_id # Tandai agar tidak spam
+                            
+                        elif tg_phase == "IDLE" and (mm % 5 == 2):
+                            if state["tg_target_loss"] > 0:
+                                expected_trades = sig_loss // state["tg_target_loss"]
+
+                                # LOGIKA PINTAR AUTO-RESET SIKLUS
+                                if expected_trades < tg_trade_counter:
+                                    tg_trade_counter = expected_trades
+                                    state['tg_trade_counter'] = tg_trade_counter
+                                    conn2 = get_db_connection()
+                                    if conn2:
+                                        conn2.cursor().execute("UPDATE market_states SET tg_trade_counter=%s WHERE market=%s", (tg_trade_counter, market_name))
+                                        conn2.commit(); conn2.close()
+
+                                if expected_trades > tg_trade_counter and sig_loss > 0:
+                                    tg_trade_counter += 1
+                                    tg_phase = "WAIT_CONF"
+                                    state['tg_trade_counter'] = tg_trade_counter; state['tg_phase'] = tg_phase; state['tg_last_candle'] = candle_id
+                                    next_min = f"{(mm + 3) % 60:02d}"
+                                    msg = f"⚠️ *SERVER: PERSIAPAN OP* ⚠️\n\n📈 *Market:* {market_name}\n🗓 *Waktu:* {waktu_laporan} WIB\n\nTarget *FALSE ke-{sig_loss}* tercapai.\nStandby arah menit ke-{next_min}.\n"
+                                    send_telegram_internal(msg)
+                                    conn2 = get_db_connection()
+                                    if conn2:
+                                        conn2.cursor().execute("UPDATE market_states SET tg_trade_counter=%s, tg_phase=%s, tg_last_candle=%s WHERE market=%s", (tg_trade_counter, tg_phase, candle_id, market_name))
+                                        conn2.commit(); conn2.close()
+
+                        elif tg_phase == "WAIT_CONF" and (mm % 5 == 0):
+                            tg_phase = "WAIT_RES"
+                            state['tg_phase'] = tg_phase
+                            state['tg_direction'] = "BUY 🟢" if base_warna == "Hijau" else "SELL 🔴"
+                            state['tg_last_candle'] = candle_id
                             tg_direction = state['tg_direction']
+                            next_min = f"{(mm + 2) % 60:02d}"
+                            msg = f"🚀 *SERVER: SINYAL EKSEKUSI* 🚀\n\n📈 *Market:* {market_name}\n🗓 *Waktu:* {waktu_laporan} WIB\n\n🚨 Eksekusi Manual:\n👉 *{tg_direction}*\n🗓 *Hasil Menit {next_min}*\n"
+                            send_telegram_internal(msg)
+                            conn2 = get_db_connection()
+                            if conn2:
+                                conn2.cursor().execute("UPDATE market_states SET tg_phase=%s, tg_direction=%s, tg_last_candle=%s WHERE market=%s", (tg_phase, tg_direction, candle_id, market_name))
+                                conn2.commit(); conn2.close()
 
-                            if tg_phase == "IDLE" and (mm % 5 == 2):
-                                if state["tg_target_loss"] > 0:
-                                    expected_trades = sig_loss // state["tg_target_loss"]
-
-                                    # LOGIKA PINTAR AUTO-RESET SIKLUS
-                                    if expected_trades < tg_trade_counter:
-                                        tg_trade_counter = expected_trades
-                                        state['tg_trade_counter'] = tg_trade_counter
-                                        conn2 = get_db_connection()
-                                        if conn2:
-                                            conn2.cursor().execute("UPDATE market_states SET tg_trade_counter=%s WHERE market=%s", (tg_trade_counter, market_name))
-                                            conn2.commit(); conn2.close()
-
-                                    if expected_trades > tg_trade_counter and sig_loss > 0:
-                                        tg_trade_counter += 1
-                                        tg_phase = "WAIT_CONF"
-                                        state['tg_trade_counter'] = tg_trade_counter; state['tg_phase'] = tg_phase; state['tg_last_candle'] = candle_id
-                                        next_min = f"{(mm + 3) % 60:02d}"
-                                        msg = f"⚠️ *SERVER: PERSIAPAN OP* ⚠️\n\n📈 *Market:* {market_name}\n🗓 *Waktu:* {waktu_laporan} WIB\n\nTarget *FALSE ke-{sig_loss}* tercapai.\nStandby arah menit ke-{next_min}.\n"
-                                        send_telegram_internal(msg)
-                                        conn2 = get_db_connection()
-                                        if conn2:
-                                            conn2.cursor().execute("UPDATE market_states SET tg_trade_counter=%s, tg_phase=%s, tg_last_candle=%s WHERE market=%s", (tg_trade_counter, tg_phase, candle_id, market_name))
-                                            conn2.commit(); conn2.close()
-
-                            elif tg_phase == "WAIT_CONF" and (mm % 5 == 0):
-                                tg_phase = "WAIT_RES"
-                                state['tg_phase'] = tg_phase
-                                state['tg_direction'] = "BUY 🟢" if base_warna == "Hijau" else "SELL 🔴"
-                                state['tg_last_candle'] = candle_id
-                                tg_direction = state['tg_direction']
-                                next_min = f"{(mm + 2) % 60:02d}"
-                                msg = f"🚀 *SERVER: SINYAL EKSEKUSI* 🚀\n\n📈 *Market:* {market_name}\n🗓 *Waktu:* {waktu_laporan} WIB\n\n🚨 Eksekusi Manual:\n👉 *{tg_direction}*\n🗓 *Hasil Menit {next_min}*\n"
-                                send_telegram_internal(msg)
-                                conn2 = get_db_connection()
-                                if conn2:
-                                    conn2.cursor().execute("UPDATE market_states SET tg_phase=%s, tg_direction=%s, tg_last_candle=%s WHERE market=%s", (tg_phase, tg_direction, candle_id, market_name))
-                                    conn2.commit(); conn2.close()
-
-                            elif tg_phase == "WAIT_RES" and (mm % 5 == 2):
-                                tg_phase = "IDLE"
-                                state['tg_phase'] = tg_phase; state['tg_last_candle'] = candle_id
-                                required_color = "Hijau" if "BUY" in tg_direction else "Merah"
-                                is_win = (base_warna == required_color)
-                                status_emoji = "✅" if is_win else "❌"
-                                hasil_teks = "TRUE" if is_win else "FALSE"
-                                msg = f"{status_emoji} *SERVER: HASIL TRADE* {status_emoji}\n\n📈 *Market:* {market_name}\nArah Tadi: *{tg_direction}*\nCandle Hasil: *{warna_label.upper()}*\nHasil Akhir: *{hasil_teks}*\n"
-                                send_telegram_internal(msg)
-                                conn2 = get_db_connection()
-                                if conn2:
-                                    conn2.cursor().execute("UPDATE market_states SET tg_phase=%s, tg_last_candle=%s WHERE market=%s", (tg_phase, candle_id, market_name))
-                                    conn2.commit(); conn2.close()
+                        elif tg_phase == "WAIT_RES" and (mm % 5 == 2):
+                            tg_phase = "IDLE"
+                            state['tg_phase'] = tg_phase; state['tg_last_candle'] = candle_id
+                            required_color = "Hijau" if "BUY" in tg_direction else "Merah"
+                            is_win = (base_warna == required_color)
+                            status_emoji = "✅" if is_win else "❌"
+                            hasil_teks = "TRUE" if is_win else "FALSE"
+                            msg = f"{status_emoji} *SERVER: HASIL TRADE* {status_emoji}\n\n📈 *Market:* {market_name}\nArah Tadi: *{tg_direction}*\nCandle Hasil: *{warna_label.upper()}*\nHasil Akhir: *{hasil_teks}*\n"
+                            send_telegram_internal(msg)
+                            conn2 = get_db_connection()
+                            if conn2:
+                                conn2.cursor().execute("UPDATE market_states SET tg_phase=%s, tg_last_candle=%s WHERE market=%s", (tg_phase, candle_id, market_name))
+                                conn2.commit(); conn2.close()
             else:
                 last_minute_checked = now.minute
 
