@@ -86,7 +86,7 @@ def init_market_state(market_name):
     
     if not row:
         c = conn.cursor()
-        c.execute("INSERT INTO market_states (market, created_at, updated_at) VALUES (%s, NOW(), NOW())", (market_name,))
+        c.execute("INSERT INTO market_states (market, is_running, created_at, updated_at) VALUES (%s, 1, NOW(), NOW())", (market_name,))
         conn.commit(); c.close()
         row = {'is_running': 1, 'tg_active': 0, 'tg_target_loss': 7, 'tg_phase': 'IDLE', 'tg_trade_counter': 0, 'tg_last_candle': '', 'tg_direction': ''}
     else:
