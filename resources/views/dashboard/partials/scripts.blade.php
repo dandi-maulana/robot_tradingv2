@@ -187,6 +187,60 @@ const allMarkets = [{
         icon: "🇨🇦",
         cat: "OTC"
     },
+    {
+        id: "Bitcoin OTC",
+        name: "Bitcoin OTC",
+        icon: "₿",
+        cat: "OTC"
+    },
+    {
+        id: "Ethereum OTC",
+        name: "Ethereum OTC",
+        icon: "Ξ",
+        cat: "OTC"
+    },
+    {
+        id: "Ripple OTC",
+        name: "Ripple OTC",
+        icon: "Ʀ",
+        cat: "OTC"
+    },
+    {
+        id: "Litecoin OTC",
+        name: "Litecoin OTC",
+        icon: "Ł",
+        cat: "OTC"
+    },
+    {
+        id: "Solana OTC",
+        name: "Solana OTC",
+        icon: "◎",
+        cat: "OTC"
+    },
+    {
+        id: "Stablecoin Composite",
+        name: "Stablecoin Composite",
+        icon: "💵",
+        cat: "24 Jam FTT"
+    },
+    {
+        id: "Halal Index",
+        name: "Halal Index",
+        icon: "🌙",
+        cat: "24 Jam FTT"
+    },
+    {
+        id: "Silver OTC",
+        name: "Silver OTC",
+        icon: "🥈",
+        cat: "OTC"
+    },
+    {
+        id: "Gold OTC",
+        name: "Gold OTC",
+        icon: "🥇",
+        cat: "OTC"
+    }
 ];
 
 let currentPage = 1;
@@ -710,7 +764,8 @@ function showPopup(message, type = "success") {
     const container = document.getElementById("popup-container");
     const color = type === "success" ? "bg-emerald-500" : "bg-red-500";
     const popup = document.createElement("div");
-    popup.className = `${color} text-white px-5 py-3 rounded-xl shadow-lg animate-popup text-xs sm:text-sm font-bold max-w-[92vw] sm:max-w-sm break-words`;
+    popup.className =
+        `${color} text-white px-5 py-3 rounded-xl shadow-lg animate-popup text-xs sm:text-sm font-bold max-w-[92vw] sm:max-w-sm break-words`;
     popup.innerText = message;
     container.appendChild(popup);
     setTimeout(() => {
@@ -1227,7 +1282,7 @@ function refreshDashboardStatus() {
             let botCountEl = document.getElementById('lbl-bot-count');
             let tgCountEl = document.getElementById('lbl-tg-count');
 
-            if (botCountEl) botCountEl.innerText = `${activeMarketsList.length}/27`;
+            if (botCountEl) botCountEl.innerText = `${activeMarketsList.length}/36`;
 
             if (tgCountEl) {
                 let tgCount = data.tg_active_count || 0;
