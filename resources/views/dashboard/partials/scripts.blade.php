@@ -710,7 +710,7 @@ function showPopup(message, type = "success") {
     const container = document.getElementById("popup-container");
     const color = type === "success" ? "bg-emerald-500" : "bg-red-500";
     const popup = document.createElement("div");
-    popup.className = `${color} text-white px-5 py-3 rounded-xl shadow-lg animate-popup text-sm font-bold`;
+    popup.className = `${color} text-white px-5 py-3 rounded-xl shadow-lg animate-popup text-xs sm:text-sm font-bold max-w-[92vw] sm:max-w-sm break-words`;
     popup.innerText = message;
     container.appendChild(popup);
     setTimeout(() => {
@@ -1451,7 +1451,15 @@ function renderHistoryTable() {
             }
             let amountStr = item.amount ? `$${item.amount}` : '-';
             tbody.innerHTML +=
-                `<tr class="hover:bg-gray-50/50"><td class="py-4 px-8"><span class="text-base font-bold text-dark">${item.waktu}</span><span class="block text-xs text-gray-400">${item.tanggal}</span></td><td class="py-4 px-8 font-bold text-dark">${item.market}</td><td class="py-4 px-8 font-bold text-indigo-600">${amountStr}</td><td class="py-4 px-8"><span class="pill ${pillClass}">${label}</span></td></tr>`;
+                `<tr class="hover:bg-gray-50/50">
+                    <td class="py-4 px-4 sm:px-8 whitespace-nowrap">
+                        <span class="text-xs sm:text-base font-bold text-dark">${item.waktu}</span>
+                        <span class="block text-[10px] sm:text-xs text-gray-400">${item.tanggal}</span>
+                    </td>
+                    <td class="py-4 px-4 sm:px-8 font-bold text-dark text-xs sm:text-base whitespace-nowrap">${item.market}</td>
+                    <td class="py-4 px-4 sm:px-8 font-bold text-indigo-600 text-xs sm:text-base whitespace-nowrap">${amountStr}</td>
+                    <td class="py-4 px-4 sm:px-8 whitespace-nowrap"><span class="pill ${pillClass} text-[10px] sm:text-xs">${label}</span></td>
+                </tr>`;
         });
     } else {
         tbody.innerHTML =
@@ -1468,19 +1476,19 @@ function renderHistoryPagination() {
     const prevDisabled = historyCurrentPage === 1 ? 'opacity-50 cursor-not-allowed' :
         'hover:bg-gray-100 cursor-pointer';
     container.innerHTML +=
-        `<button onclick="changeHistoryPage(${historyCurrentPage - 1})" class="px-3 py-1 bg-white border rounded-lg text-xs font-bold ${prevDisabled}">Prev</button>`;
+        `<button onclick="changeHistoryPage(${historyCurrentPage - 1})" class="px-2 sm:px-3 py-1 bg-white border rounded-lg text-[10px] sm:text-xs font-bold ${prevDisabled}">Prev</button>`;
     let startPage = Math.max(1, historyCurrentPage - 2);
     let endPage = Math.min(totalPages, historyCurrentPage + 2);
     for (let i = startPage; i <= endPage; i++) {
         const activeClass = i === historyCurrentPage ? 'bg-indigo-600 text-white' :
             'bg-white text-gray-600 hover:bg-gray-100 cursor-pointer';
         container.innerHTML +=
-            `<button onclick="changeHistoryPage(${i})" class="w-8 h-8 border rounded-lg text-xs font-bold ${activeClass}">${i}</button>`;
+            `<button onclick="changeHistoryPage(${i})" class="w-7 h-7 sm:w-8 sm:h-8 border rounded-lg text-[10px] sm:text-xs font-bold ${activeClass}">${i}</button>`;
     }
     const nextDisabled = historyCurrentPage === totalPages ? 'opacity-50 cursor-not-allowed' :
         'hover:bg-gray-100 cursor-pointer';
     container.innerHTML +=
-        `<button onclick="changeHistoryPage(${historyCurrentPage + 1})" class="px-3 py-1 bg-white border rounded-lg text-xs font-bold ${nextDisabled}">Next</button>`;
+        `<button onclick="changeHistoryPage(${historyCurrentPage + 1})" class="px-2 sm:px-3 py-1 bg-white border rounded-lg text-[10px] sm:text-xs font-bold ${nextDisabled}">Next</button>`;
 }
 
 function changeHistoryPage(page) {
@@ -1755,7 +1763,7 @@ function renderDojiAnalytics(dojiData) {
     if (!dojiData || dojiData.length === 0) {
         tbody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="px-6 py-12 text-center text-gray-400">
+                    <td colspan="5" class="px-4 sm:px-6 py-12 text-center text-gray-400">
                         <div class="flex flex-col items-center justify-center gap-3">
                             <span class="bg-gray-50 p-4 rounded-full">
                                 <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1792,29 +1800,29 @@ function renderDojiAnalytics(dojiData) {
 
         tbody.innerHTML += `
                 <tr class="hover:bg-gray-50/80 transition-colors group cursor-pointer" onclick="openMarketDetail('${item.market}')">
-                    <td class="px-6 py-4 flex gap-3 items-center">
+                    <td class="px-4 sm:px-6 py-3 sm:py-4 flex gap-3 items-center">
                         <span class="text-2xl">${mktIcon}</span>
                         <div>
                             <p class="font-extrabold text-dark tracking-tight text-sm">${mktName}</p>
                             <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">${item.market}</span>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-center">
+                    <td class="px-4 sm:px-6 py-3 sm:py-4 text-center">
                         <span class="inline-flex items-center gap-1 bg-red-50 border border-red-100 text-red-600 px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm">
                             <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                             ${item.consecutive_false} False
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-center">
+                    <td class="px-4 sm:px-6 py-3 sm:py-4 text-center">
                         <span class="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">${item.total_candles} Candle</span>
                     </td>
-                    <td class="px-6 py-4 text-center">
+                    <td class="px-4 sm:px-6 py-3 sm:py-4 text-center">
                         <div class="flex flex-col items-center">
                             <span class="text-lg font-black text-indigo-600">${item.doji_count}</span>
                             <span class="text-[10px] font-bold text-indigo-400 uppercase">Doji</span>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-center">
+                    <td class="px-4 sm:px-6 py-3 sm:py-4 text-center">
                         <div class="inline-flex flex-col items-center justify-center ${wrColor} px-4 py-2 rounded-xl border border-white/40 shadow-sm transition-transform group-hover:scale-105">
                             <span class="text-lg font-black ${wrTextClass}">${item.winrate}%</span>
                             <span class="text-[9px] uppercase font-bold tracking-wider opacity-80">Winrate Doji</span>
@@ -1822,6 +1830,5 @@ function renderDojiAnalytics(dojiData) {
                     </td>
                 </tr>`;
     });
-    t
 }
 </script>

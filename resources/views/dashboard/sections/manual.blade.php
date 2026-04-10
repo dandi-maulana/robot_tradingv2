@@ -5,7 +5,7 @@
             menu Monitor) untuk mengeksekusi order.</p>
 
         <h3 class="text-sm font-bold text-gray-500 uppercase mb-4">1. Pilih Market Yang Sedang Aktif</h3>
-        <div id="trade-market-container" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div id="trade-market-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         </div>
 
         <div id="trade-panel" class="hidden">

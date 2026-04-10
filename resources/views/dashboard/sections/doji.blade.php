@@ -30,16 +30,16 @@
             <table class="w-full text-left" id="table-doji-analytics">
                 <thead>
                     <tr class="bg-gray-50/80 border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400 font-bold">
-                        <th class="px-6 py-4 rounded-tl-3xl">Market (Pair)</th>
-                        <th class="px-6 py-4 text-center">Status Sinyal</th>
-                        <th class="px-6 py-4 text-center">Data Candle</th>
-                        <th class="px-6 py-4 text-center">Jumlah Doji</th>
-                        <th class="px-6 py-4 text-center rounded-tr-3xl">Winrate Doji</th>
+                        <th class="px-4 sm:px-6 py-3 sm:py-4 rounded-tl-3xl">Market (Pair)</th>
+                        <th class="px-4 sm:px-6 py-3 sm:py-4 text-center whitespace-nowrap">Status Sinyal</th>
+                        <th class="px-4 sm:px-6 py-3 sm:py-4 text-center whitespace-nowrap">Data Candle</th>
+                        <th class="px-4 sm:px-6 py-3 sm:py-4 text-center whitespace-nowrap">Jumlah Doji</th>
+                        <th class="px-4 sm:px-6 py-3 sm:py-4 text-center rounded-tr-3xl whitespace-nowrap">Winrate Doji</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm divide-y divide-gray-50" id="doji-tbody">
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-gray-400">
+                        <td colspan="5" class="px-4 sm:px-6 py-12 text-center text-gray-400">
                             <div class="flex flex-col items-center justify-center gap-3">
                                 <span class="bg-gray-50 p-4 rounded-full">
                                     <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
