@@ -11,9 +11,9 @@
     @include('dashboard.sections.monitor')
     @include('dashboard.sections.detail')
     <!-- @include('dashboard.sections.rodis')
-        @include('dashboard.sections.doji')
-        @include('dashboard.sections.manual')
-        @include('dashboard.sections.history') -->
+    @include('dashboard.sections.doji')
+    @include('dashboard.sections.manual')
+    @include('dashboard.sections.history') -->
 </div>
 @endsection
 

@@ -22,6 +22,20 @@ CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 markets_data = {}
 global_demo_balance = 0.0
 
+# --- KONTROL START_ALL (agar STOP tidak auto-start lagi) ---
+_start_all_lock = threading.Lock()
+_start_all_job_id = 0
+
+def _bump_start_all_job_id():
+    global _start_all_job_id
+    with _start_all_lock:
+        _start_all_job_id += 1
+        return _start_all_job_id
+
+def _get_start_all_job_id():
+    with _start_all_lock:
+        return _start_all_job_id
+
 # --- KONFIGURASI MYSQL ---
 DB_CONFIG = {
     'host': 'localhost',
@@ -504,8 +518,14 @@ def start_all():
     account_id = data.get('account_id')
     save_settings(token, account_id)
 
-    def start_all_bg():
+    job_id = _bump_start_all_job_id()
+
+    def start_all_bg(my_job_id):
         for m in ASSET_MAPPING.keys():
+            # Jika ada STOP atau START_ALL baru, batalkan job lama
+            if my_job_id != _get_start_all_job_id():
+                break
+
             if m not in markets_data: 
                 markets_data[m] = {"manual_queue": []}
             elif markets_data[m].get('is_running') == 1:
@@ -513,9 +533,14 @@ def start_all():
                 
             init_market_state(m)
             threading.Thread(target=run_trading_bot_thread, args=(m, token, account_id), daemon=True).start()
-            time.sleep(1.5)
+
+            # Sleep bertahap supaya responsif saat dibatalkan
+            for _ in range(15):
+                if my_job_id != _get_start_all_job_id():
+                    break
+                time.sleep(0.1)
             
-    threading.Thread(target=start_all_bg, daemon=True).start()
+    threading.Thread(target=start_all_bg, args=(job_id,), daemon=True).start()
     return jsonify({"status": "success", "message": f"Memulai {len(ASSET_MAPPING)} market secara bertahap!"})
 
 @app.route('/api/stop', methods=['POST'])
@@ -530,6 +555,9 @@ def stop_bot():
 
 @app.route('/api/stop_all', methods=['POST'])
 def stop_all():
+    # Batalkan job start_all yang sedang berjalan (kalau ada)
+    _bump_start_all_job_id()
+
     for m in markets_data.values(): m['is_running'] = 0
     conn = get_db_connection()
     if not conn: return jsonify({"status": "error"})
