@@ -1,4 +1,4 @@
-#!/var/www/robot_tradingv2/python_service/venv/bin/python3
+#!/var/www/rodis/python_service/venv/bin/python3.12
 # -*- coding: utf-8 -*-
 import re
 import sys
