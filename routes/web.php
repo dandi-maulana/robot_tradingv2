@@ -33,6 +33,14 @@ Route::middleware('auth')->group(function () {
         }
         return view('dashboard');
     })->name('dashboard');
+
+    Route::get('/admin/history', function () {
+        $user = auth()->user();
+        if ($user->role !== 'admin') {
+            return redirect('/user/dashboard');
+        }
+        return view('admin.history', ['user' => $user]);
+    })->name('admin.history');
 });
 
 // ============================================================
@@ -97,6 +105,40 @@ Route::get('/user/check-session', function (\Illuminate\Http\Request $request) {
 
     return response()->json(['valid' => true]);
 });
+
+// ============================================================
+// USER HISTORY PAGE — Menampilkan history open posisi per market
+// ============================================================
+Route::get('/user/history', function (\Illuminate\Http\Request $request) {
+    $viewerId = $request->cookie('rodis_viewer');
+    $viewerToken = $request->cookie('rodis_viewer_token');
+
+    if (!$viewerId || !$viewerToken) {
+        return redirect('/login');
+    }
+
+    try {
+        $user = \App\Models\User::find($viewerId);
+
+        if (!$user || $user->role !== 'user') {
+            return redirect('/login')
+                ->withCookie(cookie()->forget('rodis_viewer'))
+                ->withCookie(cookie()->forget('rodis_viewer_token'));
+        }
+
+        if ($user->viewer_token !== $viewerToken) {
+            return redirect('/login')
+                ->withCookie(cookie()->forget('rodis_viewer'))
+                ->withCookie(cookie()->forget('rodis_viewer_token'));
+        }
+
+        return view('user.history', ['user' => $user]);
+    } catch (\Exception $e) {
+        return redirect('/login')
+            ->withCookie(cookie()->forget('rodis_viewer'))
+            ->withCookie(cookie()->forget('rodis_viewer_token'));
+    }
+})->name('user.history');
 
 // Tangkap semua URL yang nggak terdaftar biar nggak error 404, arahkan kembali ke login
 Route::get('/{any}', function () {

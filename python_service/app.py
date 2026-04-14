@@ -37,12 +37,12 @@ def _get_start_all_job_id():
         return _start_all_job_id
 
 # --- KONFIGURASI MYSQL ---
-#DB_CONFIG = {
+# DB_CONFIG = {
 #    'host': 'localhost',
 #    'user': 'root',
 #    'password': '',
 #    'database': 'robot_trading5'
-#}
+# }
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'rodis_admin',

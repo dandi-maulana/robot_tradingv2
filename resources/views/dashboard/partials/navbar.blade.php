@@ -16,10 +16,28 @@
                     RODIS <span class="text-gojek font-semibold text-sm sm:text-lg ml-1 hidden lg:inline">(RObot
                         DISana)</span>
                 </h1>
+
+                {{-- Link to History (untuk Admin) --}}
+                @if(auth()->check() && auth()->user()->role === 'admin')
+                <div class="hidden md:flex items-center gap-2 ml-6">
+                    <a href="{{ route('admin.history') }}"
+                        class="text-xs sm:text-sm font-bold text-gojek hover:text-gojek-dark px-3 py-1.5 rounded-lg hover:bg-gojek-light transition-colors">
+                        📈 History
+                    </a>
+                </div>
+                @endif
             </div>
 
             {{-- Mobile: Toggle + Profile Button --}}
             <div class="flex items-center gap-2 md:hidden">
+                {{-- History Link Mobile (untuk Admin) --}}
+                @if(auth()->check() && auth()->user()->role === 'admin')
+                <a href="{{ route('admin.history') }}" title="Trade History"
+                    class="text-gojek font-bold text-sm px-2 py-1 rounded-lg hover:bg-gojek-light transition-colors">
+                    📈
+                </a>
+                @endif
+
                 {{-- Dark/Light Toggle Mobile --}}
                 <button id="theme-toggle-mob" title="Toggle Dark/Light Mode">
                     <span id="theme-icon-mob">🌙</span>
@@ -124,6 +142,12 @@
                 </div>
 
                 <h3 class="text-sm font-extrabold text-dark mb-3">Pusat Kendali</h3>
+
+                {{-- Link to History --}}
+                <a href="{{ route('admin.history') }}"
+                    class="w-full px-4 py-2 mb-3 bg-blue-50 text-blue-600 font-bold text-xs rounded-lg hover:bg-blue-100 transition-colors shadow-sm flex items-center justify-center gap-2">
+                    📈 Trade History
+                </a>
 
                 {{-- Token Input --}}
                 <div class="mb-3">

@@ -12,111 +12,111 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                fontFamily: {
-                    sans: ['Inter', 'sans-serif']
-                },
-                colors: {
-                    gojek: {
-                        DEFAULT: '#00aa13',
-                        dark: '#00880f',
-                        light: '#e6f6e8'
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
                     },
-                    red: {
-                        DEFAULT: '#ee2737',
-                        dark: '#c81d28',
-                        light: '#fdedee'
-                    },
-                    dark: '#1c1c1c',
-                    graybg: '#f4f5f7'
+                    colors: {
+                        gojek: {
+                            DEFAULT: '#00aa13',
+                            dark: '#00880f',
+                            light: '#e6f6e8'
+                        },
+                        red: {
+                            DEFAULT: '#ee2737',
+                            dark: '#c81d28',
+                            light: '#fdedee'
+                        },
+                        dark: '#1c1c1c',
+                        graybg: '#f4f5f7'
+                    }
                 }
             }
         }
-    }
 
-    // API_BASE selalu mengarah ke Python service di port 5000
-    var API_BASE = window.location.hostname === "127.0.0.1" ?
-        window.location.protocol + "//" + window.location.hostname + ":5000/api" :
-        "/api";
+        // API_BASE selalu mengarah ke Python service di port 5000
+        var API_BASE = window.location.hostname === "127.0.0.1" ?
+            window.location.protocol + "//" + window.location.hostname + ":5000/api" :
+            "/api";
     </script>
 
     <style>
-    body {
-        background-color: #f4f5f7;
-    }
-
-    ::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: #9ca3af;
-    }
-
-    /* ===== FADE IN ===== */
-    .fade-in {
-        animation: fadeIn 0.3s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
+        body {
+            background-color: #f4f5f7;
         }
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* ===== STREAK ITEMS ===== */
-    .connected-glow {
-        animation: greenPulse 2.2s infinite ease-in-out;
-    }
-
-    .danger-glow {
-        animation: redPulse 1.4s infinite ease-in-out;
-    }
-
-    @keyframes redPulse {
-        0% {
-            box-shadow: 0 0 0 rgba(239, 68, 68, 0.2);
+        ::-webkit-scrollbar {
+            width: 6px;
         }
 
-        50% {
-            box-shadow: 0 0 16px rgba(239, 68, 68, 0.6);
+        ::-webkit-scrollbar-track {
+            background: transparent;
         }
 
-        100% {
-            box-shadow: 0 0 0 rgba(239, 68, 68, 0.2);
-        }
-    }
-
-    @keyframes greenPulse {
-        0% {
-            box-shadow: 0 0 0 rgba(0, 170, 19, 0.2);
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
         }
 
-        50% {
-            box-shadow: 0 0 12px rgba(0, 170, 19, 0.4);
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
         }
 
-        100% {
-            box-shadow: 0 0 0 rgba(0, 170, 19, 0.2);
+        /* ===== FADE IN ===== */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
         }
-    }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== STREAK ITEMS ===== */
+        .connected-glow {
+            animation: greenPulse 2.2s infinite ease-in-out;
+        }
+
+        .danger-glow {
+            animation: redPulse 1.4s infinite ease-in-out;
+        }
+
+        @keyframes redPulse {
+            0% {
+                box-shadow: 0 0 0 rgba(239, 68, 68, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 16px rgba(239, 68, 68, 0.6);
+            }
+
+            100% {
+                box-shadow: 0 0 0 rgba(239, 68, 68, 0.2);
+            }
+        }
+
+        @keyframes greenPulse {
+            0% {
+                box-shadow: 0 0 0 rgba(0, 170, 19, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 12px rgba(0, 170, 19, 0.4);
+            }
+
+            100% {
+                box-shadow: 0 0 0 rgba(0, 170, 19, 0.2);
+            }
+        }
     </style>
 </head>
 
@@ -144,8 +144,13 @@
             </div>
 
             {{-- RIGHT SIDE: User Info + Logout --}}
-            <div class="flex items-center gap-2 sm:gap-3">
+            <div class="flex items-center gap-2 sm:gap-4">
 
+                {{-- Link to History --}}
+                <a href="{{ route('user.history') }}"
+                    class="text-xs sm:text-sm font-bold text-gojek hover:text-gojek-dark px-2 sm:px-3 py-1.5 rounded-lg hover:bg-gojek-light transition-colors">
+                    📈 History
+                </a>
 
                 {{-- Logout --}}
                 <form action="{{ route('logout') }}" method="POST">
@@ -239,7 +244,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
             <p class="text-gray-500 text-sm font-medium">
                 &copy; <script>
-                document.write(new Date().getFullYear())
+                    document.write(new Date().getFullYear())
                 </script>
                 <strong>RODIS</strong> - Robot Trading. All rights reserved.
             </p>
@@ -252,316 +257,316 @@
          SCRIPTS
     ============================================================ -->
     <script>
-    // ============================================================
-    // MARKET DEFINITIONS (sama persis dengan admin)
-    // ============================================================
-    const allMarkets = [{
-            id: "Asia Composite Index",
-            name: "Asia Index",
-            icon: "🌏",
-            cat: "24 Jam FTT"
-        },
-        {
-            id: "Europe Composite Index",
-            name: "Europe Index",
-            icon: "🌍",
-            cat: "24 Jam FTT"
-        },
-        {
-            id: "Commodity Composite",
-            name: "Commodity",
-            icon: "🌾",
-            cat: "24 Jam FTT"
-        },
-        {
-            id: "Crypto Composite Index",
-            name: "Crypto Index",
-            icon: "₿",
-            cat: "24 Jam FTT"
-        },
-        {
-            id: "EUR/USD OTC",
-            name: "EUR/USD OTC",
-            icon: "🇪🇺",
-            cat: "OTC"
-        },
-        {
-            id: "GBP/USD OTC",
-            name: "GBP/USD OTC",
-            icon: "🇬🇧",
-            cat: "OTC"
-        },
-        {
-            id: "USD/JPY OTC",
-            name: "USD/JPY OTC",
-            icon: "🇯🇵",
-            cat: "OTC"
-        },
-        {
-            id: "AUD/USD OTC",
-            name: "AUD/USD OTC",
-            icon: "🇦🇺",
-            cat: "OTC"
-        },
-        {
-            id: "NZD/USD OTC",
-            name: "NZD/USD OTC",
-            icon: "🇳🇿",
-            cat: "OTC"
-        },
-        {
-            id: "USD/CAD OTC",
-            name: "USD/CAD OTC",
-            icon: "🇨🇦",
-            cat: "OTC"
-        },
-        {
-            id: "USD/CHF OTC",
-            name: "USD/CHF OTC",
-            icon: "🇨🇭",
-            cat: "OTC"
-        },
-        {
-            id: "EUR/JPY OTC",
-            name: "EUR/JPY OTC",
-            icon: "💶",
-            cat: "OTC"
-        },
-        {
-            id: "GBP/JPY OTC",
-            name: "GBP/JPY OTC",
-            icon: "💷",
-            cat: "OTC"
-        },
-        {
-            id: "AUD/JPY OTC",
-            name: "AUD/JPY OTC",
-            icon: "🇦🇺",
-            cat: "OTC"
-        },
-        {
-            id: "CAD/JPY OTC",
-            name: "CAD/JPY OTC",
-            icon: "🇨🇦",
-            cat: "OTC"
-        },
-        {
-            id: "NZD/JPY OTC",
-            name: "NZD/JPY OTC",
-            icon: "🇳🇿",
-            cat: "OTC"
-        },
-        {
-            id: "CHF/JPY OTC",
-            name: "CHF/JPY OTC",
-            icon: "🇨🇭",
-            cat: "OTC"
-        },
-        {
-            id: "EUR/GBP OTC",
-            name: "EUR/GBP OTC",
-            icon: "💶",
-            cat: "OTC"
-        },
-        {
-            id: "EUR/AUD OTC",
-            name: "EUR/AUD OTC",
-            icon: "💶",
-            cat: "OTC"
-        },
-        {
-            id: "EUR/CAD OTC",
-            name: "EUR/CAD OTC",
-            icon: "💶",
-            cat: "OTC"
-        },
-        {
-            id: "EUR/CHF OTC",
-            name: "EUR/CHF OTC",
-            icon: "💶",
-            cat: "OTC"
-        },
-        {
-            id: "GBP/AUD OTC",
-            name: "GBP/AUD OTC",
-            icon: "💷",
-            cat: "OTC"
-        },
-        {
-            id: "GBP/CAD OTC",
-            name: "GBP/CAD OTC",
-            icon: "💷",
-            cat: "OTC"
-        },
-        {
-            id: "GBP/CHF OTC",
-            name: "GBP/CHF OTC",
-            icon: "💷",
-            cat: "OTC"
-        },
-        {
-            id: "AUD/CAD OTC",
-            name: "AUD/CAD OTC",
-            icon: "🇦🇺",
-            cat: "OTC"
-        },
-        {
-            id: "AUD/CHF OTC",
-            name: "AUD/CHF OTC",
-            icon: "🇦🇺",
-            cat: "OTC"
-        },
-        {
-            id: "CAD/CHF OTC",
-            name: "CAD/CHF OTC",
-            icon: "🇨🇦",
-            cat: "OTC"
-        },
-    ];
+        // ============================================================
+        // MARKET DEFINITIONS (sama persis dengan admin)
+        // ============================================================
+        const allMarkets = [{
+                id: "Asia Composite Index",
+                name: "Asia Index",
+                icon: "🌏",
+                cat: "24 Jam FTT"
+            },
+            {
+                id: "Europe Composite Index",
+                name: "Europe Index",
+                icon: "🌍",
+                cat: "24 Jam FTT"
+            },
+            {
+                id: "Commodity Composite",
+                name: "Commodity",
+                icon: "🌾",
+                cat: "24 Jam FTT"
+            },
+            {
+                id: "Crypto Composite Index",
+                name: "Crypto Index",
+                icon: "₿",
+                cat: "24 Jam FTT"
+            },
+            {
+                id: "EUR/USD OTC",
+                name: "EUR/USD OTC",
+                icon: "🇪🇺",
+                cat: "OTC"
+            },
+            {
+                id: "GBP/USD OTC",
+                name: "GBP/USD OTC",
+                icon: "🇬🇧",
+                cat: "OTC"
+            },
+            {
+                id: "USD/JPY OTC",
+                name: "USD/JPY OTC",
+                icon: "🇯🇵",
+                cat: "OTC"
+            },
+            {
+                id: "AUD/USD OTC",
+                name: "AUD/USD OTC",
+                icon: "🇦🇺",
+                cat: "OTC"
+            },
+            {
+                id: "NZD/USD OTC",
+                name: "NZD/USD OTC",
+                icon: "🇳🇿",
+                cat: "OTC"
+            },
+            {
+                id: "USD/CAD OTC",
+                name: "USD/CAD OTC",
+                icon: "🇨🇦",
+                cat: "OTC"
+            },
+            {
+                id: "USD/CHF OTC",
+                name: "USD/CHF OTC",
+                icon: "🇨🇭",
+                cat: "OTC"
+            },
+            {
+                id: "EUR/JPY OTC",
+                name: "EUR/JPY OTC",
+                icon: "💶",
+                cat: "OTC"
+            },
+            {
+                id: "GBP/JPY OTC",
+                name: "GBP/JPY OTC",
+                icon: "💷",
+                cat: "OTC"
+            },
+            {
+                id: "AUD/JPY OTC",
+                name: "AUD/JPY OTC",
+                icon: "🇦🇺",
+                cat: "OTC"
+            },
+            {
+                id: "CAD/JPY OTC",
+                name: "CAD/JPY OTC",
+                icon: "🇨🇦",
+                cat: "OTC"
+            },
+            {
+                id: "NZD/JPY OTC",
+                name: "NZD/JPY OTC",
+                icon: "🇳🇿",
+                cat: "OTC"
+            },
+            {
+                id: "CHF/JPY OTC",
+                name: "CHF/JPY OTC",
+                icon: "🇨🇭",
+                cat: "OTC"
+            },
+            {
+                id: "EUR/GBP OTC",
+                name: "EUR/GBP OTC",
+                icon: "💶",
+                cat: "OTC"
+            },
+            {
+                id: "EUR/AUD OTC",
+                name: "EUR/AUD OTC",
+                icon: "💶",
+                cat: "OTC"
+            },
+            {
+                id: "EUR/CAD OTC",
+                name: "EUR/CAD OTC",
+                icon: "💶",
+                cat: "OTC"
+            },
+            {
+                id: "EUR/CHF OTC",
+                name: "EUR/CHF OTC",
+                icon: "💶",
+                cat: "OTC"
+            },
+            {
+                id: "GBP/AUD OTC",
+                name: "GBP/AUD OTC",
+                icon: "💷",
+                cat: "OTC"
+            },
+            {
+                id: "GBP/CAD OTC",
+                name: "GBP/CAD OTC",
+                icon: "💷",
+                cat: "OTC"
+            },
+            {
+                id: "GBP/CHF OTC",
+                name: "GBP/CHF OTC",
+                icon: "💷",
+                cat: "OTC"
+            },
+            {
+                id: "AUD/CAD OTC",
+                name: "AUD/CAD OTC",
+                icon: "🇦🇺",
+                cat: "OTC"
+            },
+            {
+                id: "AUD/CHF OTC",
+                name: "AUD/CHF OTC",
+                icon: "🇦🇺",
+                cat: "OTC"
+            },
+            {
+                id: "CAD/CHF OTC",
+                name: "CAD/CHF OTC",
+                icon: "🇨🇦",
+                cat: "OTC"
+            },
+        ];
 
-    // ============================================================
-    // REALTIME CLOCK
-    // ============================================================
-    function startRealtimeClock() {
-        setInterval(() => {
-            const clockEl = document.getElementById('realtime-clock');
-            if (clockEl) {
-                const now = new Date();
-                const hh = String(now.getHours()).padStart(2, '0');
-                const mm = String(now.getMinutes()).padStart(2, '0');
-                const ss = String(now.getSeconds()).padStart(2, '0');
-                clockEl.innerText = `${hh}:${mm}:${ss} WIB`;
-            }
-        }, 1000);
-    }
-
-    // ============================================================
-    // DASHBOARD POLLING (READ-ONLY — sama format dengan admin)
-    // ============================================================
-    let pollingInterval;
-
-    function startPolling() {
-        refreshData();
-        pollingInterval = setInterval(refreshData, 3000);
-    }
-
-    function refreshData() {
-        fetch(`${API_BASE}/status_all`)
-            .then(res => res.json())
-            .then(data => {
-                const activeMarkets = data.active_markets || [];
-                const streakList = document.getElementById('streak-list');
-                const botCountEl = document.getElementById('lbl-bot-count');
-
-                if (botCountEl) botCountEl.innerText = `${activeMarkets.length}/36`;
-
-                // Sync telegram count
-                const tgCountEl = document.getElementById('lbl-tg-count');
-                if (tgCountEl) {
-                    let tgCount = data.tg_active_count || 0;
-                    if (tgCount > 0) {
-                        tgCountEl.innerText = `ON (${tgCount} Market)`;
-                        tgCountEl.className = 'text-blue-600 font-extrabold';
-                    } else {
-                        tgCountEl.innerText = 'OFF';
-                        tgCountEl.className = 'text-gray-400 font-bold';
-                    }
+        // ============================================================
+        // REALTIME CLOCK
+        // ============================================================
+        function startRealtimeClock() {
+            setInterval(() => {
+                const clockEl = document.getElementById('realtime-clock');
+                if (clockEl) {
+                    const now = new Date();
+                    const hh = String(now.getHours()).padStart(2, '0');
+                    const mm = String(now.getMinutes()).padStart(2, '0');
+                    const ss = String(now.getSeconds()).padStart(2, '0');
+                    clockEl.innerText = `${hh}:${mm}:${ss} WIB`;
                 }
+            }, 1000);
+        }
 
-                if (!streakList) return;
+        // ============================================================
+        // DASHBOARD POLLING (READ-ONLY — sama format dengan admin)
+        // ============================================================
+        let pollingInterval;
 
-                if (!data.market_streaks || Object.keys(data.market_streaks).length === 0) {
-                    streakList.innerHTML = `
+        function startPolling() {
+            refreshData();
+            pollingInterval = setInterval(refreshData, 3000);
+        }
+
+        function refreshData() {
+            fetch(`${API_BASE}/status_all`)
+                .then(res => res.json())
+                .then(data => {
+                    const activeMarkets = data.active_markets || [];
+                    const streakList = document.getElementById('streak-list');
+                    const botCountEl = document.getElementById('lbl-bot-count');
+
+                    if (botCountEl) botCountEl.innerText = `${activeMarkets.length}/36`;
+
+                    // Sync telegram count
+                    const tgCountEl = document.getElementById('lbl-tg-count');
+                    if (tgCountEl) {
+                        let tgCount = data.tg_active_count || 0;
+                        if (tgCount > 0) {
+                            tgCountEl.innerText = `ON (${tgCount} Market)`;
+                            tgCountEl.className = 'text-blue-600 font-extrabold';
+                        } else {
+                            tgCountEl.innerText = 'OFF';
+                            tgCountEl.className = 'text-gray-400 font-bold';
+                        }
+                    }
+
+                    if (!streakList) return;
+
+                    if (!data.market_streaks || Object.keys(data.market_streaks).length === 0) {
+                        streakList.innerHTML = `
                             <span class="text-xs text-gray-400 font-medium italic col-span-full py-8 text-center">
                                 ⏳ Menunggu Admin mengaktifkan bot trading...
                             </span>`;
-                    return;
-                }
+                        return;
+                    }
 
-                // Sort by streak descending (sama persis format admin)
-                let sortedMarkets = Object.keys(data.market_streaks)
-                    .sort((a, b) => data.market_streaks[b] - data.market_streaks[a]);
+                    // Sort by streak descending (sama persis format admin)
+                    let sortedMarkets = Object.keys(data.market_streaks)
+                        .sort((a, b) => data.market_streaks[b] - data.market_streaks[a]);
 
-                const highestStreak = sortedMarkets.length > 0 ?
-                    data.market_streaks[sortedMarkets[0]] : 0;
+                    const highestStreak = sortedMarkets.length > 0 ?
+                        data.market_streaks[sortedMarkets[0]] : 0;
 
-                // Hitung apakah semua market sudah terkoneksi (sama dengan admin)
-                const totalMarket = allMarkets.length;
-                const activeCount = activeMarkets.length;
-                const allConnected = (activeCount === totalMarket && totalMarket > 0);
+                    // Hitung apakah semua market sudah terkoneksi (sama dengan admin)
+                    const totalMarket = allMarkets.length;
+                    const activeCount = activeMarkets.length;
+                    const allConnected = (activeCount === totalMarket && totalMarket > 0);
 
-                streakList.innerHTML = '';
+                    streakList.innerHTML = '';
 
-                sortedMarkets.forEach(mkt => {
-                    let streak = data.market_streaks[mkt];
-                    let mktObj = allMarkets.find(x => x.id === mkt);
-                    let mktName = mktObj ? mktObj.name : mkt;
+                    sortedMarkets.forEach(mkt => {
+                        let streak = data.market_streaks[mkt];
+                        let mktObj = allMarkets.find(x => x.id === mkt);
+                        let mktName = mktObj ? mktObj.name : mkt;
 
-                    // Warna sama persis dengan admin dashboard
-                    let colorClass = 'bg-gray-50 text-gray-500 border-gray-200';
+                        // Warna sama persis dengan admin dashboard
+                        let colorClass = 'bg-gray-50 text-gray-500 border-gray-200';
 
-                    if (streak >= 7)
-                        colorClass = 'bg-red-100 text-red-700 border-red-300 font-extrabold';
-                    else if (streak >= 5)
-                        colorClass = 'bg-orange-100 text-orange-700 border-orange-300 font-bold';
-                    else if (streak >= 3)
-                        colorClass = 'bg-yellow-100 text-yellow-700 border-yellow-300 font-bold';
-                    else if (streak >= 1)
-                        colorClass = 'bg-blue-50 text-blue-600 border-blue-200';
+                        if (streak >= 7)
+                            colorClass = 'bg-red-100 text-red-700 border-red-300 font-extrabold';
+                        else if (streak >= 5)
+                            colorClass = 'bg-orange-100 text-orange-700 border-orange-300 font-bold';
+                        else if (streak >= 3)
+                            colorClass = 'bg-yellow-100 text-yellow-700 border-yellow-300 font-bold';
+                        else if (streak >= 1)
+                            colorClass = 'bg-blue-50 text-blue-600 border-blue-200';
 
-                    // Warna hijau saat semua market terkoneksi (sama dengan admin)
-                    let connectedClass = allConnected ?
-                        'bg-green-100 text-green-800 border-green-300 font-bold' :
-                        '';
+                        // Warna hijau saat semua market terkoneksi (sama dengan admin)
+                        let connectedClass = allConnected ?
+                            'bg-green-100 text-green-800 border-green-300 font-bold' :
+                            '';
 
-                    let dangerGlow = (streak === highestStreak && streak >= 7) ? 'danger-glow' : '';
+                        let dangerGlow = (streak === highestStreak && streak >= 7) ? 'danger-glow' : '';
 
-                    streakList.innerHTML += `
+                        streakList.innerHTML += `
                             <div class="w-full px-3 py-1.5 rounded-lg border text-[11px] flex items-center justify-between
                                         ${colorClass} ${connectedClass} ${dangerGlow}
                                         transition-all duration-300 cursor-default hover:scale-[1.02] hover:shadow-md">
                                 <span class="truncate font-semibold">${mktName}</span>
                                 <span class="bg-white/90 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider border border-white/50">False: ${streak}</span>
                             </div>`;
+                    });
+                })
+                .catch(err => {
+                    console.error("Polling error:", err);
                 });
-            })
-            .catch(err => {
-                console.error("Polling error:", err);
-            });
-    }
+        }
 
-    // ============================================================
-    // SINGLE SESSION CHECK — Cek sesi setiap 5 detik
-    // Jika ada login baru di perangkat lain, langsung tendang
-    // ============================================================
-    function startSessionCheck() {
-        setInterval(() => {
-            fetch('/user/check-session', {
-                credentials: 'same-origin'
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (!data.valid) {
-                    // Sesi sudah tidak valid → redirect ke login
-                    clearInterval(pollingInterval);
-                    alert('⚠️ Sesi Anda telah berakhir karena akun ini login di perangkat lain.');
-                    window.location.href = '/login';
-                }
-            })
-            .catch(() => {
-                // Gagal cek sesi (network error) → abaikan, coba lagi nanti
-            });
-        }, 5000);
-    }
+        // ============================================================
+        // SINGLE SESSION CHECK — Cek sesi setiap 5 detik
+        // Jika ada login baru di perangkat lain, langsung tendang
+        // ============================================================
+        function startSessionCheck() {
+            setInterval(() => {
+                fetch('/user/check-session', {
+                        credentials: 'same-origin'
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.valid) {
+                            // Sesi sudah tidak valid → redirect ke login
+                            clearInterval(pollingInterval);
+                            alert('⚠️ Sesi Anda telah berakhir karena akun ini login di perangkat lain.');
+                            window.location.href = '/login';
+                        }
+                    })
+                    .catch(() => {
+                        // Gagal cek sesi (network error) → abaikan, coba lagi nanti
+                    });
+            }, 5000);
+        }
 
-    // ============================================================
-    // INIT
-    // ============================================================
-    window.onload = function() {
-        startRealtimeClock();
-        startPolling();
-        startSessionCheck();
-    };
+        // ============================================================
+        // INIT
+        // ============================================================
+        window.onload = function() {
+            startRealtimeClock();
+            startPolling();
+            startSessionCheck();
+        };
     </script>
 </body>
 

@@ -25,6 +25,8 @@ Route::get('/user', function (Request $request) {
 
 Route::get('/get_settings', [ApiController::class, 'getSettings']);
 Route::post('/manual_trade', [ApiController::class, 'manualTrade']);
+Route::get('/trade-history', [ApiController::class, 'getTradeHistory']);
+Route::get('/debug-trade-history', [ApiController::class, 'debugTradeHistory']);
 
 // =========================================================================
 // CATATAN PENTING:
