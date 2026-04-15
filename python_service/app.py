@@ -37,18 +37,18 @@ def _get_start_all_job_id():
         return _start_all_job_id
 
 # --- KONFIGURASI MYSQL ---
-# DB_CONFIG = {
-#    'host': 'localhost',
-#    'user': 'root',
-#    'password': '',
-#    'database': 'robot_trading5'
-# }
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'rodis_admin',
-    'password': '@Nightmare02',
-    'database': 'robot_trading'
+   'host': 'localhost',
+   'user': 'root',
+   'password': '',
+   'database': 'robot_trading5'
 }
+# DB_CONFIG = {
+#     'host': 'localhost',
+#     'user': 'rodis_admin',
+#     'password': '@Nightmare02',
+#     'database': 'robot_trading'
+# }
 
 def get_db_connection():
     try:
@@ -934,6 +934,181 @@ def trade_history():
         conn.close()
         return jsonify({"trade_history": results})
     return jsonify({"trade_history": []})
+
+def count_false_streak_triggers(candles):
+    """
+    Implement logic sama seperti PHP untuk count FALSE patterns dalam 5-minute blocks
+    Group candles by 5-minute blocks (c0-c4)
+    c0 = menit ke 0-4
+    c1-c4 = menit ke 5-9, 10-14, 15-19, 20-24 dst
+    """
+    if not candles or len(candles) < 5:
+        return 0
+    
+    sig_loss = 0
+    blocks = {}
+    
+    # Group candles by 5-minute blocks
+    for candle in candles:
+        waktu = candle.get('waktu', '')
+        warna = candle.get('warna', '')
+        
+        if not waktu or ':' not in waktu:
+            continue
+        
+        try:
+            parts = waktu.split(':')
+            if len(parts) < 2:
+                continue
+            
+            hh = parts[0]
+            mm = int(parts[1])
+            
+            if mm < 0 or mm > 59:
+                continue
+            
+            base_mm = (mm // 5) * 5
+            key = f"{hh}:{base_mm:02d}"
+            
+            if key not in blocks:
+                blocks[key] = {}
+            
+            offset = mm % 5
+            base_color = 'Hijau' if 'Hijau' in warna else 'Merah'
+            blocks[key][f"c{offset}"] = base_color
+        except Exception as e:
+            continue
+    
+    if not blocks:
+        return 0
+    
+    # Sort blocks dari yang terbaru (reverse order)
+    sorted_keys = sorted(blocks.keys(), reverse=True)
+    
+    for k in sorted_keys:
+        b = blocks[k]
+        if 'c0' in b:
+            c0 = b['c0']
+            
+            # Kondisi TRUE: salah satu dari c2, c3, atau c4 SAMA dengan c0
+            is_true = (
+                ('c2' in b and b['c2'] == c0) or
+                ('c3' in b and b['c3'] == c0) or
+                ('c4' in b and b['c4'] == c0)
+            )
+            
+            if is_true:
+                break  # Reset ke 0 jika mendeteksi ada 1 TRUE (Win)
+            # Kondisi FALSE: Siklus lengkap (0,2,3,4) tapi tidak ada yang sama
+            elif 'c2' in b and 'c3' in b and 'c4' in b:
+                sig_loss += 1
+    
+    return sig_loss
+
+@app.route('/api/trade-history', methods=['GET'])
+def trade_history_calculated():
+    """
+    Endpoint baru untuk history page dengan calculated triggers dari market_histories
+    Format response sama seperti PHP endpoint
+    """
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                'success': True,
+                'data': [],
+                'date': datetime.now().strftime('%Y-%m-%d'),
+                'summary': {
+                    'active_markets_today': 0,
+                    'total_triggers_today': 0,
+                    'total_triggers_month': 0
+                }
+            })
+        
+        today = datetime.now().strftime('%Y-%m-%d')
+        month_start = datetime.now().strftime('%Y-%m-01')
+        
+        # Calculate month end
+        now = datetime.now()
+        if now.month == 12:
+            month_end = now.replace(year=now.year + 1, month=1, day=1) - timedelta(days=1)
+        else:
+            month_end = now.replace(month=now.month + 1, day=1) - timedelta(days=1)
+        month_end = month_end.strftime('%Y-%m-%d')
+        
+        c = conn.cursor(dictionary=True)
+        
+        # Get list of all markets from market_states
+        c.execute("SELECT market FROM market_states")
+        states = c.fetchall()
+        
+        result = []
+        total_today = 0
+        total_month = 0
+        
+        for state in states:
+            market = state['market']
+            
+            # Count daily triggers
+            c.execute("""
+                SELECT tanggal, waktu, warna FROM market_histories 
+                WHERE market = %s AND tanggal = %s 
+                ORDER BY waktu ASC
+            """, (market, today))
+            daily_candles = c.fetchall()
+            daily_triggers = count_false_streak_triggers(daily_candles) if daily_candles else 0
+            
+            # Count monthly triggers
+            c.execute("""
+                SELECT tanggal, waktu, warna FROM market_histories 
+                WHERE market = %s AND tanggal >= %s AND tanggal <= %s 
+                ORDER BY tanggal ASC, waktu ASC
+            """, (market, month_start, month_end))
+            monthly_candles = c.fetchall()
+            
+            monthly_triggers = 0
+            if monthly_candles:
+                # Group by tanggal dan calculate per hari
+                dates_data = {}
+                for candle in monthly_candles:
+                    date = candle['tanggal']
+                    if date not in dates_data:
+                        dates_data[date] = []
+                    dates_data[date].append(candle)
+                
+                # Calculate triggers per date
+                for date, candles in dates_data.items():
+                    monthly_triggers += count_false_streak_triggers(candles)
+            
+            total_today += daily_triggers
+            total_month += monthly_triggers
+            
+            if daily_triggers > 0 or monthly_triggers > 0:
+                result.append({
+                    'market': market,
+                    'today': daily_triggers,
+                    'month': monthly_triggers
+                })
+        
+        c.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': result,
+            'date': today,
+            'summary': {
+                'active_markets_today': len([r for r in result if r['today'] > 0]),
+                'total_triggers_today': total_today,
+                'total_triggers_month': total_month
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e),
+            'data': []
+        }), 500
 
 @app.route('/api/send_wa', methods=['POST'])
 def send_telegram():
