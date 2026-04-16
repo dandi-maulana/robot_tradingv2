@@ -155,6 +155,7 @@
                             </tr>
                         </tfoot>
                     </table>
+                    <div id="pagination" class="mt-4 flex justify-center gap-2"></div>
                 </div>
 
                 <div class="mt-4 text-xs text-slate-500 flex justify-between items-center">
@@ -164,9 +165,31 @@
 
                 <div class="mt-5 border-t border-slate-200 pt-4">
                     <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                        <div class="text-xs font-semibold text-blue-700">Persentase Benar Bulan Ini</div>
-                        <div id="bottom-month-accuracy" class="text-xl font-extrabold text-blue-700 mt-1">0.00%</div>
+
+                        <!-- 🔥 HEADER + SELECT -->
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs font-semibold text-blue-700">
+                                Persentase Benar Bulan Ini
+                            </div>
+
+                            <select id="phase-select"
+                                class="text-xs font-semibold border border-blue-200 rounded px-2 py-1 bg-white">
+                                <option value="ALL">Semua Fase</option>
+                                <option value="1">Fase 1</option>
+                                <option value="2">Fase 2</option>
+                                <option value="3">Fase 3</option>
+                                <option value="4">Fase 4</option>
+                                <option value="5">Fase 5</option>
+                                <option value="6">Fase 6</option>
+                                <option value="7">Fase 7</option>
+                            </select>
+                        </div>
+
+                        <!-- 🔥 HASIL -->
+                        <div id="bottom-month-accuracy" class="text-xl font-extrabold text-blue-700 mt-2">0.00%</div>
+
                         <div id="bottom-month-breakdown" class="text-xs text-blue-700 mt-1">Win 0 / Loss 0</div>
+
                     </div>
                 </div>
             </div>
@@ -185,7 +208,7 @@
         let currentApiDate = '';
         let currentDate = '';
         let currentPage = 1;
-        const rowsPerPage = 10;
+        const rowsPerPage = 5;
         const MASS_TG_LOSS_STORAGE_KEY = 'rodis_mass_tg_loss';
 
         function startRealtimeClock() {
@@ -333,8 +356,12 @@
                     <td class="px-3 py-2 text-center">${badgePhase(row.phase_7, row, 7)}</td>
                 </tr>
             `).join('');
+            renderPagination(totalPages);
 
-            document.getElementById('rows-info').textContent = `${rows.length} baris ditampilkan`;
+            const end = Math.min(start + rowsPerPage, totalRows);
+
+            document.getElementById('rows-info').textContent =
+                `${start + 1}-${end} dari ${totalRows} baris`;
         }
 
         function formatPercent(value) {
@@ -386,15 +413,36 @@
             const today = summary?.today || {};
             const month = summary?.month || {};
 
-            const monthAccuracy = month.accuracy_label || '0.00%';
+            const phaseStats = calculateMonthlyPhaseStats();
+            const selectedPhase = document.getElementById('phase-select')?.value || 'ALL';
 
-            document.getElementById('month-accuracy').textContent = monthAccuracy;
+            let percent = 0;
+            let win = 0;
+            let loss = 0;
+
+            if (selectedPhase === 'ALL') {
+                Object.values(phaseStats).forEach(p => {
+                    win += p.true;
+                    loss += p.false;
+                });
+
+                const total = win + loss;
+                percent = total > 0 ? ((win / total) * 100).toFixed(2) : 0;
+
+            } else {
+                const p = phaseStats[selectedPhase];
+                win = p.true;
+                loss = p.false;
+                percent = p.percent;
+            }
+
+            document.getElementById('month-accuracy').textContent = percent + '%';
             document.getElementById('today-total').textContent = today.total_signals || 0;
             document.getElementById('month-total').textContent = month.total_signals || 0;
 
-            document.getElementById('bottom-month-accuracy').textContent = monthAccuracy;
+            document.getElementById('bottom-month-accuracy').textContent = percent + '%';
             document.getElementById('bottom-month-breakdown').textContent =
-                `Win ${month.wins || 0} / Loss ${month.losses || 0}`;
+                `Win ${win} / Loss ${loss}`;
         }
 
         function loadTradeHistory() {
@@ -431,8 +479,36 @@
             }
 
             let html = '';
+
+            // tombol prev
+            if (currentPage > 1) {
+                html += `
+            <button onclick="goToPage(${currentPage - 1})"
+                class="px-3 py-1 border rounded-lg text-xs font-semibold bg-white hover:bg-slate-100">
+                Prev
+            </button>
+        `;
+            }
+
+            // nomor halaman
             for (let i = 1; i <= totalPages; i++) {
-                html += `<button onclick="goToPage(${i})">${i}</button>`;
+                html += `
+            <button onclick="goToPage(${i})"
+                class="px-3 py-1 border rounded-lg text-xs font-semibold
+                ${i === currentPage ? 'bg-blue-500 text-white' : 'bg-white hover:bg-slate-100'}">
+                ${i}
+            </button>
+        `;
+            }
+
+            // tombol next
+            if (currentPage < totalPages) {
+                html += `
+            <button onclick="goToPage(${currentPage + 1})"
+                class="px-3 py-1 border rounded-lg text-xs font-semibold bg-white hover:bg-slate-100">
+                Next
+            </button>
+        `;
             }
 
             container.innerHTML = html;
@@ -441,6 +517,31 @@
         function goToPage(page) {
             currentPage = page;
             renderTable();
+        }
+
+        function calculateMonthlyPhaseStats() {
+            let result = {};
+
+            for (let i = 1; i <= 7; i++) {
+                let trueCount = 0;
+                let falseCount = 0;
+
+                historyData.forEach(row => {
+                    const val = String(row[`phase_${i}`] || '-').toUpperCase();
+                    if (val === 'TRUE') trueCount++;
+                    if (val === 'FALSE') falseCount++;
+                });
+
+                const total = trueCount + falseCount;
+
+                result[i] = {
+                    true: trueCount,
+                    false: falseCount,
+                    percent: total > 0 ? ((trueCount / total) * 100).toFixed(2) : 0
+                };
+            }
+
+            return result;
         }
 
         document.getElementById('ticker-filter').addEventListener('change', (e) => {
@@ -454,10 +555,18 @@
             renderTable();
             renderTodayPhaseFooter();
         });
+        document.getElementById('phase-select').addEventListener('change', () => {
+            renderSummary({});
+        });
 
         window.onload = function() {
             startRealtimeClock();
             loadTradeHistory();
+
+            // 🔥 AUTO REFRESH SETIAP 5 DETIK
+            setInterval(() => {
+                loadTradeHistory();
+            }, 5000);
         };
     </script>
 </body>

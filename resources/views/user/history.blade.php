@@ -167,9 +167,31 @@
 
                 <div class="mt-5 border-t border-slate-200 pt-4">
                     <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                        <div class="text-xs font-semibold text-blue-700">Persentase Benar Bulan Ini</div>
-                        <div id="bottom-month-accuracy" class="text-xl font-extrabold text-blue-700 mt-1">0.00%</div>
+
+                        <!-- 🔥 HEADER + SELECT -->
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs font-semibold text-blue-700">
+                                Persentase Benar Bulan Ini
+                            </div>
+
+                            <select id="phase-select"
+                                class="text-xs font-semibold border border-blue-200 rounded px-2 py-1 bg-white">
+                                <option value="ALL">Semua Fase</option>
+                                <option value="1">Fase 1</option>
+                                <option value="2">Fase 2</option>
+                                <option value="3">Fase 3</option>
+                                <option value="4">Fase 4</option>
+                                <option value="5">Fase 5</option>
+                                <option value="6">Fase 6</option>
+                                <option value="7">Fase 7</option>
+                            </select>
+                        </div>
+
+                        <!-- 🔥 HASIL -->
+                        <div id="bottom-month-accuracy" class="text-xl font-extrabold text-blue-700 mt-2">0.00%</div>
+
                         <div id="bottom-month-breakdown" class="text-xs text-blue-700 mt-1">Win 0 / Loss 0</div>
+
                     </div>
                 </div>
             </div>
@@ -372,15 +394,39 @@
 
         function renderSummary(summary) {
             const today = summary?.today || {};
-            const month = summary?.month || {};
+            const month = summary?.month || {}; // ✅ FIX WAJIB
 
-            document.getElementById('month-accuracy').textContent = month.accuracy_label || '0.00%';
+            const phaseStats = calculateMonthlyPhaseStats();
+            const selectedPhase = document.getElementById('phase-select')?.value || 'ALL';
+
+            let percent = 0;
+            let win = 0;
+            let loss = 0;
+
+            if (selectedPhase === 'ALL') {
+                Object.values(phaseStats).forEach(p => {
+                    win += p.true;
+                    loss += p.false;
+                });
+
+                const total = win + loss;
+                percent = total > 0 ? ((win / total) * 100).toFixed(2) : 0;
+
+            } else {
+                const p = phaseStats[selectedPhase];
+                win = p.true;
+                loss = p.false;
+                percent = p.percent;
+            }
+
+            // ✅ FIX SEMUA OUTPUT
+            document.getElementById('month-accuracy').textContent = percent + '%';
+            document.getElementById('bottom-month-accuracy').textContent = percent + '%';
+            document.getElementById('bottom-month-breakdown').textContent =
+                `Win ${win} / Loss ${loss}`;
+
             document.getElementById('today-total').textContent = today.total_signals || 0;
             document.getElementById('month-total').textContent = month.total_signals || 0;
-
-            document.getElementById('bottom-month-accuracy').textContent = month.accuracy_label || '0.00%';
-            document.getElementById('bottom-month-breakdown').textContent =
-                `Win ${month.wins || 0} / Loss ${month.losses || 0}`;
         }
 
         function loadTradeHistory() {
@@ -407,6 +453,31 @@
                 });
         }
 
+        function calculateMonthlyPhaseStats() {
+            let result = {};
+
+            for (let i = 1; i <= 7; i++) {
+                let trueCount = 0;
+                let falseCount = 0;
+
+                historyData.forEach(row => {
+                    const val = String(row[`phase_${i}`] || '-').toUpperCase();
+                    if (val === 'TRUE') trueCount++;
+                    if (val === 'FALSE') falseCount++;
+                });
+
+                const total = trueCount + falseCount;
+
+                result[i] = {
+                    true: trueCount,
+                    false: falseCount,
+                    percent: total > 0 ? ((trueCount / total) * 100).toFixed(2) : 0
+                };
+            }
+
+            return result;
+        }
+
         document.getElementById('ticker-filter').addEventListener('change', (e) => {
             currentTicker = e.target.value;
             currentPage = 1;
@@ -420,9 +491,16 @@
             renderTodayPhaseFooter();
         });
 
+        document.getElementById('phase-select').addEventListener('change', () => {
+            renderSummary({});
+        });
+
         window.onload = function() {
             startRealtimeClock();
             loadTradeHistory();
+            setInterval(() => {
+                loadTradeHistory();
+            }, 5000); // tiap 5 detik
         };
     </script>
 </body>

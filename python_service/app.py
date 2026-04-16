@@ -37,18 +37,18 @@ def _get_start_all_job_id():
         return _start_all_job_id
 
 # --- KONFIGURASI MYSQL ---
-# DB_CONFIG = {
-#    'host': 'localhost',
-#    'user': 'root',
-#    'password': '',
-#    'database': 'robot_trading5'
-# }
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'rodis_admin',
-    'password': '@Nightmare02',
-    'database': 'robot_trading'
+   'host': 'localhost',
+   'user': 'root',
+   'password': '',
+   'database': 'robot_trading5'
 }
+# DB_CONFIG = {
+#     'host': 'localhost',
+#     'user': 'rodis_admin',
+#     'password': '@Nightmare02',
+#     'database': 'robot_trading'
+# }
 
 def get_db_connection():
     try:
@@ -1352,13 +1352,14 @@ def trade_history_calculated():
 
         c = conn.cursor(dictionary=True)
 
-        # ✅ AMBIL DARI phase_histories (INI YANG BENAR)
+        # ✅ ambil semua data (terbaru dulu)
         c.execute("""
             SELECT 
                 tanggal,
                 waktu,
                 market,
-                trigger_at,  
+                trigger_at,
+                target_loss,
                 phase_1,
                 phase_2,
                 phase_3,
@@ -1372,12 +1373,24 @@ def trade_history_calculated():
         """)
         rows = c.fetchall()
 
-        result = []
+        # 🔥 FIX 1: GROUP PER TICKER (AMBIL TERBARU SAJA)
+        latest_per_market = {}
+        for row in rows:
+            market = row.get("market")
 
+            # ambil pertama saja (karena sudah DESC)
+            if market not in latest_per_market:
+                latest_per_market[market] = row
+
+        rows = list(latest_per_market.values())
+
+        result = []
         total_true = 0
         total_false = 0
 
+        # 🔥 LOOP DATA FINAL (SUDAH UNIQUE)
         for row in rows:
+
             # hitung TRUE / FALSE
             for i in range(1, 8):
                 val = str(row.get(f'phase_{i}', '')).upper()
@@ -1391,6 +1404,10 @@ def trade_history_calculated():
                 "waktu": row.get("waktu"),
                 "ticker": row.get("market"),
 
+                # 🔥 penting untuk jam
+                "trigger_at": row.get("trigger_at"),
+                "target_loss": row.get("target_loss", 2),
+
                 "phase_1": row.get("phase_1", "-"),
                 "phase_2": row.get("phase_2", "-"),
                 "phase_3": row.get("phase_3", "-"),
@@ -1398,9 +1415,9 @@ def trade_history_calculated():
                 "phase_5": row.get("phase_5", "-"),
                 "phase_6": row.get("phase_6", "-"),
                 "phase_7": row.get("phase_7", "-"),
-                "trigger_at": row.get("trigger_at"),
             })
 
+        # 🔥 HITUNG SUMMARY
         total = total_true + total_false
         accuracy = (total_true / total * 100) if total > 0 else 0
 
