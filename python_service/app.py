@@ -1397,6 +1397,7 @@ def trade_history_calculated():
                 "phase_5": row.get("phase_5", "-"),
                 "phase_6": row.get("phase_6", "-"),
                 "phase_7": row.get("phase_7", "-"),
+                "trigger_at": row.get("trigger_at"),
             })
 
         total = total_true + total_false

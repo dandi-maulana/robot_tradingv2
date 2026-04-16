@@ -184,6 +184,8 @@
         let currentTicker = 'ALL';
         let currentApiDate = '';
         let currentDate = '';
+        let currentPage = 1;
+        const rowsPerPage = 10;
         const MASS_TG_LOSS_STORAGE_KEY = 'rodis_mass_tg_loss';
 
         function startRealtimeClock() {
@@ -305,6 +307,10 @@
         function renderTable() {
             const tbody = document.getElementById('history-table');
             const rows = getDisplayedRows();
+            const totalRows = rows.length;
+            const totalPages = Math.ceil(totalRows / rowsPerPage);
+            const start = (currentPage - 1) * rowsPerPage;
+            const paginatedRows = rows.slice(start, start + rowsPerPage);
 
             if (!rows.length) {
                 tbody.innerHTML =
@@ -313,7 +319,7 @@
                 return;
             }
 
-            tbody.innerHTML = rows.map(row => `
+            tbody.innerHTML = paginatedRows.map(row => `
                 <tr class="hover:bg-slate-50">
                     <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.tanggal || '-'}</td>
                     <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.waktu || '-'}</td>
@@ -414,6 +420,27 @@
                     document.getElementById('history-footer').innerHTML =
                         '<tr><td colspan="10" class="px-3 py-3 text-center text-xs font-bold text-red-500">Gagal memuat statistik fase.</td></tr>';
                 });
+        }
+
+        function renderPagination(totalPages) {
+            const container = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button onclick="goToPage(${i})">${i}</button>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderTable();
         }
 
         document.getElementById('ticker-filter').addEventListener('change', (e) => {
