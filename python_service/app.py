@@ -1340,110 +1340,83 @@ def count_open_positions_today(candles):
 
 @app.route('/api/trade-history', methods=['GET'])
 def trade_history_calculated():
-    """
-    Endpoint untuk history page dengan OPEN POSISI count dari market_states DB
-    
-    PENTING: 
-    - Data sudah tersimpan di market_states.open_positions_today
-    - Tidak perlu recalculate, cukup baca dari DB
-    - Lebih cepat dan akurat
-    - Return SEMUA market (tidak ada filter di backend)
-    """
     try:
         conn = get_db_connection()
         if not conn:
-            print("[API] Database connection failed")
             return jsonify({
                 'success': True,
                 'data': [],
                 'date': datetime.now().strftime('%Y-%m-%d'),
-                'summary': {
-                    'active_markets_today': 0,
-                    'total_open_positions_today': 0,
-                    'total_open_positions_month': 0
-                }
+                'summary': {}
             })
-        
-        today = datetime.now().strftime('%Y-%m-%d')
-        month_start = datetime.now().strftime('%Y-%m-01')
-        
-        # Calculate month end
-        now = datetime.now()
-        if now.month == 12:
-            month_end = now.replace(year=now.year + 1, month=1, day=1) - timedelta(days=1)
-        else:
-            month_end = now.replace(month=now.month + 1, day=1) - timedelta(days=1)
-        month_end = month_end.strftime('%Y-%m-%d')
-        
-        print(f"[API] Trade history request - Today: {today}, Period: {month_start} to {month_end}")
-        
+
         c = conn.cursor(dictionary=True)
-        
-        # Get list of all markets from market_states
-        c.execute("SELECT market FROM market_states")
-        states = c.fetchall()
-        print(f"[API] Found {len(states)} markets")
-        
+
+        # 🔥 AMBIL DATA HISTORY (INI YANG DIPAKAI FRONTEND)
+        c.execute("""
+            SELECT tanggal, waktu, market, warna
+            FROM market_histories
+            ORDER BY tanggal DESC, waktu DESC
+            LIMIT 300
+        """)
+        rows = c.fetchall()
+
         result = []
-        total_today = 0
-        total_month = 0
-        
-        for state in states:
-            market = state['market']
-            
-            try:
-                # ✅ READ TODAY open_positions dari DB (tidak perlu recalculate)
-                c.execute("""
-                    SELECT open_positions_today FROM market_states 
-                    WHERE market = %s
-                """, (market,))
-                today_row = c.fetchone()
-                daily_open_positions = today_row['open_positions_today'] if today_row else 0
-                
-                # Monthly: tetap calculate dari candles (karena monthly belum ada di DB)
-                c.execute("""
-                    SELECT tanggal, waktu, warna FROM market_histories 
-                    WHERE market = %s AND tanggal >= %s AND tanggal <= %s 
-                    ORDER BY tanggal ASC, waktu ASC
-                """, (market, month_start, month_end))
-                monthly_candles = c.fetchall()
-                monthly_open_positions = count_open_positions_today(monthly_candles) if monthly_candles else 0
-                
-                total_today += daily_open_positions
-                total_month += monthly_open_positions
-                
-                # ✅ RETURN SEMUA MARKET TANPA FILTER
-                result.append({
-                    'market': market,
-                    'today': daily_open_positions,
-                    'month': monthly_open_positions
-                })
-                print(f"[API] {market}: today={daily_open_positions} op (from DB), month={monthly_open_positions} op")
-                    
-            except Exception as e:
-                print(f"[API] Error processing {market}: {str(e)}")
-                continue
-        
+
+        # 🔥 LOOP DATA → FORMAT SESUAI FRONTEND
+        for row in rows:
+            warna = (row.get('warna') or '').upper()
+
+            # mapping sederhana (bisa kamu upgrade nanti)
+            phase_value = 'TRUE' if warna == 'HIJAU' else 'FALSE' if warna == 'MERAH' else '-'
+
+            result.append({
+                "tanggal": row.get("tanggal"),
+                "waktu": row.get("waktu"),
+                "ticker": row.get("market"),
+
+                # sementara semua phase pakai value yang sama
+                "phase_1": phase_value,
+                "phase_2": "-",
+                "phase_3": "-",
+                "phase_4": "-",
+                "phase_5": "-",
+                "phase_6": "-",
+                "phase_7": "-"
+            })
+
+        # 🔥 SUMMARY (BIAR CARD ATAS TIDAK ERROR)
+        total_signals = len(result)
+        total_true = len([r for r in result if r["phase_1"] == "TRUE"])
+        total_false = len([r for r in result if r["phase_1"] == "FALSE"])
+
+        accuracy = (total_true / (total_true + total_false) * 100) if (total_true + total_false) > 0 else 0
+
+        summary = {
+            "today": {
+                "total_signals": total_signals
+            },
+            "month": {
+                "total_signals": total_signals,
+                "wins": total_true,
+                "losses": total_false,
+                "accuracy_label": f"{accuracy:.2f}%"
+            }
+        }
+
         c.close()
         conn.close()
-        
-        # Calculate active markets (yang hari ini ada open posisi >= 1)
-        active_today = len([r for r in result if r['today'] >= 1])
-        
-        print(f"[API] Final: {len(result)} markets, active_today={active_today}, total_today={total_today} op, total_month={total_month} op")
-        
+
         return jsonify({
             'success': True,
             'data': result,
-            'date': today,
-            'summary': {
-                'active_markets_today': active_today,
-                'total_open_positions_today': total_today,
-                'total_open_positions_month': total_month
-            }
+            'date': datetime.now().strftime('%Y-%m-%d'),
+            'summary': summary,
+            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         })
+
     except Exception as e:
-        print(f"[API] FATAL ERROR: {str(e)}")
+        print("ERROR:", str(e))
         return jsonify({
             'success': False,
             'message': str(e),
