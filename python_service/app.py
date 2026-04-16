@@ -1358,6 +1358,7 @@ def trade_history_calculated():
                 tanggal,
                 waktu,
                 market,
+                trigger_at,  
                 phase_1,
                 phase_2,
                 phase_3,
