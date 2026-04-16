@@ -31,7 +31,7 @@ def _bump_start_all_job_id():
     with _start_all_lock:
         _start_all_job_id += 1
         return _start_all_job_id
-
+ 
 def _get_start_all_job_id():
     with _start_all_lock:
         return _start_all_job_id
@@ -163,7 +163,269 @@ def save_analysis_db(market, tanggal, waktu, warna, o=0.0, h=0.0, l=0.0, c_pr=0.
 
     conn.commit()
     cursor.close()
+    
+    # ✅ SETELAH INSERT SELESAI: Recalculate open_positions_today dan update ke DB
+    update_open_positions_to_db(market, tanggal)
+    sync_phase_histories_to_db(market)
+    
     conn.close()
+
+def build_phase_outcomes(candles):
+    blocks = {}
+
+    for candle in candles:
+        tanggal = str(candle.get('tanggal') or '')
+        waktu = str(candle.get('waktu') or '')
+        warna = str(candle.get('warna') or '')
+
+        if not tanggal or not waktu or ':' not in waktu:
+            continue
+
+        parts = waktu.split(':')
+        if len(parts) < 2:
+            continue
+
+        try:
+            hh = int(parts[0])
+            mm = int(parts[1])
+        except ValueError:
+            continue
+
+        if mm < 0 or mm > 59:
+            continue
+
+        hour = f"{hh:02d}"
+        base_mm = (mm // 5) * 5
+        key = f"{tanggal}_{hour}:{base_mm:02d}"
+
+        if key not in blocks:
+            blocks[key] = {
+                'tanggal': tanggal,
+                'waktu': f"{hour}:{base_mm:02d}",
+                'candles': {}
+            }
+
+        offset = mm % 5
+        base_color = "Hijau" if "Hijau" in warna else "Merah"
+        blocks[key]['candles'][f'c{offset}'] = base_color
+
+    outcomes = []
+    for key in sorted(blocks.keys()):
+        block = blocks[key]
+        c = block['candles']
+        if 'c0' not in c or 'c2' not in c or 'c3' not in c or 'c4' not in c:
+            continue
+
+        c0 = c['c0']
+        is_true = c['c2'] == c0 or c['c3'] == c0 or c['c4'] == c0
+        outcomes.append({
+            'tanggal': block['tanggal'],
+            'waktu': block['waktu'],
+            'datetime': f"{block['tanggal']} {block['waktu']}",
+            'result': 'TRUE' if is_true else 'FALSE'
+        })
+
+    return outcomes
+
+def build_phase_history_rows(market, candles, target_loss):
+    outcomes = build_phase_outcomes(candles)
+    if not outcomes:
+        return []
+
+    start_phase = target_loss + 1
+    if start_phase > 7:
+        return []
+
+    rows = []
+    consecutive_false = 0
+    sequence_locked = False
+    active_signal = None
+
+    for outcome in outcomes:
+        result = outcome['result']
+
+        if active_signal is not None:
+            phase = active_signal['next_phase']
+            active_signal[f'phase_{phase}'] = result
+
+            if result == 'TRUE':
+                for fill in range(phase + 1, 8):
+                    active_signal[f'phase_{fill}'] = '-'
+
+                active_signal['resolved_result'] = 'TRUE'
+                active_signal['resolved_phase'] = phase
+                active_signal['resolved_at'] = outcome['datetime']
+                del active_signal['next_phase']
+
+                rows.append(active_signal)
+                active_signal = None
+                consecutive_false = 0
+                sequence_locked = False
+            else:
+                consecutive_false += 1
+
+                if phase >= 7:
+                    active_signal['resolved_result'] = 'FALSE'
+                    active_signal['resolved_phase'] = 7
+                    active_signal['resolved_at'] = outcome['datetime']
+                    del active_signal['next_phase']
+
+                    rows.append(active_signal)
+                    active_signal = None
+                    sequence_locked = True
+                else:
+                    active_signal['next_phase'] = phase + 1
+
+            continue
+
+        if result == 'TRUE':
+            consecutive_false = 0
+            sequence_locked = False
+            continue
+
+        consecutive_false += 1
+
+        if sequence_locked:
+            continue
+
+        if consecutive_false != target_loss:
+            continue
+
+        active_signal = {
+            'tanggal': outcome['tanggal'],
+            'waktu': outcome['waktu'],
+            'ticker': market,
+            'phase_1': '-',
+            'phase_2': '-',
+            'phase_3': '-',
+            'phase_4': '-',
+            'phase_5': '-',
+            'phase_6': '-',
+            'phase_7': '-',
+            'next_phase': start_phase,
+            'resolved_result': 'PENDING',
+            'resolved_phase': None,
+            'resolved_at': None,
+            'trigger_at': outcome['datetime'],
+            'target_loss': target_loss
+        }
+
+    if active_signal is not None:
+        del active_signal['next_phase']
+        rows.append(active_signal)
+
+    return rows
+
+def sync_phase_histories_to_db(market):
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return
+
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT tanggal, waktu, warna
+            FROM market_histories
+            WHERE market = %s
+            ORDER BY tanggal ASC, waktu ASC, id ASC
+        """, (market,))
+        candles = cursor.fetchall() or []
+
+        write_cursor = conn.cursor()
+
+        for target_loss in range(1, 7):
+            rows = build_phase_history_rows(market, candles, target_loss)
+            write_cursor.execute(
+                "DELETE FROM phase_histories WHERE market = %s AND target_loss = %s",
+                (market, target_loss)
+            )
+
+            if not rows:
+                continue
+
+            payload = []
+            for row in rows:
+                payload.append((
+                    market,
+                    target_loss,
+                    row.get('tanggal', ''),
+                    row.get('waktu', ''),
+                    row.get('phase_1', '-'),
+                    row.get('phase_2', '-'),
+                    row.get('phase_3', '-'),
+                    row.get('phase_4', '-'),
+                    row.get('phase_5', '-'),
+                    row.get('phase_6', '-'),
+                    row.get('phase_7', '-'),
+                    row.get('resolved_result', 'PENDING'),
+                    row.get('resolved_phase'),
+                    row.get('trigger_at', ''),
+                    row.get('resolved_at')
+                ))
+
+            write_cursor.executemany("""
+                INSERT INTO phase_histories
+                (market, target_loss, tanggal, waktu, phase_1, phase_2, phase_3, phase_4, phase_5, phase_6, phase_7, resolved_result, resolved_phase, trigger_at, resolved_at, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+            """, payload)
+
+        conn.commit()
+        write_cursor.close()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"[DB] Error syncing phase histories for {market}: {str(e)}")
+
+def update_open_positions_to_db(market, tanggal):
+    """
+    Recalculate open_positions untuk market hari ini dan simpan ke DB
+    Dipanggil setiap kali ada candle baru masuk
+    """
+    try:
+        conn = get_db_connection()
+        if not conn: return
+        
+        cursor = conn.cursor(dictionary=True)
+        
+        # 1. Cek apakah perlu reset (ganti tanggal)?
+        cursor.execute("SELECT last_positions_reset_date FROM market_states WHERE market = %s", (market,))
+        state_row = cursor.fetchone()
+        
+        if state_row:
+            last_reset_date = state_row.get('last_positions_reset_date')
+            if last_reset_date and str(last_reset_date) != tanggal:
+                # Tanggal berubah → Reset counter
+                print(f"[DB] {market}: Reset open_positions (tanggal berubah dari {last_reset_date} ke {tanggal})")
+                cursor.execute(
+                    "UPDATE market_states SET open_positions_today = 0, last_positions_reset_date = %s WHERE market = %s",
+                    (tanggal, market)
+                )
+                conn.commit()
+        
+        # 2. Ambil semua candles hari ini
+        cursor.execute("""
+            SELECT tanggal, waktu, warna FROM market_histories 
+            WHERE market = %s AND tanggal = %s 
+            ORDER BY waktu ASC
+        """, (market, tanggal))
+        today_candles = cursor.fetchall()
+        
+        # 3. Recalculate open_positions
+        open_positions = count_open_positions_today(today_candles) if today_candles else 0
+        
+        # 4. Update DB
+        cursor.execute(
+            "UPDATE market_states SET open_positions_today = %s, last_positions_reset_date = %s WHERE market = %s",
+            (open_positions, tanggal, market)
+        )
+        conn.commit()
+        
+        print(f"[DB] {market} ({tanggal}): Updated open_positions_today = {open_positions}")
+        
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"[DB] Error updating open_positions for {market}: {str(e)}")
 
 def get_history_db(market, limit=100):
     conn = get_db_connection()
@@ -870,14 +1132,24 @@ def get_data():
 @app.route('/api/status_all', methods=['GET'])
 def status_all():
     conn = get_db_connection()
-    if not conn: return jsonify({"active_markets": [], "market_streaks": {}, "doji_analytics": [], "balance": global_demo_balance, "tg_active_count": 0})
+    if not conn:
+        return jsonify({
+            "active_markets": [],
+            "market_streaks": {},
+            "doji_analytics": [],
+            "balance": global_demo_balance,
+            "tg_active_count": 0,
+            "mass_target_loss": None
+        })
 
     c_dict = conn.cursor(dictionary=True)
-    c_dict.execute("SELECT market, tg_active FROM market_states WHERE is_running = 1")
+    c_dict.execute("SELECT market, tg_active, tg_target_loss FROM market_states WHERE is_running = 1")
     running_data = c_dict.fetchall()
 
     active_markets = [row['market'] for row in running_data]
     tg_active_count = sum(1 for row in running_data if row['tg_active'] == 1)
+    active_target_losses = [int(row.get('tg_target_loss') or 0) for row in running_data if row.get('tg_active') == 1 and int(row.get('tg_target_loss') or 0) > 0]
+    mass_target_loss = active_target_losses[0] if active_target_losses else None
 
     market_streaks = {}
     doji_analytics = []
@@ -921,7 +1193,8 @@ def status_all():
         "market_streaks": market_streaks,
         "doji_analytics": doji_analytics,
         "balance": global_demo_balance,
-        "tg_active_count": tg_active_count
+        "tg_active_count": tg_active_count,
+        "mass_target_loss": mass_target_loss
     })
 
 @app.route('/api/trade_history', methods=['GET'])
@@ -937,91 +1210,157 @@ def trade_history():
 
 def count_false_streak_triggers(candles):
     """
-    Implement logic sama seperti PHP untuk count FALSE patterns dalam 5-minute blocks
-    Group candles by 5-minute blocks (c0-c4)
-    c0 = menit ke 0-4
-    c1-c4 = menit ke 5-9, 10-14, 15-19, 20-24 dst
+    Implement logic sama seperti calc_sig_loss() untuk count FALSE patterns dalam 5-minute blocks
+    Group candles by 5-minute blocks (c0-c4) per tanggal dan jam
+    c0 = menit ke 0-4, c1-c4 = menit ke 5-9, 10-14, dst
     """
-    if not candles or len(candles) < 5:
-        return 0
-    
     sig_loss = 0
     blocks = {}
     
-    # Group candles by 5-minute blocks
-    for candle in candles:
-        waktu = candle.get('waktu', '')
-        warna = candle.get('warna', '')
-        
-        if not waktu or ':' not in waktu:
-            continue
-        
-        try:
-            parts = waktu.split(':')
-            if len(parts) < 2:
+    for c in candles:
+        if c.get("waktu") and ":" in c["waktu"]:
+            try:
+                parts = c["waktu"].split(":")
+                hh, mm = parts[0], int(parts[1])
+                base_mm = (mm // 5) * 5
+                key = f"{c['tanggal']}_{hh}:{base_mm:02d}"
+                
+                if key not in blocks:
+                    blocks[key] = {}
+                
+                offset = mm % 5
+                base_color = "Hijau" if "Hijau" in c['warna'] else "Merah"
+                blocks[key][f'c{offset}'] = base_color
+            except Exception as e:
                 continue
-            
-            hh = parts[0]
-            mm = int(parts[1])
-            
-            if mm < 0 or mm > 59:
-                continue
-            
-            base_mm = (mm // 5) * 5
-            key = f"{hh}:{base_mm:02d}"
-            
-            if key not in blocks:
-                blocks[key] = {}
-            
-            offset = mm % 5
-            base_color = 'Hijau' if 'Hijau' in warna else 'Merah'
-            blocks[key][f"c{offset}"] = base_color
-        except Exception as e:
-            continue
     
-    if not blocks:
-        return 0
-    
-    # Sort blocks dari yang terbaru (reverse order)
+    # Diurutkan agar deteksi reset ke 0 dari candle terbaru berjalan akurat
     sorted_keys = sorted(blocks.keys(), reverse=True)
-    
     for k in sorted_keys:
         b = blocks[k]
         if 'c0' in b:
             c0 = b['c0']
             
             # Kondisi TRUE: salah satu dari c2, c3, atau c4 SAMA dengan c0
-            is_true = (
-                ('c2' in b and b['c2'] == c0) or
-                ('c3' in b and b['c3'] == c0) or
-                ('c4' in b and b['c4'] == c0)
-            )
-            
+            is_true = False
+            if 'c2' in b and b['c2'] == c0:
+                is_true = True
+            if 'c3' in b and b['c3'] == c0:
+                is_true = True
+            if 'c4' in b and b['c4'] == c0:
+                is_true = True
+
             if is_true:
                 break  # Reset ke 0 jika mendeteksi ada 1 TRUE (Win)
             # Kondisi FALSE: Siklus lengkap (0,2,3,4) tapi tidak ada yang sama
             elif 'c2' in b and 'c3' in b and 'c4' in b:
                 sig_loss += 1
-    
+
     return sig_loss
+
+def count_open_positions_today(candles):
+    """
+    Hitung berapa KALI open posisi terjadi (bukan FALSE streak value)
+    
+    Logic:
+    - Process blok dari OLDEST to NEWEST (chronologically)
+    - Track: `open_positions` counter dan `at_2_or_above` flag
+    - Ketika FALSE FIRST TIME mencapai >= 2 → Increment counter
+    - Counter TIDAK direset ketika FALSE turun kembali ke 0
+    
+    Return: Total jumlah open posisi yang terdeteksi hari ini
+    
+    Contoh:
+    10:00-04: Win → Reset
+    10:05-09: FALSE = 1
+    10:10-14: FALSE = 2 🚨 open_positions = 1
+    10:15-19: Win → Reset (counter TETAP 1, tidak turun)
+    10:20-24: FALSE = 1
+    10:25-29: FALSE = 2 🚨 open_positions = 2
+    
+    Result: 2 (ada 2 kali open posisi hari ini)
+    """
+    blocks = {}
+    open_positions = 0
+    at_2_or_above = False  # Flag untuk track: sudah mencapai 2 di sequence ini atau belum?
+    
+    # Build blocks dari candles
+    for c in candles:
+        if c.get("waktu") and ":" in c["waktu"]:
+            try:
+                parts = c["waktu"].split(":")
+                hh, mm = parts[0], int(parts[1])
+                base_mm = (mm // 5) * 5
+                key = f"{c['tanggal']}_{hh}:{base_mm:02d}"
+                
+                if key not in blocks:
+                    blocks[key] = {}
+                
+                offset = mm % 5
+                base_color = "Hijau" if "Hijau" in c['warna'] else "Merah"
+                blocks[key][f'c{offset}'] = base_color
+            except Exception as e:
+                continue
+    
+    # Process blocks dari OLDEST to NEWEST (chronologically)
+    sorted_keys = sorted(blocks.keys())  # ASC, bukan DESC seperti calc_sig_loss
+    
+    sig_loss = 0
+    for k in sorted_keys:
+        b = blocks[k]
+        if 'c0' in b:
+            c0 = b['c0']
+            
+            # Kondisi TRUE: salah satu dari c2, c3, atau c4 SAMA dengan c0
+            is_true = False
+            if 'c2' in b and b['c2'] == c0:
+                is_true = True
+            if 'c3' in b and b['c3'] == c0:
+                is_true = True
+            if 'c4' in b and b['c4'] == c0:
+                is_true = True
+
+            if is_true:
+                # WIN → Reset sig_loss DAN reset flag
+                sig_loss = 0
+                at_2_or_above = False
+            # Kondisi FALSE: Siklus lengkap (0,2,3,4) tapi tidak ada yang sama
+            elif 'c2' in b and 'c3' in b and 'c4' in b:
+                sig_loss += 1
+                
+                # 🚨 LOGIC: Ketika sig_loss FIRST TIME mencapai >= 2
+                if sig_loss >= 2 and not at_2_or_above:
+                    open_positions += 1
+                    at_2_or_above = True  # Mark: sudah dihitung untuk sequence ini
+            else:
+                # Tidak ada candle lengkap, reset flag aja
+                at_2_or_above = False
+
+    return open_positions
 
 @app.route('/api/trade-history', methods=['GET'])
 def trade_history_calculated():
     """
-    Endpoint baru untuk history page dengan calculated triggers dari market_histories
-    Format response sama seperti PHP endpoint
+    Endpoint untuk history page dengan OPEN POSISI count dari market_states DB
+    
+    PENTING: 
+    - Data sudah tersimpan di market_states.open_positions_today
+    - Tidak perlu recalculate, cukup baca dari DB
+    - Lebih cepat dan akurat
+    - Return SEMUA market (tidak ada filter di backend)
     """
     try:
         conn = get_db_connection()
         if not conn:
+            print("[API] Database connection failed")
             return jsonify({
                 'success': True,
                 'data': [],
                 'date': datetime.now().strftime('%Y-%m-%d'),
                 'summary': {
                     'active_markets_today': 0,
-                    'total_triggers_today': 0,
-                    'total_triggers_month': 0
+                    'total_open_positions_today': 0,
+                    'total_open_positions_month': 0
                 }
             })
         
@@ -1036,11 +1375,14 @@ def trade_history_calculated():
             month_end = now.replace(month=now.month + 1, day=1) - timedelta(days=1)
         month_end = month_end.strftime('%Y-%m-%d')
         
+        print(f"[API] Trade history request - Today: {today}, Period: {month_start} to {month_end}")
+        
         c = conn.cursor(dictionary=True)
         
         # Get list of all markets from market_states
         c.execute("SELECT market FROM market_states")
         states = c.fetchall()
+        print(f"[API] Found {len(states)} markets")
         
         result = []
         total_today = 0
@@ -1049,61 +1391,59 @@ def trade_history_calculated():
         for state in states:
             market = state['market']
             
-            # Count daily triggers
-            c.execute("""
-                SELECT tanggal, waktu, warna FROM market_histories 
-                WHERE market = %s AND tanggal = %s 
-                ORDER BY waktu ASC
-            """, (market, today))
-            daily_candles = c.fetchall()
-            daily_triggers = count_false_streak_triggers(daily_candles) if daily_candles else 0
-            
-            # Count monthly triggers
-            c.execute("""
-                SELECT tanggal, waktu, warna FROM market_histories 
-                WHERE market = %s AND tanggal >= %s AND tanggal <= %s 
-                ORDER BY tanggal ASC, waktu ASC
-            """, (market, month_start, month_end))
-            monthly_candles = c.fetchall()
-            
-            monthly_triggers = 0
-            if monthly_candles:
-                # Group by tanggal dan calculate per hari
-                dates_data = {}
-                for candle in monthly_candles:
-                    date = candle['tanggal']
-                    if date not in dates_data:
-                        dates_data[date] = []
-                    dates_data[date].append(candle)
+            try:
+                # ✅ READ TODAY open_positions dari DB (tidak perlu recalculate)
+                c.execute("""
+                    SELECT open_positions_today FROM market_states 
+                    WHERE market = %s
+                """, (market,))
+                today_row = c.fetchone()
+                daily_open_positions = today_row['open_positions_today'] if today_row else 0
                 
-                # Calculate triggers per date
-                for date, candles in dates_data.items():
-                    monthly_triggers += count_false_streak_triggers(candles)
-            
-            total_today += daily_triggers
-            total_month += monthly_triggers
-            
-            if daily_triggers > 0 or monthly_triggers > 0:
+                # Monthly: tetap calculate dari candles (karena monthly belum ada di DB)
+                c.execute("""
+                    SELECT tanggal, waktu, warna FROM market_histories 
+                    WHERE market = %s AND tanggal >= %s AND tanggal <= %s 
+                    ORDER BY tanggal ASC, waktu ASC
+                """, (market, month_start, month_end))
+                monthly_candles = c.fetchall()
+                monthly_open_positions = count_open_positions_today(monthly_candles) if monthly_candles else 0
+                
+                total_today += daily_open_positions
+                total_month += monthly_open_positions
+                
+                # ✅ RETURN SEMUA MARKET TANPA FILTER
                 result.append({
                     'market': market,
-                    'today': daily_triggers,
-                    'month': monthly_triggers
+                    'today': daily_open_positions,
+                    'month': monthly_open_positions
                 })
+                print(f"[API] {market}: today={daily_open_positions} op (from DB), month={monthly_open_positions} op")
+                    
+            except Exception as e:
+                print(f"[API] Error processing {market}: {str(e)}")
+                continue
         
         c.close()
         conn.close()
+        
+        # Calculate active markets (yang hari ini ada open posisi >= 1)
+        active_today = len([r for r in result if r['today'] >= 1])
+        
+        print(f"[API] Final: {len(result)} markets, active_today={active_today}, total_today={total_today} op, total_month={total_month} op")
         
         return jsonify({
             'success': True,
             'data': result,
             'date': today,
             'summary': {
-                'active_markets_today': len([r for r in result if r['today'] > 0]),
-                'total_triggers_today': total_today,
-                'total_triggers_month': total_month
+                'active_markets_today': active_today,
+                'total_open_positions_today': total_today,
+                'total_open_positions_month': total_month
             }
         })
     except Exception as e:
+        print(f"[API] FATAL ERROR: {str(e)}")
         return jsonify({
             'success': False,
             'message': str(e),

@@ -12,6 +12,7 @@ let historyCurrentPage = 1;
 const historyItemsPerPage = 10;
 let currentTradeHistory = [];
 let isMassTelegramActive = false;
+const MASS_TG_LOSS_STORAGE_KEY = 'rodis_mass_tg_loss';
 
 let rodisState = {
     active: false,
@@ -531,8 +532,17 @@ function toggleTheme() {
 document.addEventListener('DOMContentLoaded', function() {
     const btnDesktop = document.getElementById('theme-toggle');
     const btnMobile = document.getElementById('theme-toggle-mob');
+    const massLossInput = document.getElementById('mass-tg-loss');
     if (btnDesktop) btnDesktop.addEventListener('click', toggleTheme);
     if (btnMobile) btnMobile.addEventListener('click', toggleTheme);
+    if (massLossInput) {
+        const savedMassLoss = localStorage.getItem(MASS_TG_LOSS_STORAGE_KEY);
+        if (savedMassLoss) massLossInput.value = savedMassLoss;
+        massLossInput.addEventListener('input', function(event) {
+            const value = String(event.target.value || '').trim();
+            if (value !== '') localStorage.setItem(MASS_TG_LOSS_STORAGE_KEY, value);
+        });
+    }
 });
 
 // ================================================================
@@ -879,6 +889,7 @@ function activateMassTelegram(event) {
     const targetLoss = document.getElementById('mass-tg-loss').value;
     const btn = event.currentTarget;
     const originalText = btn.innerHTML;
+    localStorage.setItem(MASS_TG_LOSS_STORAGE_KEY, String(targetLoss));
 
     btn.innerHTML = '⏳ Memproses...';
     btn.disabled = true;
@@ -1247,6 +1258,17 @@ function refreshDashboardStatus() {
     fetch(`${API_BASE}/status_all`)
         .then(res => res.json())
         .then(data => {
+            const massLossInput = document.getElementById('mass-tg-loss');
+            if (massLossInput) {
+                const serverMassLoss = Number.parseInt(data.mass_target_loss || 0, 10);
+                const savedMassLoss = localStorage.getItem(MASS_TG_LOSS_STORAGE_KEY);
+                if (Number.isFinite(serverMassLoss) && serverMassLoss > 0) {
+                    massLossInput.value = serverMassLoss;
+                    localStorage.setItem(MASS_TG_LOSS_STORAGE_KEY, String(serverMassLoss));
+                } else if (savedMassLoss) {
+                    massLossInput.value = savedMassLoss;
+                }
+            }
 
             if (data.balance !== undefined && data.balance !== null) {
                 const el = document.getElementById('nav-balance');
