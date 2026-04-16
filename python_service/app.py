@@ -1352,52 +1352,62 @@ def trade_history_calculated():
 
         c = conn.cursor(dictionary=True)
 
-        # 🔥 AMBIL DATA HISTORY (INI YANG DIPAKAI FRONTEND)
+        # ✅ AMBIL DARI phase_histories (INI YANG BENAR)
         c.execute("""
-            SELECT tanggal, waktu, market, warna
-            FROM market_histories
+            SELECT 
+                tanggal,
+                waktu,
+                market,
+                phase_1,
+                phase_2,
+                phase_3,
+                phase_4,
+                phase_5,
+                phase_6,
+                phase_7
+            FROM phase_histories
             ORDER BY tanggal DESC, waktu DESC
-            LIMIT 300
+            LIMIT 500
         """)
         rows = c.fetchall()
 
         result = []
 
-        # 🔥 LOOP DATA → FORMAT SESUAI FRONTEND
-        for row in rows:
-            warna = (row.get('warna') or '').upper()
+        total_true = 0
+        total_false = 0
 
-            # mapping sederhana (bisa kamu upgrade nanti)
-            phase_value = 'TRUE' if warna == 'HIJAU' else 'FALSE' if warna == 'MERAH' else '-'
+        for row in rows:
+            # hitung TRUE / FALSE
+            for i in range(1, 8):
+                val = str(row.get(f'phase_{i}', '')).upper()
+                if val == 'TRUE':
+                    total_true += 1
+                elif val == 'FALSE':
+                    total_false += 1
 
             result.append({
                 "tanggal": row.get("tanggal"),
                 "waktu": row.get("waktu"),
                 "ticker": row.get("market"),
 
-                # sementara semua phase pakai value yang sama
-                "phase_1": phase_value,
-                "phase_2": "-",
-                "phase_3": "-",
-                "phase_4": "-",
-                "phase_5": "-",
-                "phase_6": "-",
-                "phase_7": "-"
+                "phase_1": row.get("phase_1", "-"),
+                "phase_2": row.get("phase_2", "-"),
+                "phase_3": row.get("phase_3", "-"),
+                "phase_4": row.get("phase_4", "-"),
+                "phase_5": row.get("phase_5", "-"),
+                "phase_6": row.get("phase_6", "-"),
+                "phase_7": row.get("phase_7", "-"),
             })
 
-        # 🔥 SUMMARY (BIAR CARD ATAS TIDAK ERROR)
-        total_signals = len(result)
-        total_true = len([r for r in result if r["phase_1"] == "TRUE"])
-        total_false = len([r for r in result if r["phase_1"] == "FALSE"])
-
-        accuracy = (total_true / (total_true + total_false) * 100) if (total_true + total_false) > 0 else 0
+        total = total_true + total_false
+        accuracy = (total_true / total * 100) if total > 0 else 0
 
         summary = {
             "today": {
-                "total_signals": total_signals
+                "total_signals": len(result)
             },
             "month": {
-                "total_signals": total_signals,
+                "total_signals": len(result),
                 "wins": total_true,
                 "losses": total_false,
                 "accuracy_label": f"{accuracy:.2f}%"
