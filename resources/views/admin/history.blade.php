@@ -67,10 +67,10 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <a href="{{ route('user.dashboard') }}"
+                <a href="{{ route('dashboard') }}"
                     class="text-sm font-bold text-gojek hover:text-gojek-dark">Dashboard</a>
                 <span class="w-px h-5 bg-slate-200"></span>
-                <a href="{{ route('user.history') }}"
+                <a href="{{ route('admin.history') }}"
                     class="text-sm font-bold text-gojek bg-gojek-light px-3 py-1 rounded-lg border border-gojek">History</a>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
@@ -110,6 +110,8 @@
                             class="text-xs font-semibold border border-slate-300 rounded-lg px-3 py-1.5 bg-white">
                             <option value="ALL">Semua Ticker</option>
                         </select>
+                        <input type="date" id="date-filter"
+                            class="text-xs font-semibold border border-slate-300 rounded-lg px-3 py-1.5 bg-white">
                         <div
                             class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-1.5">
                             <span id="clock">00:00:00 WIB</span>
@@ -154,7 +156,7 @@
                         </tfoot>
                     </table>
                 </div>
-                <div id="pagination" class="mt-4 flex justify-center gap-2"></div>
+
                 <div class="mt-4 text-xs text-slate-500 flex justify-between items-center">
                     <span id="rows-info">0 baris ditampilkan</span>
                     <span>Update terakhir: <span id="updated-at">-</span></span>
@@ -176,12 +178,12 @@
             <strong>RODIS</strong> - Robot Trading
         </div>
     </footer>
+
     <script>
         let historyData = [];
         let currentTicker = 'ALL';
         let currentApiDate = '';
-        let currentPage = 1;
-        const rowsPerPage = 10;
+        let currentDate = '';
         const MASS_TG_LOSS_STORAGE_KEY = 'rodis_mass_tg_loss';
 
         function startRealtimeClock() {
@@ -195,56 +197,78 @@
         }
 
         function parseTriggerDateTime(dateTimeValue) {
-            if (!dateTimeValue || !String(dateTimeValue).includes(' ')) return null;
+            if (!dateTimeValue || !String(dateTimeValue).includes(' ')) {
+                return null;
+            }
 
             const [datePart, timePart] = String(dateTimeValue).split(' ');
-            const d = datePart.split('-').map(Number);
-            const t = timePart.split(':').map(Number);
+            const datePieces = datePart.split('-').map(Number);
+            const timePieces = timePart.split(':').map(Number);
 
-            return new Date(d[0], d[1] - 1, d[2], t[0], t[1], 0);
-        }
+            if (datePieces.length !== 3 || timePieces.length < 2) {
+                return null;
+            }
 
-        function getHistoryTargetLoss() {
-            const saved = localStorage.getItem(MASS_TG_LOSS_STORAGE_KEY);
-            const parsed = Number.parseInt(saved || '2', 10);
-            return Number.isFinite(parsed) && parsed > 0 ? parsed : 2;
+            return new Date(
+                datePieces[0],
+                datePieces[1] - 1,
+                datePieces[2],
+                timePieces[0],
+                timePieces[1],
+                0
+            );
         }
 
         function getPhaseTimeLabel(row, phaseNumber) {
-            const val = String(row[`phase_${phaseNumber}`] || '').toUpperCase();
-            if (val !== 'TRUE' && val !== 'FALSE') return '';
+            const phaseValue = String(row[`phase_${phaseNumber}`] || '-').toUpperCase();
+            if (phaseValue !== 'TRUE' && phaseValue !== 'FALSE') {
+                return '';
+            }
 
-            const targetLoss = getHistoryTargetLoss();
-            if (phaseNumber <= targetLoss) return '';
+            const targetLoss = Number.parseInt(row.target_loss || getHistoryTargetLoss(), 10);
+            if (!Number.isFinite(targetLoss) || phaseNumber <= targetLoss) {
+                return '';
+            }
 
-            const base = parseTriggerDateTime(row.trigger_at);
-            if (!base) return '';
+            const baseDate = parseTriggerDateTime(row.trigger_at);
+            if (!baseDate) {
+                return '';
+            }
 
-            base.setMinutes(base.getMinutes() + (phaseNumber - targetLoss) * 5);
+            const offsetMinutes = (phaseNumber - targetLoss) * 5;
+            baseDate.setMinutes(baseDate.getMinutes() + offsetMinutes);
 
-            return `${String(base.getHours()).padStart(2,'0')}:${String(base.getMinutes()).padStart(2,'0')}`;
+            const hh = String(baseDate.getHours()).padStart(2, '0');
+            const mm = String(baseDate.getMinutes()).padStart(2, '0');
+            return `${hh}:${mm}`;
         }
 
         function badgePhase(value, row, phaseNumber) {
             const val = (value || '-').toUpperCase();
-
-            if (val === 'TRUE' || val === 'FALSE') {
-                const color = val === 'TRUE' ? 'emerald' : 'red';
-                const time = getPhaseTimeLabel(row, phaseNumber);
-
+            if (val === 'TRUE') {
+                const timeLabel = getPhaseTimeLabel(row, phaseNumber);
                 return `
-            <div class="flex flex-col items-center gap-1">
-                <span class="inline-block min-w-12 px-2 py-1 rounded text-xs font-bold bg-${color}-100 text-${color}-700">${val}</span>
-                ${time ? `<span class="text-[11px] font-semibold text-slate-500">${time}</span>` : ''}
-            </div>`;
+                <div class="flex flex-col items-center gap-1">
+                    <span class="inline-block min-w-12 px-2 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-700">TRUE</span>
+                    ${timeLabel ? `<span class="text-[11px] font-semibold text-slate-500">${timeLabel}</span>` : ''}
+                </div>
+            `;
             }
-
+            if (val === 'FALSE') {
+                const timeLabel = getPhaseTimeLabel(row, phaseNumber);
+                return `
+                <div class="flex flex-col items-center gap-1">
+                    <span class="inline-block min-w-12 px-2 py-1 rounded text-xs font-bold bg-red-100 text-red-700">FALSE</span>
+                    ${timeLabel ? `<span class="text-[11px] font-semibold text-slate-500">${timeLabel}</span>` : ''}
+                </div>
+            `;
+            }
             return `<span class="inline-block min-w-12 px-2 py-1 rounded text-xs font-bold bg-slate-100 text-slate-500">-</span>`;
         }
 
         function fillTickerOptions(rows) {
             const select = document.getElementById('ticker-filter');
-            const uniqueTickers = [...new Set(rows.map(r => r.ticker).filter(Boolean))].sort();
+            const uniqueTickers = [...new Set(rows.map(r => r.ticker).filter(Boolean))].sort((a, b) => a.localeCompare(b));
 
             select.innerHTML = '<option value="ALL">Semua Ticker</option>';
             uniqueTickers.forEach(ticker => {
@@ -254,23 +278,33 @@
                 select.appendChild(opt);
             });
 
-            select.value = currentTicker;
+            if (![...select.options].some(opt => opt.value === currentTicker)) {
+                currentTicker = 'ALL';
+                select.value = 'ALL';
+            } else {
+                select.value = currentTicker;
+            }
         }
 
         function getDisplayedRows() {
-            return currentTicker === 'ALL' ?
-                historyData :
-                historyData.filter(r => r.ticker === currentTicker);
+            let rows = historyData;
+
+            // filter ticker
+            if (currentTicker !== 'ALL') {
+                rows = rows.filter(r => r.ticker === currentTicker);
+            }
+
+            // filter tanggal
+            if (currentDate) {
+                rows = rows.filter(r => r.tanggal === currentDate);
+            }
+
+            return rows;
         }
 
         function renderTable() {
             const tbody = document.getElementById('history-table');
             const rows = getDisplayedRows();
-
-            const totalRows = rows.length;
-            const totalPages = Math.ceil(totalRows / rowsPerPage);
-            const start = (currentPage - 1) * rowsPerPage;
-            const paginatedRows = rows.slice(start, start + rowsPerPage);
 
             if (!rows.length) {
                 tbody.innerHTML =
@@ -279,108 +313,97 @@
                 return;
             }
 
-            tbody.innerHTML = paginatedRows.map(row => `
-            <tr class="hover:bg-slate-50">
-                <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.tanggal || '-'}</td>
-                <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.waktu || '-'}</td>
-                <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.ticker || '-'}</td>
-                ${[1,2,3,4,5,6,7].map(p => `<td class="px-3 py-2 text-center">${badgePhase(row[`phase_${p}`], row, p)}</td>`).join('')}
-            </tr>
-        `).join('');
+            tbody.innerHTML = rows.map(row => `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.tanggal || '-'}</td>
+                    <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.waktu || '-'}</td>
+                    <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.ticker || '-'}</td>
+                    <td class="px-3 py-2 text-center">${badgePhase(row.phase_1, row, 1)}</td>
+                    <td class="px-3 py-2 text-center">${badgePhase(row.phase_2, row, 2)}</td>
+                    <td class="px-3 py-2 text-center">${badgePhase(row.phase_3, row, 3)}</td>
+                    <td class="px-3 py-2 text-center">${badgePhase(row.phase_4, row, 4)}</td>
+                    <td class="px-3 py-2 text-center">${badgePhase(row.phase_5, row, 5)}</td>
+                    <td class="px-3 py-2 text-center">${badgePhase(row.phase_6, row, 6)}</td>
+                    <td class="px-3 py-2 text-center">${badgePhase(row.phase_7, row, 7)}</td>
+                </tr>
+            `).join('');
 
-            document.getElementById('rows-info').textContent =
-                `${start + 1}-${Math.min(start + rowsPerPage, totalRows)} dari ${totalRows} baris`;
-
-            renderPagination(totalPages); // ✅ DIPINDAH KE SINI (FIX)
-        }
-
-        function renderPagination(totalPages) {
-            const container = document.getElementById('pagination');
-
-            if (totalPages <= 1) {
-                container.innerHTML = '';
-                return;
-            }
-
-            let html = '';
-
-            for (let i = 1; i <= totalPages; i++) {
-                html += `
-                <button onclick="goToPage(${i})"
-                    class="px-3 py-1 text-xs font-bold rounded-lg border
-                    ${i === currentPage
-                        ? 'bg-gojek text-white border-gojek'
-                        : 'bg-white text-slate-600 border-slate-300'}">
-                    ${i}
-                </button>
-            `;
-            }
-
-            container.innerHTML = html;
-        }
-
-        function goToPage(page) {
-            currentPage = page;
-            renderTable();
+            document.getElementById('rows-info').textContent = `${rows.length} baris ditampilkan`;
         }
 
         function formatPercent(value) {
             return `${value.toFixed(2)}%`;
         }
 
+        function getHistoryTargetLoss() {
+            const saved = localStorage.getItem(MASS_TG_LOSS_STORAGE_KEY);
+            const parsed = Number.parseInt(saved || '2', 10);
+            return Number.isFinite(parsed) && parsed > 0 ? parsed : 2;
+        }
+
         function renderTodayPhaseFooter() {
             const footer = document.getElementById('history-footer');
             const todayRows = getDisplayedRows().filter(row => row.tanggal === currentApiDate);
             const phases = [1, 2, 3, 4, 5, 6, 7];
-
             const phaseCells = phases.map(phase => {
-                let t = 0,
-                    f = 0;
+                let trueCount = 0;
+                let falseCount = 0;
 
                 todayRows.forEach(row => {
-                    const val = String(row[`phase_${phase}`] || '').toUpperCase();
-                    if (val === 'TRUE') t++;
-                    else if (val === 'FALSE') f++;
+                    const value = String(row[`phase_${phase}`] || '-').toUpperCase();
+                    if (value === 'TRUE') {
+                        trueCount++;
+                    } else if (value === 'FALSE') {
+                        falseCount++;
+                    }
                 });
 
-                const total = t + f;
-                const percent = total > 0 ? formatPercent((t / total) * 100) : '-';
+                const total = trueCount + falseCount;
+                const percentLabel = total > 0 ? formatPercent((trueCount / total) * 100) : '-';
 
-                return `<td class="px-3 py-3 text-center"><div class="text-sm font-extrabold text-slate-800">${percent}</div></td>`;
+                return `
+                <td class="px-3 py-3 text-center">
+                    <div class="text-sm font-extrabold text-slate-800">${percentLabel}</div>
+                </td>
+            `;
             }).join('');
 
             footer.innerHTML = `
             <tr>
                 <td colspan="3" class="px-3 py-3 text-xs font-extrabold text-slate-700">Persentase Hari Ini</td>
                 ${phaseCells}
-            </tr>`;
+            </tr>
+        `;
         }
 
         function renderSummary(summary) {
             const today = summary?.today || {};
             const month = summary?.month || {};
 
-            document.getElementById('month-accuracy').textContent = month.accuracy_label || '0.00%';
+            const monthAccuracy = month.accuracy_label || '0.00%';
+
+            document.getElementById('month-accuracy').textContent = monthAccuracy;
             document.getElementById('today-total').textContent = today.total_signals || 0;
             document.getElementById('month-total').textContent = month.total_signals || 0;
 
-            document.getElementById('bottom-month-accuracy').textContent = month.accuracy_label || '0.00%';
+            document.getElementById('bottom-month-accuracy').textContent = monthAccuracy;
             document.getElementById('bottom-month-breakdown').textContent =
                 `Win ${month.wins || 0} / Loss ${month.losses || 0}`;
         }
 
         function loadTradeHistory() {
-            fetch(`/api/trade-history?target_loss=${getHistoryTargetLoss()}`)
+            const targetLoss = getHistoryTargetLoss();
+            fetch(`/api/trade-history?target_loss=${targetLoss}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (!data.success) throw new Error();
+                    if (!data.success) {
+                        throw new Error(data.message || 'Gagal memuat data');
+                    }
 
-                    historyData = data.data || [];
+                    historyData = Array.isArray(data.data) ? data.data : [];
                     currentApiDate = data.date || '';
-
                     fillTickerOptions(historyData);
-                    renderTable(); // ✅ cukup ini
-
+                    renderTable();
                     renderTodayPhaseFooter();
                     renderSummary(data.summary || {});
                     document.getElementById('updated-at').textContent = data.generated_at || '-';
@@ -395,7 +418,12 @@
 
         document.getElementById('ticker-filter').addEventListener('change', (e) => {
             currentTicker = e.target.value;
-            currentPage = 1;
+            renderTable();
+            renderTodayPhaseFooter();
+        });
+
+        document.getElementById('date-filter').addEventListener('change', (e) => {
+            currentDate = e.target.value;
             renderTable();
             renderTodayPhaseFooter();
         });

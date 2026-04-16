@@ -10,44 +10,44 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                fontFamily: {
-                    sans: ['Inter', 'sans-serif']
-                },
-                colors: {
-                    gojek: {
-                        DEFAULT: '#00aa13',
-                        dark: '#00880f',
-                        light: '#e6f6e8'
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    },
+                    colors: {
+                        gojek: {
+                            DEFAULT: '#00aa13',
+                            dark: '#00880f',
+                            light: '#e6f6e8'
+                        }
                     }
                 }
             }
         }
-    }
     </script>
 
     <style>
-    body {
-        background: #f4f5f7;
-    }
-
-    .fade-in {
-        animation: fadeIn .25s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(6px);
+        body {
+            background: #f4f5f7;
         }
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
+        .fade-in {
+            animation: fadeIn .25s ease-in-out;
         }
-    }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
@@ -110,6 +110,11 @@
                             class="text-xs font-semibold border border-slate-300 rounded-lg px-3 py-1.5 bg-white">
                             <option value="ALL">Semua Ticker</option>
                         </select>
+
+                        <!-- ✅ TAMBAHAN DATE FILTER -->
+                        <input type="date" id="date-filter"
+                            class="text-xs font-semibold border border-slate-300 rounded-lg px-3 py-1.5 bg-white">
+
                         <div
                             class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-1.5">
                             <span id="clock">00:00:00 WIB</span>
@@ -177,109 +182,118 @@
         </div>
     </footer>
     <script>
-    let historyData = [];
-    let currentTicker = 'ALL';
-    let currentApiDate = '';
-    let currentPage = 1;
-    const rowsPerPage = 10;
-    const MASS_TG_LOSS_STORAGE_KEY = 'rodis_mass_tg_loss';
+        let historyData = [];
+        let currentTicker = 'ALL';
+        let currentApiDate = '';
+        let currentPage = 1;
+        let currentDate = '';
+        const rowsPerPage = 10;
+        const MASS_TG_LOSS_STORAGE_KEY = 'rodis_mass_tg_loss';
 
-    function startRealtimeClock() {
-        setInterval(() => {
-            const now = new Date();
-            const hh = String(now.getHours()).padStart(2, '0');
-            const mm = String(now.getMinutes()).padStart(2, '0');
-            const ss = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('clock').textContent = `${hh}:${mm}:${ss} WIB`;
-        }, 1000);
-    }
+        function startRealtimeClock() {
+            setInterval(() => {
+                const now = new Date();
+                const hh = String(now.getHours()).padStart(2, '0');
+                const mm = String(now.getMinutes()).padStart(2, '0');
+                const ss = String(now.getSeconds()).padStart(2, '0');
+                document.getElementById('clock').textContent = `${hh}:${mm}:${ss} WIB`;
+            }, 1000);
+        }
 
-    function parseTriggerDateTime(dateTimeValue) {
-        if (!dateTimeValue || !String(dateTimeValue).includes(' ')) return null;
+        function parseTriggerDateTime(dateTimeValue) {
+            if (!dateTimeValue || !String(dateTimeValue).includes(' ')) return null;
 
-        const [datePart, timePart] = String(dateTimeValue).split(' ');
-        const d = datePart.split('-').map(Number);
-        const t = timePart.split(':').map(Number);
+            const [datePart, timePart] = String(dateTimeValue).split(' ');
+            const d = datePart.split('-').map(Number);
+            const t = timePart.split(':').map(Number);
 
-        return new Date(d[0], d[1] - 1, d[2], t[0], t[1], 0);
-    }
+            return new Date(d[0], d[1] - 1, d[2], t[0], t[1], 0);
+        }
 
-    function getHistoryTargetLoss() {
-        const saved = localStorage.getItem(MASS_TG_LOSS_STORAGE_KEY);
-        const parsed = Number.parseInt(saved || '2', 10);
-        return Number.isFinite(parsed) && parsed > 0 ? parsed : 2;
-    }
+        function getHistoryTargetLoss() {
+            const saved = localStorage.getItem(MASS_TG_LOSS_STORAGE_KEY);
+            const parsed = Number.parseInt(saved || '2', 10);
+            return Number.isFinite(parsed) && parsed > 0 ? parsed : 2;
+        }
 
-    function getPhaseTimeLabel(row, phaseNumber) {
-        const val = String(row[`phase_${phaseNumber}`] || '').toUpperCase();
-        if (val !== 'TRUE' && val !== 'FALSE') return '';
+        function getPhaseTimeLabel(row, phaseNumber) {
+            const val = String(row[`phase_${phaseNumber}`] || '').toUpperCase();
+            if (val !== 'TRUE' && val !== 'FALSE') return '';
 
-        const targetLoss = getHistoryTargetLoss();
-        if (phaseNumber <= targetLoss) return '';
+            const targetLoss = getHistoryTargetLoss();
+            if (phaseNumber <= targetLoss) return '';
 
-        const base = parseTriggerDateTime(row.trigger_at);
-        if (!base) return '';
+            const base = parseTriggerDateTime(row.trigger_at);
+            if (!base) return '';
 
-        base.setMinutes(base.getMinutes() + (phaseNumber - targetLoss) * 5);
+            base.setMinutes(base.getMinutes() + (phaseNumber - targetLoss) * 5);
 
-        return `${String(base.getHours()).padStart(2,'0')}:${String(base.getMinutes()).padStart(2,'0')}`;
-    }
+            return `${String(base.getHours()).padStart(2,'0')}:${String(base.getMinutes()).padStart(2,'0')}`;
+        }
 
-    function badgePhase(value, row, phaseNumber) {
-        const val = (value || '-').toUpperCase();
+        function badgePhase(value, row, phaseNumber) {
+            const val = (value || '-').toUpperCase();
 
-        if (val === 'TRUE' || val === 'FALSE') {
-            const color = val === 'TRUE' ? 'emerald' : 'red';
-            const time = getPhaseTimeLabel(row, phaseNumber);
+            if (val === 'TRUE' || val === 'FALSE') {
+                const color = val === 'TRUE' ? 'emerald' : 'red';
+                const time = getPhaseTimeLabel(row, phaseNumber);
 
-            return `
+                return `
             <div class="flex flex-col items-center gap-1">
                 <span class="inline-block min-w-12 px-2 py-1 rounded text-xs font-bold bg-${color}-100 text-${color}-700">${val}</span>
                 ${time ? `<span class="text-[11px] font-semibold text-slate-500">${time}</span>` : ''}
             </div>`;
+            }
+
+            return `<span class="inline-block min-w-12 px-2 py-1 rounded text-xs font-bold bg-slate-100 text-slate-500">-</span>`;
         }
 
-        return `<span class="inline-block min-w-12 px-2 py-1 rounded text-xs font-bold bg-slate-100 text-slate-500">-</span>`;
-    }
+        function fillTickerOptions(rows) {
+            const select = document.getElementById('ticker-filter');
+            const uniqueTickers = [...new Set(rows.map(r => r.ticker).filter(Boolean))].sort();
 
-    function fillTickerOptions(rows) {
-        const select = document.getElementById('ticker-filter');
-        const uniqueTickers = [...new Set(rows.map(r => r.ticker).filter(Boolean))].sort();
+            select.innerHTML = '<option value="ALL">Semua Ticker</option>';
+            uniqueTickers.forEach(ticker => {
+                const opt = document.createElement('option');
+                opt.value = ticker;
+                opt.textContent = ticker;
+                select.appendChild(opt);
+            });
 
-        select.innerHTML = '<option value="ALL">Semua Ticker</option>';
-        uniqueTickers.forEach(ticker => {
-            const opt = document.createElement('option');
-            opt.value = ticker;
-            opt.textContent = ticker;
-            select.appendChild(opt);
-        });
-
-        select.value = currentTicker;
-    }
-
-    function getDisplayedRows() {
-        return currentTicker === 'ALL' ?
-            historyData :
-            historyData.filter(r => r.ticker === currentTicker);
-    }
-
-    function renderTable() {
-        const tbody = document.getElementById('history-table');
-        const rows = getDisplayedRows();
-
-        const totalRows = rows.length;
-        const totalPages = Math.ceil(totalRows / rowsPerPage);
-        const start = (currentPage - 1) * rowsPerPage;
-        const paginatedRows = rows.slice(start, start + rowsPerPage);
-
-        if (!rows.length) {
-            tbody.innerHTML =
-                '<tr><td colspan="10" class="px-4 py-8 text-center text-slate-400 font-medium">Belum ada data history fase</td></tr>';
-            document.getElementById('rows-info').textContent = '0 baris ditampilkan';
-            return;
+            select.value = currentTicker;
         }
 
-        tbody.innerHTML = paginatedRows.map(row => `
+        function getDisplayedRows() {
+            let rows = historyData;
+
+            if (currentTicker !== 'ALL') {
+                rows = rows.filter(r => r.ticker === currentTicker);
+            }
+
+            if (currentDate) {
+                rows = rows.filter(r => r.tanggal === currentDate);
+            }
+
+            return rows;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('history-table');
+            const rows = getDisplayedRows();
+
+            const totalRows = rows.length;
+            const totalPages = Math.ceil(totalRows / rowsPerPage);
+            const start = (currentPage - 1) * rowsPerPage;
+            const paginatedRows = rows.slice(start, start + rowsPerPage);
+
+            if (!rows.length) {
+                tbody.innerHTML =
+                    '<tr><td colspan="10" class="px-4 py-8 text-center text-slate-400 font-medium">Belum ada data history fase</td></tr>';
+                document.getElementById('rows-info').textContent = '0 baris ditampilkan';
+                return;
+            }
+
+            tbody.innerHTML = paginatedRows.map(row => `
             <tr class="hover:bg-slate-50">
                 <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.tanggal || '-'}</td>
                 <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.waktu || '-'}</td>
@@ -288,24 +302,24 @@
             </tr>
         `).join('');
 
-        document.getElementById('rows-info').textContent =
-            `${start + 1}-${Math.min(start + rowsPerPage, totalRows)} dari ${totalRows} baris`;
+            document.getElementById('rows-info').textContent =
+                `${start + 1}-${Math.min(start + rowsPerPage, totalRows)} dari ${totalRows} baris`;
 
-        renderPagination(totalPages); // ✅ DIPINDAH KE SINI (FIX)
-    }
-
-    function renderPagination(totalPages) {
-        const container = document.getElementById('pagination');
-
-        if (totalPages <= 1) {
-            container.innerHTML = '';
-            return;
+            renderPagination(totalPages); // ✅ DIPINDAH KE SINI (FIX)
         }
 
-        let html = '';
+        function renderPagination(totalPages) {
+            const container = document.getElementById('pagination');
 
-        for (let i = 1; i <= totalPages; i++) {
-            html += `
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            for (let i = 1; i <= totalPages; i++) {
+                html += `
                 <button onclick="goToPage(${i})"
                     class="px-3 py-1 text-xs font-bold rounded-lg border
                     ${i === currentPage
@@ -314,96 +328,102 @@
                     ${i}
                 </button>
             `;
+            }
+
+            container.innerHTML = html;
         }
 
-        container.innerHTML = html;
-    }
+        function goToPage(page) {
+            currentPage = page;
+            renderTable();
+        }
 
-    function goToPage(page) {
-        currentPage = page;
-        renderTable();
-    }
+        function formatPercent(value) {
+            return `${value.toFixed(2)}%`;
+        }
 
-    function formatPercent(value) {
-        return `${value.toFixed(2)}%`;
-    }
+        function renderTodayPhaseFooter() {
+            const footer = document.getElementById('history-footer');
+            const todayRows = getDisplayedRows().filter(row => row.tanggal === currentApiDate);
+            const phases = [1, 2, 3, 4, 5, 6, 7];
 
-    function renderTodayPhaseFooter() {
-        const footer = document.getElementById('history-footer');
-        const todayRows = getDisplayedRows().filter(row => row.tanggal === currentApiDate);
-        const phases = [1, 2, 3, 4, 5, 6, 7];
+            const phaseCells = phases.map(phase => {
+                let t = 0,
+                    f = 0;
 
-        const phaseCells = phases.map(phase => {
-            let t = 0,
-                f = 0;
+                todayRows.forEach(row => {
+                    const val = String(row[`phase_${phase}`] || '').toUpperCase();
+                    if (val === 'TRUE') t++;
+                    else if (val === 'FALSE') f++;
+                });
 
-            todayRows.forEach(row => {
-                const val = String(row[`phase_${phase}`] || '').toUpperCase();
-                if (val === 'TRUE') t++;
-                else if (val === 'FALSE') f++;
-            });
+                const total = t + f;
+                const percent = total > 0 ? formatPercent((t / total) * 100) : '-';
 
-            const total = t + f;
-            const percent = total > 0 ? formatPercent((t / total) * 100) : '-';
+                return `<td class="px-3 py-3 text-center"><div class="text-sm font-extrabold text-slate-800">${percent}</div></td>`;
+            }).join('');
 
-            return `<td class="px-3 py-3 text-center"><div class="text-sm font-extrabold text-slate-800">${percent}</div></td>`;
-        }).join('');
-
-        footer.innerHTML = `
+            footer.innerHTML = `
             <tr>
                 <td colspan="3" class="px-3 py-3 text-xs font-extrabold text-slate-700">Persentase Hari Ini</td>
                 ${phaseCells}
             </tr>`;
-    }
+        }
 
-    function renderSummary(summary) {
-        const today = summary?.today || {};
-        const month = summary?.month || {};
+        function renderSummary(summary) {
+            const today = summary?.today || {};
+            const month = summary?.month || {};
 
-        document.getElementById('month-accuracy').textContent = month.accuracy_label || '0.00%';
-        document.getElementById('today-total').textContent = today.total_signals || 0;
-        document.getElementById('month-total').textContent = month.total_signals || 0;
+            document.getElementById('month-accuracy').textContent = month.accuracy_label || '0.00%';
+            document.getElementById('today-total').textContent = today.total_signals || 0;
+            document.getElementById('month-total').textContent = month.total_signals || 0;
 
-        document.getElementById('bottom-month-accuracy').textContent = month.accuracy_label || '0.00%';
-        document.getElementById('bottom-month-breakdown').textContent =
-            `Win ${month.wins || 0} / Loss ${month.losses || 0}`;
-    }
+            document.getElementById('bottom-month-accuracy').textContent = month.accuracy_label || '0.00%';
+            document.getElementById('bottom-month-breakdown').textContent =
+                `Win ${month.wins || 0} / Loss ${month.losses || 0}`;
+        }
 
-    function loadTradeHistory() {
-        fetch(`/api/trade-history?target_loss=${getHistoryTargetLoss()}`)
-            .then(res => res.json())
-            .then(data => {
-                if (!data.success) throw new Error();
+        function loadTradeHistory() {
+            fetch(`/api/trade-history?target_loss=${getHistoryTargetLoss()}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) throw new Error();
 
-                historyData = data.data || [];
-                currentApiDate = data.date || '';
+                    historyData = data.data || [];
+                    currentApiDate = data.date || '';
 
-                fillTickerOptions(historyData);
-                renderTable(); // ✅ cukup ini
+                    fillTickerOptions(historyData);
+                    renderTable(); // ✅ cukup ini
 
-                renderTodayPhaseFooter();
-                renderSummary(data.summary || {});
-                document.getElementById('updated-at').textContent = data.generated_at || '-';
-            })
-            .catch(() => {
-                document.getElementById('history-table').innerHTML =
-                    '<tr><td colspan="10" class="px-4 py-8 text-center text-red-500 font-medium">Gagal memuat data history</td></tr>';
-                document.getElementById('history-footer').innerHTML =
-                    '<tr><td colspan="10" class="px-3 py-3 text-center text-xs font-bold text-red-500">Gagal memuat statistik fase.</td></tr>';
-            });
-    }
+                    renderTodayPhaseFooter();
+                    renderSummary(data.summary || {});
+                    document.getElementById('updated-at').textContent = data.generated_at || '-';
+                })
+                .catch(() => {
+                    document.getElementById('history-table').innerHTML =
+                        '<tr><td colspan="10" class="px-4 py-8 text-center text-red-500 font-medium">Gagal memuat data history</td></tr>';
+                    document.getElementById('history-footer').innerHTML =
+                        '<tr><td colspan="10" class="px-3 py-3 text-center text-xs font-bold text-red-500">Gagal memuat statistik fase.</td></tr>';
+                });
+        }
 
-    document.getElementById('ticker-filter').addEventListener('change', (e) => {
-        currentTicker = e.target.value;
-        currentPage = 1;
-        renderTable();
-        renderTodayPhaseFooter();
-    });
+        document.getElementById('ticker-filter').addEventListener('change', (e) => {
+            currentTicker = e.target.value;
+            currentPage = 1;
+            renderTable();
+            renderTodayPhaseFooter();
+        });
+        document.getElementById('date-filter').addEventListener('change', (e) => {
+            currentDate = e.target.value;
+            currentPage = 1;
+            renderTable();
+            renderTodayPhaseFooter();
+        });
 
-    window.onload = function() {
-        startRealtimeClock();
-        loadTradeHistory();
-    };
+        window.onload = function() {
+            startRealtimeClock();
+            loadTradeHistory();
+        };
     </script>
 </body>
 
