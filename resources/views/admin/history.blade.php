@@ -155,7 +155,7 @@
                             </tr>
                         </tfoot>
                     </table>
-                    <div id="pagination" class="mt-4 flex justify-center gap-2"></div>
+                    <!-- <div id="pagination" class="mt-4 flex justify-center gap-2"></div> -->
                 </div>
 
                 <div class="mt-4 text-xs text-slate-500 flex justify-between items-center">
@@ -333,7 +333,7 @@
             const totalRows = rows.length;
             const totalPages = Math.ceil(totalRows / rowsPerPage);
             const start = (currentPage - 1) * rowsPerPage;
-            const paginatedRows = rows.slice(start, start + rowsPerPage);
+            // const paginatedRows = rows.slice(start, start + rowsPerPage);
 
             if (!rows.length) {
                 tbody.innerHTML =
@@ -342,7 +342,7 @@
                 return;
             }
 
-            tbody.innerHTML = paginatedRows.map(row => `
+            tbody.innerHTML = rows.map(row => `
                 <tr class="hover:bg-slate-50">
                     <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.tanggal || '-'}</td>
                     <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.waktu || '-'}</td>
@@ -356,12 +356,10 @@
                     <td class="px-3 py-2 text-center">${badgePhase(row.phase_7, row, 7)}</td>
                 </tr>
             `).join('');
-            renderPagination(totalPages);
-
-            const end = Math.min(start + rowsPerPage, totalRows);
+            // renderPagination(totalPages);
 
             document.getElementById('rows-info').textContent =
-                `${start + 1}-${end} dari ${totalRows} baris`;
+                `${totalRows} baris ditampilkan`;
         }
 
         function formatPercent(value) {
@@ -376,7 +374,8 @@
 
         function renderTodayPhaseFooter() {
             const footer = document.getElementById('history-footer');
-            const todayRows = getDisplayedRows().filter(row => row.tanggal === currentApiDate);
+            // const todayRows = getDisplayedRows().filter(row => row.tanggal === currentApiDate);
+            const todayRows = getDisplayedRows();
             const phases = [1, 2, 3, 4, 5, 6, 7];
             const phaseCells = phases.map(phase => {
                 let trueCount = 0;
@@ -470,49 +469,49 @@
                 });
         }
 
-        function renderPagination(totalPages) {
-            const container = document.getElementById('pagination');
+        // function renderPagination(totalPages) {
+        //     const container = document.getElementById('pagination');
 
-            if (totalPages <= 1) {
-                container.innerHTML = '';
-                return;
-            }
+        //     if (totalPages <= 1) {
+        //         container.innerHTML = '';
+        //         return;
+        //     }
 
-            let html = '';
+        //     let html = '';
 
-            // tombol prev
-            if (currentPage > 1) {
-                html += `
-            <button onclick="goToPage(${currentPage - 1})"
-                class="px-3 py-1 border rounded-lg text-xs font-semibold bg-white hover:bg-slate-100">
-                Prev
-            </button>
-        `;
-            }
+        //     // tombol prev
+        //     if (currentPage > 1) {
+        //         html += `
+        //     <button onclick="goToPage(${currentPage - 1})"
+        //         class="px-3 py-1 border rounded-lg text-xs font-semibold bg-white hover:bg-slate-100">
+        //         Prev
+        //     </button>
+        // `;
+        //     }
 
-            // nomor halaman
-            for (let i = 1; i <= totalPages; i++) {
-                html += `
-            <button onclick="goToPage(${i})"
-                class="px-3 py-1 border rounded-lg text-xs font-semibold
-                ${i === currentPage ? 'bg-blue-500 text-white' : 'bg-white hover:bg-slate-100'}">
-                ${i}
-            </button>
-        `;
-            }
+        //     // nomor halaman
+        //     for (let i = 1; i <= totalPages; i++) {
+        //         html += `
+        //     <button onclick="goToPage(${i})"
+        //         class="px-3 py-1 border rounded-lg text-xs font-semibold
+        //         ${i === currentPage ? 'bg-blue-500 text-white' : 'bg-white hover:bg-slate-100'}">
+        //         ${i}
+        //     </button>
+        // `;
+        //     }
 
-            // tombol next
-            if (currentPage < totalPages) {
-                html += `
-            <button onclick="goToPage(${currentPage + 1})"
-                class="px-3 py-1 border rounded-lg text-xs font-semibold bg-white hover:bg-slate-100">
-                Next
-            </button>
-        `;
-            }
+        //     // tombol next
+        //     if (currentPage < totalPages) {
+        //         html += `
+        //     <button onclick="goToPage(${currentPage + 1})"
+        //         class="px-3 py-1 border rounded-lg text-xs font-semibold bg-white hover:bg-slate-100">
+        //         Next
+        //     </button>
+        // `;
+        //     }
 
-            container.innerHTML = html;
-        }
+        //     container.innerHTML = html;
+        // }
 
         function goToPage(page) {
             currentPage = page;

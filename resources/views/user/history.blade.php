@@ -159,7 +159,7 @@
                         </tfoot>
                     </table>
                 </div>
-                <div id="pagination" class="mt-4 flex justify-center gap-2"></div>
+                <!-- <div id="pagination" class="mt-4 flex justify-center gap-2"></div> -->
                 <div class="mt-4 text-xs text-slate-500 flex justify-between items-center">
                     <span id="rows-info">0 baris ditampilkan</span>
                     <span>Update terakhir: <span id="updated-at">-</span></span>
@@ -306,7 +306,7 @@
             const totalRows = rows.length;
             const totalPages = Math.ceil(totalRows / rowsPerPage);
             const start = (currentPage - 1) * rowsPerPage;
-            const paginatedRows = rows.slice(start, start + rowsPerPage);
+            // const paginatedRows = rows.slice(start, start + rowsPerPage);
 
             if (!rows.length) {
                 tbody.innerHTML =
@@ -315,7 +315,7 @@
                 return;
             }
 
-            tbody.innerHTML = paginatedRows.map(row => `
+            tbody.innerHTML = rows.map(row => `
             <tr class="hover:bg-slate-50">
                 <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.tanggal || '-'}</td>
                 <td class="px-3 py-2 text-xs font-semibold text-slate-700">${row.waktu || '-'}</td>
@@ -325,35 +325,35 @@
         `).join('');
 
             document.getElementById('rows-info').textContent =
-                `${start + 1}-${Math.min(start + rowsPerPage, totalRows)} dari ${totalRows} baris`;
+                `${totalRows} baris ditampilkan`;
 
-            renderPagination(totalPages); // ✅ DIPINDAH KE SINI (FIX)
+            // renderPagination(totalPages); // ✅ DIPINDAH KE SINI (FIX)
         }
 
-        function renderPagination(totalPages) {
-            const container = document.getElementById('pagination');
+        // function renderPagination(totalPages) {
+        //     const container = document.getElementById('pagination');
 
-            if (totalPages <= 1) {
-                container.innerHTML = '';
-                return;
-            }
+        //     if (totalPages <= 1) {
+        //         container.innerHTML = '';
+        //         return;
+        //     }
 
-            let html = '';
+        //     let html = '';
 
-            for (let i = 1; i <= totalPages; i++) {
-                html += `
-                <button onclick="goToPage(${i})"
-                    class="px-3 py-1 text-xs font-bold rounded-lg border
-                    ${i === currentPage
-                        ? 'bg-gojek text-white border-gojek'
-                        : 'bg-white text-slate-600 border-slate-300'}">
-                    ${i}
-                </button>
-            `;
-            }
+        //     for (let i = 1; i <= totalPages; i++) {
+        //         html += `
+        //         <button onclick="goToPage(${i})"
+        //             class="px-3 py-1 text-xs font-bold rounded-lg border
+        //             ${i === currentPage
+        //                 ? 'bg-gojek text-white border-gojek'
+        //                 : 'bg-white text-slate-600 border-slate-300'}">
+        //             ${i}
+        //         </button>
+        //     `;
+        //     }
 
-            container.innerHTML = html;
-        }
+        //     container.innerHTML = html;
+        // }
 
         function goToPage(page) {
             currentPage = page;
@@ -366,7 +366,8 @@
 
         function renderTodayPhaseFooter() {
             const footer = document.getElementById('history-footer');
-            const todayRows = getDisplayedRows().filter(row => row.tanggal === currentApiDate);
+            // const todayRows = getDisplayedRows().filter(row => row.tanggal === currentApiDate);
+            const todayRows = getDisplayedRows();
             const phases = [1, 2, 3, 4, 5, 6, 7];
 
             const phaseCells = phases.map(phase => {
