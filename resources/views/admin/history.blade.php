@@ -209,7 +209,7 @@
         let currentDate = '';
         let currentPage = 1;
         const rowsPerPage = 5;
-        const MASS_TG_LOSS_STORAGE_KEY = 'rodis_mass_tg_loss';
+        const FIXED_HISTORY_TARGET_LOSS = 2;
 
         function startRealtimeClock() {
             setInterval(() => {
@@ -244,13 +244,21 @@
             );
         }
 
+        function normalizePhaseValue(value) {
+            const normalized = String(value ?? '').trim().toUpperCase();
+            if (normalized === 'TRUE' || normalized === 'FALSE') {
+                return normalized;
+            }
+            return '-';
+        }
+
         function getPhaseTimeLabel(row, phaseNumber) {
-            const phaseValue = String(row[`phase_${phaseNumber}`] || '-').toUpperCase();
+            const phaseValue = normalizePhaseValue(row[`phase_${phaseNumber}`]);
             if (phaseValue !== 'TRUE' && phaseValue !== 'FALSE') {
                 return '';
             }
 
-            const targetLoss = Number.parseInt(row.target_loss || getHistoryTargetLoss(), 10);
+            const targetLoss = Number.parseInt(row.target_loss || FIXED_HISTORY_TARGET_LOSS, 10);
             if (!Number.isFinite(targetLoss) || phaseNumber <= targetLoss) {
                 return '';
             }
@@ -269,7 +277,7 @@
         }
 
         function badgePhase(value, row, phaseNumber) {
-            const val = (value || '-').toUpperCase();
+            const val = normalizePhaseValue(value);
             if (val === 'TRUE') {
                 const timeLabel = getPhaseTimeLabel(row, phaseNumber);
                 return `
@@ -366,12 +374,6 @@
             return `${value.toFixed(2)}%`;
         }
 
-        function getHistoryTargetLoss() {
-            const saved = localStorage.getItem(MASS_TG_LOSS_STORAGE_KEY);
-            const parsed = Number.parseInt(saved || '2', 10);
-            return Number.isFinite(parsed) && parsed > 0 ? parsed : 2;
-        }
-
         function renderTodayPhaseFooter() {
             const footer = document.getElementById('history-footer');
             // const todayRows = getDisplayedRows().filter(row => row.tanggal === currentApiDate);
@@ -382,7 +384,7 @@
                 let falseCount = 0;
 
                 todayRows.forEach(row => {
-                    const value = String(row[`phase_${phase}`] || '-').toUpperCase();
+                    const value = normalizePhaseValue(row[`phase_${phase}`]);
                     if (value === 'TRUE') {
                         trueCount++;
                     } else if (value === 'FALSE') {
@@ -445,7 +447,7 @@
         }
 
         function loadTradeHistory() {
-            const targetLoss = getHistoryTargetLoss();
+            const targetLoss = FIXED_HISTORY_TARGET_LOSS;
             fetch(`/api/trade-history?target_loss=${targetLoss}`)
                 .then(res => res.json())
                 .then(data => {
@@ -526,7 +528,7 @@
                 let falseCount = 0;
 
                 historyData.forEach(row => {
-                    const val = String(row[`phase_${i}`] || '-').toUpperCase();
+                    const val = normalizePhaseValue(row[`phase_${i}`]);
                     if (val === 'TRUE') trueCount++;
                     if (val === 'FALSE') falseCount++;
                 });
