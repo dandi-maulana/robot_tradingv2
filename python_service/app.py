@@ -1341,6 +1341,15 @@ def count_open_positions_today(candles):
 @app.route('/api/trade-history', methods=['GET'])
 def trade_history_calculated():
     try:
+        raw_target_loss = request.args.get('target_loss', '2')
+        try:
+            requested_target_loss = int(raw_target_loss)
+        except (TypeError, ValueError):
+            requested_target_loss = 2
+
+        if requested_target_loss < 1 or requested_target_loss > 6:
+            requested_target_loss = 2
+
         conn = get_db_connection()
         if not conn:
             return jsonify({
@@ -1368,9 +1377,10 @@ def trade_history_calculated():
                 phase_6,
                 phase_7
             FROM phase_histories
-            ORDER BY tanggal DESC, waktu DESC
+            WHERE target_loss = %s
+            ORDER BY tanggal DESC, waktu DESC, id DESC
             LIMIT 500
-        """)
+        """, (requested_target_loss,))
         rows = c.fetchall()
 
         # 🔥 FIX 1: GROUP PER TICKER (AMBIL TERBARU SAJA)
@@ -1406,7 +1416,7 @@ def trade_history_calculated():
 
                 # 🔥 penting untuk jam
                 "trigger_at": row.get("trigger_at"),
-                "target_loss": row.get("target_loss", 2),
+                "target_loss": row.get("target_loss", requested_target_loss),
 
                 "phase_1": row.get("phase_1", "-"),
                 "phase_2": row.get("phase_2", "-"),
