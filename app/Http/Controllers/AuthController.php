@@ -67,6 +67,19 @@ class AuthController extends Controller
                 $request->session()->regenerate();
                 return redirect()->intended('/dashboard');
 
+            } elseif ($user->role === 'user2') {
+                // ====================================================
+                // USER2 PATTERN SCANNER: Login via cookie terpisah
+                // Cookie: rodis_viewer2 untuk halaman pattern scanner
+                // ====================================================
+                $viewerToken = bin2hex(random_bytes(32));
+                $user->viewer_token = $viewerToken;
+                $user->save();
+
+                return redirect('/user2/dashboard')
+                    ->withCookie(cookie('rodis_viewer2', $user->id, 120, '/', null, false, true))
+                    ->withCookie(cookie('rodis_viewer2_token', $viewerToken, 120, '/', null, false, true));
+
             } else {
                 // ====================================================
                 // USER VIEWER: Login via encrypted cookie TERPISAH

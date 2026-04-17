@@ -153,7 +153,8 @@
                 <div class="mb-3">
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Access Token</label>
                     <input type="password" id="token" placeholder="Paste Token..."
-                        class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-gojek font-mono text-xs transition-all">
+                        class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-gojek font-mono text-xs transition-all"
+                        oninput="localStorage.setItem('rodis_token', this.value)">
                     <p class="text-[10px] text-red-500 mt-2 font-bold leading-tight">
                         ⚠️ Jangan mengubah Token jika Target Account ID di bawah sudah terisi!
                     </p>

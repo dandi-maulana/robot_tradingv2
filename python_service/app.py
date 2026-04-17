@@ -37,18 +37,18 @@ def _get_start_all_job_id():
         return _start_all_job_id
 
 # --- KONFIGURASI MYSQL ---
-# DB_CONFIG = {
-#    'host': 'localhost',
-#    'user': 'root',
-#    'password': '',
-#    'database': 'robot_trading5'
-# }
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'rodis_admin',
-    'password': '@Nightmare02',
-    'database': 'robot_trading'
+   'host': 'localhost',
+   'user': 'root',
+   'password': '',
+   'database': 'robot_trading5'
 }
+# DB_CONFIG = {
+#     'host': 'localhost',
+#     'user': 'rodis_admin',
+#     'password': '@Nightmare02',
+#     'database': 'robot_trading'
+# }
 
 def get_db_connection():
     try:
@@ -480,6 +480,165 @@ def send_telegram_internal(message):
 
     threading.Thread(target=send_task, daemon=True).start()
 
+# --- USER2: TELEGRAM KE GRUP RODIS NOTIFIKASI ---
+def send_telegram_user2(message):
+    """Kirim notifikasi ke grup RODIS NOTIFIKASI (khusus User2)"""
+    def send_task():
+        bot_token = "8762488972:AAHzdICqLME-9MuMh1aZevOpc0TyNHceES8"
+        chat_id   = "-1003801360218"  # Grup: RODIS NOTIFIKASI
+        try:
+            encoded_msg = urllib.parse.quote(message)
+            url = f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={chat_id}&text={encoded_msg}&parse_mode=Markdown"
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+            urllib.request.urlopen(req, timeout=10)
+            print(f"✅ [USER2] Notif Telegram terkirim ke RODIS NOTIFIKASI")
+        except Exception as e:
+            print(f"❌ [USER2] Gagal mengirim Telegram: {e}")
+
+    threading.Thread(target=send_task, daemon=True).start()
+
+
+# --- USER2: LOGIKA DETEKSI POLA C1-C5 ---
+def check_user2_pattern(market, tanggal, waktu_block):
+    """
+    Mengecek pola C1-C5 untuk sistem User2.
+
+    Pola UP   : C1=Merah, C2=Hijau,  C3=Merah, C4=Merah, C5=Merah
+    Pola DOWN : C1=Hijau, C2=Merah,  C3=Hijau, C4=Hijau, C5=Hijau
+
+    Notif Telegram dikirim saat C3 selesai (menit ke-02) jika C1,C2,C3 cocok.
+    """
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return
+
+        cursor = conn.cursor(dictionary=True)
+
+        # Ambil candle menit 01-05 pada blok ini dari market_histories
+        # waktu_block = "HH:MM" contoh 10:00 → ambil candle 10:01-10:05
+        parts = waktu_block.split(":")
+        hh = int(parts[0])
+        base_mm = int(parts[1])  # menit pertama blok (xx:00, xx:05, ...)
+
+        # Menit ke-1 s/d 5 di dalam blok ini = base_mm+1 s/d base_mm+5
+        # Mapping:
+        #   c1 = base_mm + 0  (menit 00 pada blok, yaitu waktu 10:00 → C1)
+        #   c2 = base_mm + 1, dst.
+        # CATATAN: Data disimpan sebagai menit aktual (00-59)
+        # Kita ambil semua candle dalam blok ini (base_mm sampai base_mm+4)
+        candle_times = []
+        for offset in range(5):  # c1=offset 0, c2=offset 1, dst
+            mm = base_mm + offset
+            if mm > 59:
+                # Lewat ke jam berikutnya (jarang terjadi tapi aman)
+                actual_hh = (hh + 1) % 24
+                actual_mm = mm - 60
+            else:
+                actual_hh = hh
+                actual_mm = mm
+            candle_times.append(f"{actual_hh:02d}:{actual_mm:02d}")
+
+        # Ambil semua candle di blok ini
+        placeholders = ','.join(['%s'] * len(candle_times))
+        cursor.execute(f"""
+            SELECT waktu, warna FROM market_histories
+            WHERE market = %s AND tanggal = %s AND waktu IN ({placeholders})
+            ORDER BY waktu ASC
+        """, [market, tanggal] + candle_times)
+        rows = cursor.fetchall()
+
+        # Map waktu ke warna dasar
+        candle_map = {}
+        for row in rows:
+            base_color = "Hijau" if "Hijau" in str(row['warna']) else "Merah"
+            candle_map[row['waktu']] = base_color
+
+        # Ambil warna C1 s/d C5
+        c1 = candle_map.get(candle_times[0])
+        c2 = candle_map.get(candle_times[1])
+        c3 = candle_map.get(candle_times[2])
+        c4 = candle_map.get(candle_times[3])
+        c5 = candle_map.get(candle_times[4])
+
+        # Tentukan tipe pola berdasarkan semua data yang tersedia
+        pattern_type = 'NONE'
+        if c1 and c2 and c3:
+            # Cek pola UP: C1=M, C2=H, C3=M
+            if c1 == 'Merah' and c2 == 'Hijau' and c3 == 'Merah':
+                if c4 and c5:
+                    pattern_type = 'UP' if (c4 == 'Merah' and c5 == 'Merah') else 'NONE'
+                else:
+                    pattern_type = 'UP'  # Sementara cocok (c4,c5 belum ada)
+            # Cek pola DOWN: C1=H, C2=M, C3=H
+            elif c1 == 'Hijau' and c2 == 'Merah' and c3 == 'Hijau':
+                if c4 and c5:
+                    pattern_type = 'DOWN' if (c4 == 'Hijau' and c5 == 'Hijau') else 'NONE'
+                else:
+                    pattern_type = 'DOWN'  # Sementara cocok
+
+        # Cek apakah notif sudah dikirim untuk blok ini
+        cursor.execute("""
+            SELECT id, notif_sent, pattern_type FROM user2_patterns
+            WHERE market = %s AND tanggal = %s AND waktu_block = %s
+        """, (market, tanggal, waktu_block))
+        existing = cursor.fetchone()
+
+        write_cursor = conn.cursor()
+
+        if existing:
+            # Update data candle
+            write_cursor.execute("""
+                UPDATE user2_patterns
+                SET c1=%s, c2=%s, c3=%s, c4=%s, c5=%s, pattern_type=%s, updated_at=NOW()
+                WHERE market=%s AND tanggal=%s AND waktu_block=%s
+            """, (c1, c2, c3, c4, c5, pattern_type, market, tanggal, waktu_block))
+            notif_already_sent = existing['notif_sent']
+        else:
+            # Insert baru
+            write_cursor.execute("""
+                INSERT INTO user2_patterns
+                (market, tanggal, waktu_block, c1, c2, c3, c4, c5, pattern_type, notif_sent, created_at, updated_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,0,NOW(),NOW())
+            """, (market, tanggal, waktu_block, c1, c2, c3, c4, c5, pattern_type))
+            notif_already_sent = False
+
+        conn.commit()
+
+        # Kirim notif Telegram saat C3 sudah ada, pola cocok, dan notif belum pernah dikirim
+        if c3 and pattern_type in ('UP', 'DOWN') and not notif_already_sent:
+            arah  = "📈 UP (BELI)" if pattern_type == 'UP' else "📉 DOWN (JUAL)"
+            emoji = "🟢" if pattern_type == 'UP' else "🔴"
+            msg = f"""🚨 *SINYAL POLA TERDETEKSI* 🚨
+
+{emoji} Arah   : *{arah}*
+📊 Market : *{market}*
+🗓 Blok   : {waktu_block} WIB
+
+Pola Candle:
+  C1: {'🟢 Hijau' if c1=='Hijau' else '🔴 Merah'}
+  C2: {'🟢 Hijau' if c2=='Hijau' else '🔴 Merah'}
+  C3: {'🟢 Hijau' if c3=='Hijau' else '🔴 Merah'}
+
+⚡ Siap eksekusi pada C4 & C5!"""
+
+            send_telegram_user2(msg)
+
+            # Tandai notif sudah dikirim
+            write_cursor.execute("""
+                UPDATE user2_patterns SET notif_sent=1
+                WHERE market=%s AND tanggal=%s AND waktu_block=%s
+            """, (market, tanggal, waktu_block))
+            conn.commit()
+            print(f"[USER2] ✅ Notif terkirim: {market} | {waktu_block} | {pattern_type}")
+
+        write_cursor.close()
+        cursor.close()
+        conn.close()
+
+    except Exception as e:
+        print(f"[USER2] ❌ Error check_user2_pattern {market}: {e}")
+
 # --- DIUBAH: LOGIKA FALSE/TRUE BLOK 5 MENIT ---
 def calc_sig_loss(history_list):
     sig_loss = 0
@@ -824,69 +983,70 @@ async def async_bot_task(market_name, token, user_account_id):
                 pass
 
             if len(last_raw_candles) > 0:
+                try:
+                    last_minute_checked = now.minute
+                    target_candle = last_raw_candles[1] if len(last_raw_candles) >= 2 else last_raw_candles[0]
 
-                last_minute_checked = now.minute
-                target_candle = last_raw_candles[1] if len(last_raw_candles) >= 2 else last_raw_candles[0]
+                    o_pr = float(target_candle.get('open', 0))
+                    h_pr = float(target_candle.get('high', 0))
+                    l_pr = float(target_candle.get('low', 0))
+                    c_pr = float(target_candle.get('close', 0))
+                    vol  = int(target_candle.get('vol', 0))
 
-                o_pr = float(target_candle.get('open', 0))
-                h_pr = float(target_candle.get('high', 0))
-                l_pr = float(target_candle.get('low', 0))
-                c_pr = float(target_candle.get('close', 0))
-                vol  = int(target_candle.get('vol', 0))
+                    warna_label = get_candle_color(o_pr, h_pr, l_pr, c_pr)
+                    base_warna = "Hijau" if "Hijau" in warna_label else "Merah"
 
-                warna_label = get_candle_color(o_pr, h_pr, l_pr, c_pr)
-                base_warna = "Hijau" if "Hijau" in warna_label else "Merah"
+                    save_analysis_db(
+                        market_name,
+                        now.strftime("%Y-%m-%d"),
+                        waktu_laporan,
+                        warna_label,
+                        o_pr, h_pr, l_pr, c_pr, vol
+                    )
 
-                save_analysis_db(
-                    market_name,
-                    now.strftime("%Y-%m-%d"),
-                    waktu_laporan,
-                    warna_label,
-                    o_pr, h_pr, l_pr, c_pr, vol
-                )
+                    # Tampilkan status di terminal biar user tahu bot jalan
+                    symbol_color = "🟢" if base_warna == "Hijau" else "🔴"
+                    print(f"[{now.strftime('%H:%M:%S')}] {market_name} | {waktu_laporan} | {symbol_color} {warna_label} | {c_pr}", flush=True)
 
-                # =========================================
-                # ✅ LOGIKA TELEGRAM BARU (ANTI SPAM - 1x NOTIF)
-                # =========================================
-                if state.get('tg_active'):
+                    # =========================================
+                    # ✅ USER2: CEK POLA C1-C5 SETELAH SIMPAN
+                    # =========================================
+                    try:
+                        tanggal_str  = now.strftime("%Y-%m-%d")
+                        menit_laporan = int(waktu_laporan.split(':')[1])
+                        base_block_mm = (menit_laporan // 5) * 5
+                        jam_laporan   = waktu_laporan.split(':')[0]
+                        waktu_block   = f"{jam_laporan}:{base_block_mm:02d}"
+                        check_user2_pattern(market_name, tanggal_str, waktu_block)
+                    except Exception as e_u2:
+                        print(f"[USER2] Error trigger: {e_u2}", flush=True)
 
-                    hist = get_history_db(market_name, 100)
-                    sig_loss = calc_sig_loss(hist)
+                    # =========================================
+                    # ✅ LOGIKA TELEGRAM BARU (ANTI SPAM - 1x NOTIF)
+                    # =========================================
+                    if state.get('tg_active'):
+                        hist = get_history_db(market_name, 100)
+                        sig_loss = calc_sig_loss(hist)
+                        candle_id = f"{now.strftime('%Y-%m-%d')}_{waktu_laporan}"
 
-                    candle_id = f"{now.strftime('%Y-%m-%d')}_{waktu_laporan}"
+                        if state.get("tg_last_candle") != candle_id:
+                            trigger_target = state.get('tg_target_loss', 7)
+                            last_notif_level = state.get('tg_notif_sent_for_level', -1)
+                            
+                            if sig_loss < last_notif_level:
+                                state['tg_notif_sent_for_level'] = -1
+                                last_notif_level = -1
 
-                    # anti spam (1 candle 1 notif)
-                    if state.get("tg_last_candle") != candle_id:
+                            if sig_loss == trigger_target and sig_loss != last_notif_level:
+                                open_time = now + timedelta(minutes=5)
+                                open_jam = open_time.strftime("%H:%M")
+                                msg = f"🚨 ALERT FALSE STREAK TERCAPAI\n\n📈 Market: {market_name}\n📊 False Beruntun: {sig_loss}x\n⏰ Target: {trigger_target}x\n\n⏱ Open Posisi: {open_jam} WIB\n✅ Siap untuk entry!"
+                                send_telegram_internal(msg)
+                                state['tg_notif_sent_for_level'] = sig_loss
 
-                        trigger_target = state.get('tg_target_loss', 7)
-
-                        # 🔥 HANYA KIRIM NOTIF 1x saat sig_loss PERTAMA KALI CAPAI TARGET
-                        # Reset tracking jika sig_loss < last notif level (berarti ada WIN)
-                        last_notif_level = state.get('tg_notif_sent_for_level', -1)
-                        
-                        if sig_loss < last_notif_level:
-                            # Reset jika ada WIN (sig_loss turun)
-                            state['tg_notif_sent_for_level'] = -1
-                            last_notif_level = -1
-
-                        # Kirim notif HANYA jika sig_loss = target DAN belum pernah kirim untuk level ini
-                        if sig_loss == trigger_target and sig_loss != last_notif_level:
-                            # Hitung jam open posisi (5 menit dari sekarang)
-                            open_time = now + timedelta(minutes=5)
-                            open_jam = open_time.strftime("%H:%M")
-
-                            msg = f"""🚨 ALERT FALSE STREAK TERCAPAI
-
-📈 Market: {market_name}
-📊 False Beruntun: {sig_loss}x
-⏰ Target: {trigger_target}x
-
-⏱ Open Posisi: {open_jam} WIB
-✅ Siap untuk entry!"""
-                            send_telegram_internal(msg)
-                            state['tg_notif_sent_for_level'] = sig_loss  # Mark notif sent
-
-                        state["tg_last_candle"] = candle_id
+                            state["tg_last_candle"] = candle_id
+                except Exception as e_proc:
+                    print(f"❌ Error processing candle {market_name}: {e_proc}", flush=True)
 
             else:
                 last_minute_checked = now.minute
@@ -1461,6 +1621,83 @@ def trade_history_calculated():
             'message': str(e),
             'data': []
         }), 500
+
+@app.route('/api/user2_data', methods=['GET'])
+def user2_data():
+    """
+    Endpoint untuk halaman User2 Pattern Scanner.
+    Mengembalikan status C1-C5 dan pola untuk semua market hari ini.
+    """
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'data': []})
+
+        today = datetime.now().strftime('%Y-%m-%d')
+        cursor = conn.cursor(dictionary=True)
+
+        # Ambil semua record user2_patterns untuk hari ini
+        cursor.execute("""
+            SELECT market, waktu_block, c1, c2, c3, c4, c5, pattern_type, notif_sent
+            FROM user2_patterns
+            WHERE tanggal = %s
+            ORDER BY market ASC, waktu_block DESC
+        """, (today,))
+        rows = cursor.fetchall()
+
+        # Grouping: ambil blok terbaru per market
+        latest_per_market = {}
+        for row in rows:
+            mkt = row['market']
+            if mkt not in latest_per_market:
+                latest_per_market[mkt] = row
+
+        # Tambahkan market yang running tapi belum ada record hari ini
+        cursor.execute("SELECT market FROM market_states WHERE is_running = 1")
+        running_markets = [r['market'] for r in cursor.fetchall()]
+
+        result = []
+        for mkt in running_markets:
+            if mkt in latest_per_market:
+                row = latest_per_market[mkt]
+                result.append({
+                    'market'      : mkt,
+                    'waktu_block' : row['waktu_block'],
+                    'c1'          : row['c1'] or '-',
+                    'c2'          : row['c2'] or '-',
+                    'c3'          : row['c3'] or '-',
+                    'c4'          : row['c4'] or '-',
+                    'c5'          : row['c5'] or '-',
+                    'pattern_type': row['pattern_type'] or 'NONE',
+                    'notif_sent'  : bool(row['notif_sent']),
+                })
+            else:
+                result.append({
+                    'market'      : mkt,
+                    'waktu_block' : '-',
+                    'c1'          : '-',
+                    'c2'          : '-',
+                    'c3'          : '-',
+                    'c4'          : '-',
+                    'c5'          : '-',
+                    'pattern_type': 'NONE',
+                    'notif_sent'  : False,
+                })
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data'   : result,
+            'date'   : today,
+            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+
+    except Exception as e:
+        print(f"[USER2 API] Error: {e}")
+        return jsonify({'success': False, 'data': [], 'error': str(e)}), 500
+
 
 @app.route('/api/send_wa', methods=['POST'])
 def send_telegram():

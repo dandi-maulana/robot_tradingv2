@@ -550,7 +550,18 @@ document.addEventListener('DOMContentLoaded', function() {
 // ================================================================
 window.onload = function() {
     fetch(`${API_BASE}/get_settings`).then(res => res.json()).then(data => {
-        if (data.token) document.getElementById('token').value = data.token;
+        const tokenInput = document.getElementById('token');
+        if (tokenInput) {
+            if (data.token) {
+                // Token tersimpan di DB (sudah pernah Start) — pakai dari DB
+                tokenInput.value = data.token;
+                localStorage.setItem('rodis_token', data.token); // sync ke localStorage
+            } else {
+                // Token belum ada di DB — coba ambil dari localStorage (baru Cek Akun saja)
+                const savedToken = localStorage.getItem('rodis_token');
+                if (savedToken) tokenInput.value = savedToken;
+            }
+        }
         if (data.account_id) {
             const select = document.getElementById('account-id');
             if (!select.querySelector(`option[value="${data.account_id}"]`)) {
@@ -575,6 +586,7 @@ window.onload = function() {
         });
     }
 }
+
 
 // ================================================================
 // VIEW MANAGEMENT

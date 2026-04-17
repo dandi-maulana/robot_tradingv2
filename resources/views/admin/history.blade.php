@@ -26,6 +26,10 @@
                 }
             }
         }
+
+        var API_BASE = window.location.hostname === "127.0.0.1" ?
+            window.location.protocol + "//" + window.location.hostname + ":5000/api" :
+            "/api";
     </script>
 
     <style>
@@ -448,7 +452,7 @@
 
         function loadTradeHistory() {
             const targetLoss = FIXED_HISTORY_TARGET_LOSS;
-            fetch(`/api/trade-history?target_loss=${targetLoss}`)
+            fetch(`${API_BASE}/trade-history?target_loss=${targetLoss}`)
                 .then(res => res.json())
                 .then(data => {
                     if (!data.success) {

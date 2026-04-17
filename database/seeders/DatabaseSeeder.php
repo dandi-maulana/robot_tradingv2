@@ -31,5 +31,16 @@ class DatabaseSeeder extends Seeder
                 'role' => 'user',
             ]
         );
+
+        // Akun User2 (Pattern Scanner - C1-C5 RODIS NOTIFIKASI)
+        User::updateOrCreate(
+            ['username' => 'user2'],
+            [
+                'name' => 'User2 Pattern Scanner',
+                'email' => 'user2@localhost.com',
+                'password' => Hash::make('user123'),
+                'role' => 'user2',
+            ]
+        );
     }
 }
