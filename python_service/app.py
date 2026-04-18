@@ -335,11 +335,6 @@ def sync_phase_histories_to_db(market):
 
         for target_loss in range(1, 7):
             rows = build_phase_history_rows(market, candles, target_loss)
-            write_cursor.execute(
-                "DELETE FROM phase_histories WHERE market = %s AND target_loss = %s",
-                (market, target_loss)
-            )
-
             if not rows:
                 continue
 
@@ -367,6 +362,20 @@ def sync_phase_histories_to_db(market):
                 INSERT INTO phase_histories
                 (market, target_loss, tanggal, waktu, phase_1, phase_2, phase_3, phase_4, phase_5, phase_6, phase_7, resolved_result, resolved_phase, trigger_at, resolved_at, created_at, updated_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON DUPLICATE KEY UPDATE
+                    tanggal = VALUES(tanggal),
+                    waktu = VALUES(waktu),
+                    phase_1 = VALUES(phase_1),
+                    phase_2 = VALUES(phase_2),
+                    phase_3 = VALUES(phase_3),
+                    phase_4 = VALUES(phase_4),
+                    phase_5 = VALUES(phase_5),
+                    phase_6 = VALUES(phase_6),
+                    phase_7 = VALUES(phase_7),
+                    resolved_result = VALUES(resolved_result),
+                    resolved_phase = VALUES(resolved_phase),
+                    resolved_at = VALUES(resolved_at),
+                    updated_at = NOW()
             """, payload)
 
         conn.commit()
