@@ -37,18 +37,18 @@ def _get_start_all_job_id():
         return _start_all_job_id
 
 # --- KONFIGURASI MYSQL ---
-DB_CONFIG = {
-   'host': 'localhost',
-   'user': 'root',
-   'password': '',
-   'database': 'robot_trading5'
-}
 # DB_CONFIG = {
-#     'host': 'localhost',
-#     'user': 'rodis_admin',
-#     'password': '@Nightmare02',
-#     'database': 'robot_trading'
+#    'host': 'localhost',
+#    'user': 'root',
+#    'password': '',
+#    'database': 'robot_trading5'
 # }
+DB_CONFIG = {
+    'host': 'localhost',
+    'user': 'rodis_admin',
+    'password': '@Nightmare02',
+    'database': 'robot_trading'
+}
 
 def get_db_connection():
     try:
@@ -1539,21 +1539,11 @@ def trade_history_calculated():
             FROM phase_histories
             WHERE target_loss = %s
             ORDER BY tanggal DESC, waktu DESC, id DESC
-            LIMIT 500
+            LIMIT 5000
         """, (requested_target_loss,))
         rows = c.fetchall()
 
         # 🔥 FIX 1: GROUP PER TICKER (AMBIL TERBARU SAJA)
-        latest_per_market = {}
-        for row in rows:
-            market = row.get("market")
-
-            # ambil pertama saja (karena sudah DESC)
-            if market not in latest_per_market:
-                latest_per_market[market] = row
-
-        rows = list(latest_per_market.values())
-
         result = []
         total_true = 0
         total_false = 0
