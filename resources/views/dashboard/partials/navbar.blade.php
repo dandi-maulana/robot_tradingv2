@@ -92,30 +92,14 @@
             </div> -->
         <!-- </div> -->
 
-        {{-- RIGHT SIDE: Balance, Order, Account, Theme Toggle --}}
+        {{-- RIGHT SIDE: Account, Theme Toggle --}}
         <div
             class="flex flex-wrap sm:flex-nowrap items-center justify-between md:justify-end gap-2 sm:gap-3 w-full md:w-auto border-t border-gray-100 md:border-t-0 pt-3 md:pt-0">
-
-            <!-- {{-- Order Value --}}
-            <div
-                class="bg-indigo-50 border border-indigo-200 px-3 sm:px-4 py-2 rounded-xl flex items-center justify-center gap-1 sm:gap-2 shadow-sm flex-1 md:flex-none">
-                <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest hidden sm:inline">Order
-                    :</span>
-                <span class="text-sm sm:text-lg font-extrabold text-indigo-600" id="nav-order-val">$10.00</span>
-            </div>
-
-            {{-- Balance --}}
-            <div
-                class="bg-gray-50 border border-gray-200 px-3 sm:px-4 py-2 rounded-xl flex items-center justify-center gap-1 sm:gap-2 shadow-sm flex-1 md:flex-none">
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden sm:inline">Saldo
-                    :</span>
-                <span class="text-sm sm:text-lg font-extrabold text-gojek" id="nav-balance">$0.00</span>
-            </div>
 
             {{-- Dark/Light Toggle Desktop --}}
             <button id="theme-toggle" title="Toggle Dark/Light Mode" class="hidden md:flex">
                 <span id="theme-icon">🌙</span>
-            </button> -->
+            </button>
 
             {{-- Profile Button Desktop --}}
             <div class="relative hidden md:block">

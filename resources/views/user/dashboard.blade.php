@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -15,553 +15,339 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif']
-                    },
-                    colors: {
-                        gojek: {
-                            DEFAULT: '#00aa13',
-                            dark: '#00880f',
-                            light: '#e6f6e8'
-                        },
-                        red: {
-                            DEFAULT: '#ee2737',
-                            dark: '#c81d28',
-                            light: '#fdedee'
-                        },
-                        dark: '#1c1c1c',
-                        graybg: '#f4f5f7'
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                 }
             }
         }
 
-        // API_BASE selalu mengarah ke Python service di port 5000
         var API_BASE = window.location.hostname === "127.0.0.1" ?
             window.location.protocol + "//" + window.location.hostname + ":5000/api" :
             "/api";
     </script>
 
     <style>
-        body {
-            background-color: #f4f5f7;
+        * { box-sizing: border-box; }
+
+        :root { --t: 0.35s; }
+
+        [data-theme="dark"] {
+            --bg: #0b0e1a; --bg-card: rgba(255,255,255,0.03); --bg-card-hover: rgba(255,255,255,0.06);
+            --bg-nav: rgba(11,14,26,0.88); --border: rgba(255,255,255,0.06); --border-s: rgba(255,255,255,0.04);
+            --t1: #f1f5f9; --t2: rgba(255,255,255,0.55); --t3: rgba(255,255,255,0.25); --t4: rgba(255,255,255,0.12);
+            --green: #34d399; --green-bg: rgba(16,185,129,0.1); --green-bd: rgba(16,185,129,0.18);
+            --red: #fca5a5; --red-bg: rgba(239,68,68,0.1); --red-bd: rgba(239,68,68,0.18);
+            --indigo: #818cf8; --amber: #fbbf24; --blue: #60a5fa;
+            --badge-green-bg: rgba(16,185,129,0.12); --badge-green-t: #6ee7b7; --badge-green-bd: rgba(16,185,129,0.22);
+            --badge-red-bg: rgba(239,68,68,0.12); --badge-red-t: #fca5a5; --badge-red-bd: rgba(239,68,68,0.22);
+            --input-bg: rgba(255,255,255,0.05); --input-bd: rgba(255,255,255,0.08);
+            --scroll: rgba(255,255,255,0.08);
+            --streak-0: rgba(255,255,255,0.04); --streak-0-t: rgba(255,255,255,0.4); --streak-0-bd: rgba(255,255,255,0.08);
+            --streak-1: rgba(59,130,246,0.1); --streak-1-t: #93c5fd; --streak-1-bd: rgba(59,130,246,0.2);
+            --streak-3: rgba(234,179,8,0.1); --streak-3-t: #fde047; --streak-3-bd: rgba(234,179,8,0.2);
+            --streak-5: rgba(249,115,22,0.1); --streak-5-t: #fdba74; --streak-5-bd: rgba(249,115,22,0.2);
+            --streak-7: rgba(239,68,68,0.12); --streak-7-t: #fca5a5; --streak-7-bd: rgba(239,68,68,0.25);
+            --streak-false-bg: rgba(255,255,255,0.06); --streak-false-t: rgba(255,255,255,0.5);
         }
 
-        ::-webkit-scrollbar {
-            width: 6px;
+        [data-theme="light"] {
+            --bg: #f0f2f5; --bg-card: #ffffff; --bg-card-hover: #f8fafc;
+            --bg-nav: rgba(255,255,255,0.92); --border: #e2e8f0; --border-s: #f1f5f9;
+            --t1: #0f172a; --t2: #64748b; --t3: #94a3b8; --t4: #cbd5e1;
+            --green: #059669; --green-bg: #ecfdf5; --green-bd: #a7f3d0;
+            --red: #dc2626; --red-bg: #fef2f2; --red-bd: #fecaca;
+            --indigo: #6366f1; --amber: #f59e0b; --blue: #3b82f6;
+            --badge-green-bg: #d1fae5; --badge-green-t: #065f46; --badge-green-bd: #a7f3d0;
+            --badge-red-bg: #fee2e2; --badge-red-t: #991b1b; --badge-red-bd: #fca5a5;
+            --input-bg: #ffffff; --input-bd: #e2e8f0;
+            --scroll: #cbd5e1;
+            --streak-0: #f8fafc; --streak-0-t: #64748b; --streak-0-bd: #e2e8f0;
+            --streak-1: #eff6ff; --streak-1-t: #2563eb; --streak-1-bd: #bfdbfe;
+            --streak-3: #fefce8; --streak-3-t: #a16207; --streak-3-bd: #fde68a;
+            --streak-5: #fff7ed; --streak-5-t: #c2410c; --streak-5-bd: #fed7aa;
+            --streak-7: #fef2f2; --streak-7-t: #dc2626; --streak-7-bd: #fecaca;
+            --streak-false-bg: rgba(0,0,0,0.04); --streak-false-t: #64748b;
         }
 
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
+        body { background: var(--bg); color: var(--t1); transition: background var(--t), color var(--t); }
 
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--scroll); border-radius: 10px; }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
+        .fade-in { animation: fadeIn .3s ease-out; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
-        /* ===== FADE IN ===== */
-        .fade-in {
-            animation: fadeIn 0.3s ease-in-out;
-        }
+        .card { background: var(--bg-card); border: 1px solid var(--border); transition: background var(--t), border-color var(--t); }
+        .nav-bar { background: var(--bg-nav); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); transition: background var(--t), border-color var(--t); }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* ===== STREAK ITEMS ===== */
-        .connected-glow {
-            animation: greenPulse 2.2s infinite ease-in-out;
-        }
-
-        .danger-glow {
-            animation: redPulse 1.4s infinite ease-in-out;
-        }
-
+        .danger-glow { animation: redPulse 1.4s infinite ease-in-out; }
         @keyframes redPulse {
-            0% {
-                box-shadow: 0 0 0 rgba(239, 68, 68, 0.2);
-            }
-
-            50% {
-                box-shadow: 0 0 16px rgba(239, 68, 68, 0.6);
-            }
-
-            100% {
-                box-shadow: 0 0 0 rgba(239, 68, 68, 0.2);
-            }
+            0%, 100% { box-shadow: 0 0 0 rgba(239,68,68,0.2); }
+            50% { box-shadow: 0 0 16px rgba(239,68,68,0.5); }
         }
 
+        .connected-glow { animation: greenPulse 2.2s infinite ease-in-out; }
         @keyframes greenPulse {
-            0% {
-                box-shadow: 0 0 0 rgba(0, 170, 19, 0.2);
-            }
+            0%, 100% { box-shadow: 0 0 0 rgba(16,185,129,0.2); }
+            50% { box-shadow: 0 0 12px rgba(16,185,129,0.4); }
+        }
 
-            50% {
-                box-shadow: 0 0 12px rgba(0, 170, 19, 0.4);
-            }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .dot-red { background: #ef4444; animation: dotR 1.5s ease-in-out infinite; }
+        @keyframes dotR {
+            0%, 100% { box-shadow: 0 0 6px rgba(239,68,68,0.5); opacity: 1; }
+            50% { box-shadow: 0 0 2px rgba(239,68,68,0.2); opacity: 0.4; }
+        }
 
-            100% {
-                box-shadow: 0 0 0 rgba(0, 170, 19, 0.2);
-            }
+        /* Theme toggle */
+        .theme-toggle { width:52px; height:28px; border-radius:14px; cursor:pointer; position:relative; transition:background 0.4s; border:none; outline:none; padding:0; }
+        [data-theme="dark"] .theme-toggle { background: linear-gradient(135deg, #1e293b, #334155); box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); }
+        [data-theme="light"] .theme-toggle { background: linear-gradient(135deg, #bfdbfe, #93c5fd); box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); }
+        .toggle-knob { position:absolute; top:3px; width:22px; height:22px; border-radius:50%; transition: left 0.4s cubic-bezier(0.68,-0.15,0.32,1.15), background 0.4s, box-shadow 0.4s; display:flex; align-items:center; justify-content:center; font-size:12px; }
+        [data-theme="dark"] .toggle-knob { left:3px; background:linear-gradient(135deg,#4f46e5,#6366f1); box-shadow:0 2px 8px rgba(99,102,241,0.4); }
+        [data-theme="light"] .toggle-knob { left:27px; background:linear-gradient(135deg,#f59e0b,#fbbf24); box-shadow:0 2px 8px rgba(245,158,11,0.4); }
+
+        /* Streak item */
+        .streak-item {
+            transition: all 0.2s ease;
+            cursor: default;
+        }
+        .streak-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 
-<body class="text-dark antialiased flex flex-col min-h-screen">
+<body class="antialiased flex flex-col min-h-screen">
 
-    <!-- ============================================================
-         NAVBAR (sama dengan admin, tapi tanpa kontrol)
-    ============================================================ -->
-    <nav class="bg-white sticky top-0 z-50 shadow-sm px-4 sm:px-6 py-3 border-b border-gray-100">
-        <div class="flex items-center justify-between">
-
-            {{-- LOGO & BRAND --}}
-            <div class="flex items-center gap-2 sm:gap-3">
-                <div class="bg-gojek text-white p-1.5 sm:p-2 rounded-xl shadow-sm">
-                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- NAVBAR -->
+    <nav class="nav-bar sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #10b981, #059669);">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
-                        </path>
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                 </div>
-                <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-dark">
-                    RODIS <span class="text-gojek font-semibold text-sm sm:text-lg ml-1 hidden lg:inline">(RObot
-                        DISana)</span>
+                <h1 class="text-sm sm:text-base font-bold tracking-tight">
+                    RODIS <span style="color: var(--green);" class="font-semibold hidden lg:inline">(RObot DISana)</span>
                 </h1>
             </div>
 
-            {{-- RIGHT SIDE: User Info + Logout --}}
-            <div class="flex items-center gap-2 sm:gap-4">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Ubah tema">
+                    <span class="toggle-knob"><span id="theme-icon">🌙</span></span>
+                </button>
 
-                {{-- Link to History --}}
                 <a href="{{ route('user.history') }}"
-                    class="text-xs sm:text-sm font-bold text-gojek hover:text-gojek-dark px-2 sm:px-3 py-1.5 rounded-lg hover:bg-gojek-light transition-colors">
+                    class="text-[11px] sm:text-xs font-bold px-2.5 py-1.5 rounded-lg transition-all"
+                    style="color: var(--green); background: var(--green-bg); border: 1px solid var(--green-bd);">
                     📈 History
                 </a>
 
-                {{-- Logout --}}
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
-                    <button type="submit"
-                        class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 border border-red-100 shadow-sm">
-                        🚪 <span class="hidden sm:inline">Logout</span>
+                    <button type="submit" class="text-[11px] sm:text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all"
+                        style="color: var(--red); background: var(--red-bg); border: 1px solid var(--red-bd);">
+                        Logout
                     </button>
                 </form>
             </div>
         </div>
     </nav>
 
-    <!-- ============================================================
-         MAIN CONTENT
-    ============================================================ -->
+    <!-- MAIN -->
     <main class="flex-grow">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 w-full relative z-20 pt-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-4">
 
-            {{-- INFO BANNER --}}
-            <div class="mb-6 gap-4 border-b border-gray-100 pb-5 fade-in">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                        <h3 class="text-xl font-bold text-dark hidden md:block mb-2">Dashboard</h3>
-                        <div class="flex flex-wrap items-center gap-2 text-xs font-medium">
-                            <span
-                                class="px-2.5 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-800 rounded-lg flex items-center gap-1.5 shadow-sm">
-                                🤖 Bot Berjalan: <b id="lbl-bot-count" class="text-indigo-600 text-sm">0/36</b>
-                            </span>
-                            <span
-                                class="px-2.5 py-1.5 bg-gray-50 border border-gray-200 text-gray-600 rounded-lg flex items-center gap-1.5 shadow-sm">
-                                📲 Sinyal Massal: <b id="lbl-tg-count" class="text-gray-400 font-bold">OFF</b>
-                            </span>
-                        </div>
-                    </div>
-
-                    <div
-                        class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm">
-                        ⏰ <span id="realtime-clock">Memuat Waktu...</span>
+            <!-- HEADER + STATS -->
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 fade-in">
+                <div>
+                    <h2 class="text-lg sm:text-xl font-extrabold">Pusat Kendali Market</h2>
+                    <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                        <span class="card rounded-lg px-2.5 py-1 text-[11px] font-semibold flex items-center gap-1.5"
+                              style="color: var(--indigo);">
+                            🤖 Bot Berjalan: <b id="lbl-bot-count" class="text-sm">0/36</b>
+                        </span>
+                        <span class="card rounded-lg px-2.5 py-1 text-[11px] font-semibold flex items-center gap-1.5"
+                              style="color: var(--t3);">
+                            📲 Sinyal Massal: <b id="lbl-tg-count" style="color: var(--t3);">OFF</b>
+                        </span>
                     </div>
                 </div>
+                <span id="realtime-clock" class="text-xs font-mono" style="color: var(--t3);">Memuat Waktu...</span>
             </div>
 
-            {{-- LIVE FALSE STREAK SECTION --}}
-            <div class="grid grid-cols-1 gap-5 mb-6 w-full items-stretch fade-in">
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 w-full flex flex-col"
-                    id="live-streak-container">
-                    <div
-                        class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 border-b border-gray-50 pb-3 gap-2">
-                        <h3 class="text-sm font-extrabold text-dark flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-red animate-pulse shadow-[0_0_8px_#ef4444]"></span>
-                            Live False Streak (Backtest Monitor)
-                        </h3>
-                        <span
-                            class="px-2.5 py-1 bg-gray-50 border border-gray-200 text-gray-500 rounded-lg text-[10px] font-bold shadow-sm flex items-center gap-1">
-                            <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                </path>
-                            </svg>
-                            READ-ONLY
-                        </span>
-                    </div>
-                    <div id="streak-list" class="
-                        grid
-                        grid-cols-2
-                        sm:grid-cols-3
-                        md:grid-cols-4
-                        lg:grid-cols-5
-                        xl:grid-cols-6
-                        gap-2
-                        pt-1
-                        min-h-[30px]
-                    ">
-                        <span class="text-xs text-gray-400 font-medium italic col-span-full py-8 text-center">
-                            ⏳ Menunggu Admin mengaktifkan bot trading...
-                        </span>
-                    </div>
+            <!-- LIVE FALSE STREAK -->
+            <div class="card rounded-2xl p-4 sm:p-5 fade-in" id="live-streak-container">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 pb-3 gap-2"
+                     style="border-bottom: 1px solid var(--border-s);">
+                    <h3 class="text-sm font-extrabold flex items-center gap-2">
+                        <span class="dot dot-red"></span>
+                        Live False Streak (Backtest Monitor)
+                    </h3>
+                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1"
+                          style="color: var(--t3); background: var(--bg-card); border: 1px solid var(--border);">
+                        👁 READ-ONLY
+                    </span>
+                </div>
+                <div id="streak-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 pt-1 min-h-[30px]">
+                    <span class="text-xs font-medium italic col-span-full py-8 text-center" style="color: var(--t4);">
+                        ⏳ Menunggu Admin mengaktifkan bot trading...
+                    </span>
                 </div>
             </div>
 
         </div>
     </main>
 
-    <!-- ============================================================
-         FOOTER (sama dengan admin)
-    ============================================================ -->
-    <footer class="bg-white border-t border-gray-200 py-6 mt-10">
+    <!-- FOOTER -->
+    <footer style="border-top: 1px solid var(--border-s);" class="py-4 mt-4">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
-            <p class="text-gray-500 text-sm font-medium">
-                &copy; <script>
-                    document.write(new Date().getFullYear())
-                </script>
-                <strong>RODIS</strong> - Robot Trading. All rights reserved.
+            <p class="text-[11px]" style="color: var(--t4);">
+                &copy; <script>document.write(new Date().getFullYear())</script>
+                <span style="color: var(--t3);" class="font-semibold">RODIS</span> - Robot Trading. All rights reserved.
             </p>
-            <div class="flex space-x-6 mt-4 md:mt-0 text-sm font-medium text-gray-400">
-            </div>
         </div>
     </footer>
 
-    <!-- ============================================================
-         SCRIPTS
-    ============================================================ -->
     <script>
-        // ============================================================
-        // MARKET DEFINITIONS (sama persis dengan admin)
-        // ============================================================
-        const allMarkets = [{
-                id: "Asia Composite Index",
-                name: "Asia Index",
-                icon: "🌏",
-                cat: "24 Jam FTT"
-            },
-            {
-                id: "Europe Composite Index",
-                name: "Europe Index",
-                icon: "🌍",
-                cat: "24 Jam FTT"
-            },
-            {
-                id: "Commodity Composite",
-                name: "Commodity",
-                icon: "🌾",
-                cat: "24 Jam FTT"
-            },
-            {
-                id: "Crypto Composite Index",
-                name: "Crypto Index",
-                icon: "₿",
-                cat: "24 Jam FTT"
-            },
-            {
-                id: "EUR/USD OTC",
-                name: "EUR/USD OTC",
-                icon: "🇪🇺",
-                cat: "OTC"
-            },
-            {
-                id: "GBP/USD OTC",
-                name: "GBP/USD OTC",
-                icon: "🇬🇧",
-                cat: "OTC"
-            },
-            {
-                id: "USD/JPY OTC",
-                name: "USD/JPY OTC",
-                icon: "🇯🇵",
-                cat: "OTC"
-            },
-            {
-                id: "AUD/USD OTC",
-                name: "AUD/USD OTC",
-                icon: "🇦🇺",
-                cat: "OTC"
-            },
-            {
-                id: "NZD/USD OTC",
-                name: "NZD/USD OTC",
-                icon: "🇳🇿",
-                cat: "OTC"
-            },
-            {
-                id: "USD/CAD OTC",
-                name: "USD/CAD OTC",
-                icon: "🇨🇦",
-                cat: "OTC"
-            },
-            {
-                id: "USD/CHF OTC",
-                name: "USD/CHF OTC",
-                icon: "🇨🇭",
-                cat: "OTC"
-            },
-            {
-                id: "EUR/JPY OTC",
-                name: "EUR/JPY OTC",
-                icon: "💶",
-                cat: "OTC"
-            },
-            {
-                id: "GBP/JPY OTC",
-                name: "GBP/JPY OTC",
-                icon: "💷",
-                cat: "OTC"
-            },
-            {
-                id: "AUD/JPY OTC",
-                name: "AUD/JPY OTC",
-                icon: "🇦🇺",
-                cat: "OTC"
-            },
-            {
-                id: "CAD/JPY OTC",
-                name: "CAD/JPY OTC",
-                icon: "🇨🇦",
-                cat: "OTC"
-            },
-            {
-                id: "NZD/JPY OTC",
-                name: "NZD/JPY OTC",
-                icon: "🇳🇿",
-                cat: "OTC"
-            },
-            {
-                id: "CHF/JPY OTC",
-                name: "CHF/JPY OTC",
-                icon: "🇨🇭",
-                cat: "OTC"
-            },
-            {
-                id: "EUR/GBP OTC",
-                name: "EUR/GBP OTC",
-                icon: "💶",
-                cat: "OTC"
-            },
-            {
-                id: "EUR/AUD OTC",
-                name: "EUR/AUD OTC",
-                icon: "💶",
-                cat: "OTC"
-            },
-            {
-                id: "EUR/CAD OTC",
-                name: "EUR/CAD OTC",
-                icon: "💶",
-                cat: "OTC"
-            },
-            {
-                id: "EUR/CHF OTC",
-                name: "EUR/CHF OTC",
-                icon: "💶",
-                cat: "OTC"
-            },
-            {
-                id: "GBP/AUD OTC",
-                name: "GBP/AUD OTC",
-                icon: "💷",
-                cat: "OTC"
-            },
-            {
-                id: "GBP/CAD OTC",
-                name: "GBP/CAD OTC",
-                icon: "💷",
-                cat: "OTC"
-            },
-            {
-                id: "GBP/CHF OTC",
-                name: "GBP/CHF OTC",
-                icon: "💷",
-                cat: "OTC"
-            },
-            {
-                id: "AUD/CAD OTC",
-                name: "AUD/CAD OTC",
-                icon: "🇦🇺",
-                cat: "OTC"
-            },
-            {
-                id: "AUD/CHF OTC",
-                name: "AUD/CHF OTC",
-                icon: "🇦🇺",
-                cat: "OTC"
-            },
-            {
-                id: "CAD/CHF OTC",
-                name: "CAD/CHF OTC",
-                icon: "🇨🇦",
-                cat: "OTC"
-            },
+        // THEME
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.setAttribute('data-theme', 'light'); icon.textContent = '☀️';
+                localStorage.setItem('rodis-theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark'); icon.textContent = '🌙';
+                localStorage.setItem('rodis-theme', 'dark');
+            }
+        }
+        (function() {
+            const saved = localStorage.getItem('rodis-theme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+                const icon = document.getElementById('theme-icon');
+                if (icon) icon.textContent = saved === 'dark' ? '🌙' : '☀️';
+            }
+        })();
+
+        // MARKETS
+        const allMarkets = [
+            {id:"Asia Composite Index",name:"Asia Index",icon:"🌏",cat:"24 Jam FTT"},
+            {id:"Europe Composite Index",name:"Europe Index",icon:"🌍",cat:"24 Jam FTT"},
+            {id:"Commodity Composite",name:"Commodity",icon:"🌾",cat:"24 Jam FTT"},
+            {id:"Crypto Composite Index",name:"Crypto Index",icon:"₿",cat:"24 Jam FTT"},
+            {id:"EUR/USD OTC",name:"EUR/USD OTC",icon:"🇪🇺",cat:"OTC"},{id:"GBP/USD OTC",name:"GBP/USD OTC",icon:"🇬🇧",cat:"OTC"},
+            {id:"USD/JPY OTC",name:"USD/JPY OTC",icon:"🇯🇵",cat:"OTC"},{id:"AUD/USD OTC",name:"AUD/USD OTC",icon:"🇦🇺",cat:"OTC"},
+            {id:"NZD/USD OTC",name:"NZD/USD OTC",icon:"🇳🇿",cat:"OTC"},{id:"USD/CAD OTC",name:"USD/CAD OTC",icon:"🇨🇦",cat:"OTC"},
+            {id:"USD/CHF OTC",name:"USD/CHF OTC",icon:"🇨🇭",cat:"OTC"},{id:"EUR/JPY OTC",name:"EUR/JPY OTC",icon:"💶",cat:"OTC"},
+            {id:"GBP/JPY OTC",name:"GBP/JPY OTC",icon:"💷",cat:"OTC"},{id:"AUD/JPY OTC",name:"AUD/JPY OTC",icon:"🇦🇺",cat:"OTC"},
+            {id:"CAD/JPY OTC",name:"CAD/JPY OTC",icon:"🇨🇦",cat:"OTC"},{id:"NZD/JPY OTC",name:"NZD/JPY OTC",icon:"🇳🇿",cat:"OTC"},
+            {id:"CHF/JPY OTC",name:"CHF/JPY OTC",icon:"🇨🇭",cat:"OTC"},{id:"EUR/GBP OTC",name:"EUR/GBP OTC",icon:"💶",cat:"OTC"},
+            {id:"EUR/AUD OTC",name:"EUR/AUD OTC",icon:"💶",cat:"OTC"},{id:"EUR/CAD OTC",name:"EUR/CAD OTC",icon:"💶",cat:"OTC"},
+            {id:"EUR/CHF OTC",name:"EUR/CHF OTC",icon:"💶",cat:"OTC"},{id:"GBP/AUD OTC",name:"GBP/AUD OTC",icon:"💷",cat:"OTC"},
+            {id:"GBP/CAD OTC",name:"GBP/CAD OTC",icon:"💷",cat:"OTC"},{id:"GBP/CHF OTC",name:"GBP/CHF OTC",icon:"💷",cat:"OTC"},
+            {id:"AUD/CAD OTC",name:"AUD/CAD OTC",icon:"🇦🇺",cat:"OTC"},{id:"AUD/CHF OTC",name:"AUD/CHF OTC",icon:"🇦🇺",cat:"OTC"},
+            {id:"CAD/CHF OTC",name:"CAD/CHF OTC",icon:"🇨🇦",cat:"OTC"},
         ];
 
-        // ============================================================
-        // REALTIME CLOCK
-        // ============================================================
+        // CLOCK
         function startRealtimeClock() {
             setInterval(() => {
-                const clockEl = document.getElementById('realtime-clock');
-                if (clockEl) {
-                    const now = new Date();
-                    const hh = String(now.getHours()).padStart(2, '0');
-                    const mm = String(now.getMinutes()).padStart(2, '0');
-                    const ss = String(now.getSeconds()).padStart(2, '0');
-                    clockEl.innerText = `${hh}:${mm}:${ss} WIB`;
-                }
+                const now = new Date();
+                document.getElementById('realtime-clock').innerText =
+                    [now.getHours(), now.getMinutes(), now.getSeconds()].map(n => String(n).padStart(2,'0')).join(':') + ' WIB';
             }, 1000);
         }
 
-        // ============================================================
-        // DASHBOARD POLLING (READ-ONLY — sama format dengan admin)
-        // ============================================================
+        // POLLING
         let pollingInterval;
-
-        function startPolling() {
-            refreshData();
-            pollingInterval = setInterval(refreshData, 3000);
-        }
+        function startPolling() { refreshData(); pollingInterval = setInterval(refreshData, 3000); }
 
         function refreshData() {
-            fetch(`${API_BASE}/status_all`)
-                .then(res => res.json())
-                .then(data => {
-                    const activeMarkets = data.active_markets || [];
-                    const streakList = document.getElementById('streak-list');
-                    const botCountEl = document.getElementById('lbl-bot-count');
+            fetch(`${API_BASE}/status_all`).then(res => res.json()).then(data => {
+                const activeMarkets = data.active_markets || [];
+                const streakList = document.getElementById('streak-list');
+                const botCountEl = document.getElementById('lbl-bot-count');
 
-                    if (botCountEl) botCountEl.innerText = `${activeMarkets.length}/36`;
+                if (botCountEl) botCountEl.innerText = `${activeMarkets.length}/36`;
 
-                    // Sync telegram count
-                    const tgCountEl = document.getElementById('lbl-tg-count');
-                    if (tgCountEl) {
-                        let tgCount = data.tg_active_count || 0;
-                        if (tgCount > 0) {
-                            tgCountEl.innerText = `ON (${tgCount} Market)`;
-                            tgCountEl.className = 'text-blue-600 font-extrabold';
-                        } else {
-                            tgCountEl.innerText = 'OFF';
-                            tgCountEl.className = 'text-gray-400 font-bold';
-                        }
+                const tgCountEl = document.getElementById('lbl-tg-count');
+                if (tgCountEl) {
+                    let tgCount = data.tg_active_count || 0;
+                    if (tgCount > 0) {
+                        tgCountEl.innerText = `ON (${tgCount} Market)`;
+                        tgCountEl.style.color = 'var(--blue)';
+                    } else {
+                        tgCountEl.innerText = 'OFF';
+                        tgCountEl.style.color = 'var(--t3)';
+                    }
+                }
+
+                if (!streakList) return;
+
+                if (!data.market_streaks || Object.keys(data.market_streaks).length === 0) {
+                    streakList.innerHTML = `<span class="text-xs font-medium italic col-span-full py-8 text-center" style="color:var(--t4);">⏳ Menunggu Admin mengaktifkan bot trading...</span>`;
+                    return;
+                }
+
+                let sortedMarkets = Object.keys(data.market_streaks).sort((a,b) => data.market_streaks[b] - data.market_streaks[a]);
+                const highestStreak = sortedMarkets.length > 0 ? data.market_streaks[sortedMarkets[0]] : 0;
+                const totalMarket = allMarkets.length;
+                const activeCount = activeMarkets.length;
+                const allConnected = (activeCount === totalMarket && totalMarket > 0);
+
+                streakList.innerHTML = '';
+
+                sortedMarkets.forEach(mkt => {
+                    let streak = data.market_streaks[mkt];
+                    let mktObj = allMarkets.find(x => x.id === mkt);
+                    let mktName = mktObj ? mktObj.name : mkt;
+
+                    let bgVar, tVar, bdVar;
+                    if (streak >= 7) { bgVar = '--streak-7'; tVar = '--streak-7-t'; bdVar = '--streak-7-bd'; }
+                    else if (streak >= 5) { bgVar = '--streak-5'; tVar = '--streak-5-t'; bdVar = '--streak-5-bd'; }
+                    else if (streak >= 3) { bgVar = '--streak-3'; tVar = '--streak-3-t'; bdVar = '--streak-3-bd'; }
+                    else if (streak >= 1) { bgVar = '--streak-1'; tVar = '--streak-1-t'; bdVar = '--streak-1-bd'; }
+                    else { bgVar = '--streak-0'; tVar = '--streak-0-t'; bdVar = '--streak-0-bd'; }
+
+                    let dangerGlow = (streak === highestStreak && streak >= 7) ? 'danger-glow' : '';
+
+                    if (allConnected) {
+                        bgVar = '--green-bg'; tVar = '--green'; bdVar = '--green-bd';
+                        dangerGlow = '';
                     }
 
-                    if (!streakList) return;
-
-                    if (!data.market_streaks || Object.keys(data.market_streaks).length === 0) {
-                        streakList.innerHTML = `
-                            <span class="text-xs text-gray-400 font-medium italic col-span-full py-8 text-center">
-                                ⏳ Menunggu Admin mengaktifkan bot trading...
-                            </span>`;
-                        return;
-                    }
-
-                    // Sort by streak descending (sama persis format admin)
-                    let sortedMarkets = Object.keys(data.market_streaks)
-                        .sort((a, b) => data.market_streaks[b] - data.market_streaks[a]);
-
-                    const highestStreak = sortedMarkets.length > 0 ?
-                        data.market_streaks[sortedMarkets[0]] : 0;
-
-                    // Hitung apakah semua market sudah terkoneksi (sama dengan admin)
-                    const totalMarket = allMarkets.length;
-                    const activeCount = activeMarkets.length;
-                    const allConnected = (activeCount === totalMarket && totalMarket > 0);
-
-                    streakList.innerHTML = '';
-
-                    sortedMarkets.forEach(mkt => {
-                        let streak = data.market_streaks[mkt];
-                        let mktObj = allMarkets.find(x => x.id === mkt);
-                        let mktName = mktObj ? mktObj.name : mkt;
-
-                        // Warna sama persis dengan admin dashboard
-                        let colorClass = 'bg-gray-50 text-gray-500 border-gray-200';
-
-                        if (streak >= 7)
-                            colorClass = 'bg-red-100 text-red-700 border-red-300 font-extrabold';
-                        else if (streak >= 5)
-                            colorClass = 'bg-orange-100 text-orange-700 border-orange-300 font-bold';
-                        else if (streak >= 3)
-                            colorClass = 'bg-yellow-100 text-yellow-700 border-yellow-300 font-bold';
-                        else if (streak >= 1)
-                            colorClass = 'bg-blue-50 text-blue-600 border-blue-200';
-
-                        // Warna hijau saat semua market terkoneksi (sama dengan admin)
-                        let connectedClass = allConnected ?
-                            'bg-green-100 text-green-800 border-green-300 font-bold' :
-                            '';
-
-                        let dangerGlow = (streak === highestStreak && streak >= 7) ? 'danger-glow' : '';
-
-                        streakList.innerHTML += `
-                            <div class="w-full px-3 py-1.5 rounded-lg border text-[11px] flex items-center justify-between
-                                        ${colorClass} ${connectedClass} ${dangerGlow}
-                                        transition-all duration-300 cursor-default hover:scale-[1.02] hover:shadow-md">
-                                <span class="truncate font-semibold">${mktName}</span>
-                                <span class="bg-white/90 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider border border-white/50">False: ${streak}</span>
-                            </div>`;
-                    });
-                })
-                .catch(err => {
-                    console.error("Polling error:", err);
+                    streakList.innerHTML += `
+                        <div class="streak-item w-full px-3 py-1.5 rounded-lg text-[11px] flex items-center justify-between ${dangerGlow}"
+                             style="background: var(${bgVar}); color: var(${tVar}); border: 1px solid var(${bdVar}); transition: background var(--t), color var(--t), border-color var(--t);">
+                            <span class="truncate font-semibold">${mktName}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold"
+                                  style="background: var(--streak-false-bg); color: var(--streak-false-t);">False: ${streak}</span>
+                        </div>`;
                 });
+            }).catch(err => console.error("Polling error:", err));
         }
 
-        // ============================================================
-        // SINGLE SESSION CHECK — Cek sesi setiap 5 detik
-        // Jika ada login baru di perangkat lain, langsung tendang
-        // ============================================================
+        // SESSION CHECK
         function startSessionCheck() {
             setInterval(() => {
-                fetch('/user/check-session', {
-                        credentials: 'same-origin'
-                    })
+                fetch('/user/check-session', { credentials: 'same-origin' })
                     .then(res => res.json())
                     .then(data => {
                         if (!data.valid) {
-                            // Sesi sudah tidak valid → redirect ke login
                             clearInterval(pollingInterval);
                             alert('⚠️ Sesi Anda telah berakhir karena akun ini login di perangkat lain.');
                             window.location.href = '/login';
                         }
-                    })
-                    .catch(() => {
-                        // Gagal cek sesi (network error) → abaikan, coba lagi nanti
-                    });
+                    }).catch(() => {});
             }, 5000);
         }
 
-        // ============================================================
-        // INIT
-        // ============================================================
         window.onload = function() {
             startRealtimeClock();
             startPolling();
@@ -569,5 +355,4 @@
         };
     </script>
 </body>
-
 </html>
