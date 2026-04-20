@@ -40,18 +40,18 @@ def _get_start_all_job_id():
 
 
 # --- KONFIGURASI MYSQL ---
-DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "",
-    "database": "robot_trading5",
-}
-# DB_CONFIG = {
-#     'host': 'localhost',
-#     'user': 'rodis_admin',
-#     'password': '@Nightmare02',
-#     'database': 'robot_trading'
-# }
+#DB_CONFIG = {
+#    "host": "localhost",
+#    "user": "root",
+#    "password": "",
+#    "database": "robot_trading5",
+#}
+ DB_CONFIG = {
+     'host': 'localhost',
+     'user': 'rodis_admin',
+     'password': '@Nightmare02',
+     'database': 'robot_trading'
+ }
 
 
 def get_db_connection():
