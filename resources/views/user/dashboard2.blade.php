@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RODIS - Pattern Scanner</title>
-    <meta name="description" content="RODIS Pattern Scanner - Monitor pola candle C1-C5 secara real-time">
+    <meta name="description" content="RODIS Pattern Scanner - Monitor pola candle C1-C8 secara real-time">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
@@ -400,7 +400,7 @@
         /* ===== CANDLE GRID ===== */
         .candle-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(8, 1fr);
             gap: 6px;
         }
 
@@ -663,6 +663,9 @@
                             <span class="badge-merah" style="font-size:9px;padding:1px 5px;">C3 Merah</span>
                             <span class="badge-merah" style="font-size:9px;padding:1px 5px;">C4 Merah</span>
                             <span class="badge-merah" style="font-size:9px;padding:1px 5px;">C5 Merah</span>
+                            <span class="badge-merah" style="font-size:9px;padding:1px 5px;">C6 Merah</span>
+                            <span class="badge-merah" style="font-size:9px;padding:1px 5px;">C7 Merah</span>
+                            <span class="badge-merah" style="font-size:9px;padding:1px 5px;">C8 Merah</span>
                         </div>
                         <p class="text-[10px] mt-1.5 flex items-center gap-1"
                             style="color: var(--green-accent); opacity: 0.7;">
@@ -694,6 +697,9 @@
                             <span class="badge-hijau" style="font-size:9px;padding:1px 5px;">C3 Hijau</span>
                             <span class="badge-hijau" style="font-size:9px;padding:1px 5px;">C4 Hijau</span>
                             <span class="badge-hijau" style="font-size:9px;padding:1px 5px;">C5 Hijau</span>
+                            <span class="badge-hijau" style="font-size:9px;padding:1px 5px;">C6 Hijau</span>
+                            <span class="badge-hijau" style="font-size:9px;padding:1px 5px;">C7 Hijau</span>
+                            <span class="badge-hijau" style="font-size:9px;padding:1px 5px;">C8 Hijau</span>
                         </div>
                         <p class="text-[10px] mt-1.5 flex items-center gap-1"
                             style="color: var(--red-accent); opacity: 0.7;">
@@ -741,12 +747,18 @@
                                 <th class="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider"
                                     style="color: var(--text-muted);">C5</th>
                                 <th class="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider"
+                                    style="color: var(--text-muted);">C6</th>
+                                <th class="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider"
+                                    style="color: var(--text-muted);">C7</th>
+                                <th class="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider"
+                                    style="color: var(--text-muted);">C8</th>
+                                <th class="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider"
                                     style="color: var(--text-muted);">Waktu</th>
                             </tr>
                         </thead>
                         <tbody id="waiting-tbody">
                             <tr>
-                                <td colspan="8" class="px-4 py-6 text-center text-xs" style="color: var(--text-ghost);">
+                                <td colspan="11" class="px-4 py-6 text-center text-xs" style="color: var(--text-ghost);">
                                     Menunggu data dari bot trading...
                                 </td>
                             </tr>
@@ -769,7 +781,7 @@
     ============================================================ -->
     <footer style="border-top: 1px solid var(--border-subtle);" class="py-3 mt-2">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-[11px]" style="color: var(--text-ghost);">
-            <span style="color: var(--text-muted);" class="font-semibold">RODIS</span> · Pattern Scanner C1-C5
+            <span style="color: var(--text-muted);" class="font-semibold">RODIS</span> · Pattern Scanner C1-C8
         </div>
     </footer>
 
@@ -864,12 +876,15 @@
                     </div>
                     <span class="text-[10px] font-mono" style="color: var(--text-muted);">${blokLabel}</span>
                 </div>
-                <div class="candle-grid">
+                <div class="candle-grid" style="grid-template-columns: repeat(8, 1fr);">
                     <div class="candle-cell"><span class="c-label">C1</span>${candleBadgeWithMinute(item.c1, item.waktu_block, 0)}</div>
                     <div class="candle-cell"><span class="c-label">C2</span>${candleBadgeWithMinute(item.c2, item.waktu_block, 1)}</div>
                     <div class="candle-cell"><span class="c-label">C3</span>${candleBadgeWithMinute(item.c3, item.waktu_block, 2)}</div>
                     <div class="candle-cell"><span class="c-label">C4</span>${candleBadgeWithMinute(item.c4, item.waktu_block, 3)}</div>
                     <div class="candle-cell"><span class="c-label">C5</span>${candleBadgeWithMinute(item.c5, item.waktu_block, 4)}</div>
+                    <div class="candle-cell"><span class="c-label">C6</span>${candleBadgeWithMinute(item.c6, item.waktu_block, 5)}</div>
+                    <div class="candle-cell"><span class="c-label">C7</span>${candleBadgeWithMinute(item.c7, item.waktu_block, 6)}</div>
+                    <div class="candle-cell"><span class="c-label">C8</span>${candleBadgeWithMinute(item.c8, item.waktu_block, 7)}</div>
                 </div>
             </div>`;
         }
@@ -908,7 +923,7 @@
             if (!data || data.length === 0) {
                 upBody.innerHTML = `<div class="text-center py-8 text-xs" style="color:var(--text-ghost)">Belum ada sinyal UP</div>`;
                 downBody.innerHTML = `<div class="text-center py-8 text-xs" style="color:var(--text-ghost)">Belum ada sinyal DOWN</div>`;
-                waitingBody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-xs" style="color:var(--text-ghost)">Menunggu data...</td></tr>`;
+                waitingBody.innerHTML = `<tr><td colspan="11" class="px-4 py-6 text-center text-xs" style="color:var(--text-ghost)">Menunggu data...</td></tr>`;
                 if (statBot) statBot.textContent = '0';
                 document.getElementById('rows-info').textContent = '0 pasang ditampilkan';
                 return;
@@ -940,7 +955,7 @@
                 : downItems.map(item => buildSignalCard(item, 'DOWN')).join('');
 
             if (waitingItems.length === 0) {
-                waitingBody.innerHTML = `<tr><td colspan="8" class="px-4 py-4 text-center text-xs" style="color:var(--text-muted)">Semua market memiliki pola aktif 🎉</td></tr>`;
+                waitingBody.innerHTML = `<tr><td colspan="11" class="px-4 py-4 text-center text-xs" style="color:var(--text-muted)">Semua market memiliki pola aktif 🎉</td></tr>`;
             } else {
                 let html = '';
                 waitingItems.forEach((item, idx) => {
@@ -956,6 +971,9 @@
                         <td class="px-3 py-2 text-center">${candleBadgeWithMinute(item.c3, item.waktu_block, 2)}</td>
                         <td class="px-3 py-2 text-center">${candleBadgeWithMinute(item.c4, item.waktu_block, 3)}</td>
                         <td class="px-3 py-2 text-center">${candleBadgeWithMinute(item.c5, item.waktu_block, 4)}</td>
+                        <td class="px-3 py-2 text-center">${candleBadgeWithMinute(item.c6, item.waktu_block, 5)}</td>
+                        <td class="px-3 py-2 text-center">${candleBadgeWithMinute(item.c7, item.waktu_block, 6)}</td>
+                        <td class="px-3 py-2 text-center">${candleBadgeWithMinute(item.c8, item.waktu_block, 7)}</td>
                         <td class="px-3 py-2 text-center text-[11px]">${blokLabel}</td>
                     </tr>`;
                 });
