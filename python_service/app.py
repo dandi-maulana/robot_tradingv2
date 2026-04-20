@@ -40,18 +40,18 @@ def _get_start_all_job_id():
 
 
 # --- KONFIGURASI MYSQL ---
+# DB_CONFIG = {
+#     "host": "localhost",
+#     "user": "root",
+#     "password": "",
+#     "database": "robot_trading5",
+# }
 DB_CONFIG = {
     "host": "localhost",
-    "user": "root",
-    "password": "",
-    "database": "robot_trading5",
+    "user": "rodis_admin",
+    "password": "@Nightmare02",
+    "database": "robot_trading",
 }
-# DB_CONFIG = {
-#     'host': 'localhost',
-#     'user': 'rodis_admin',
-#     'password': '@Nightmare02',
-#     'database': 'robot_trading'
-# }
 
 
 def get_db_connection():
@@ -709,7 +709,9 @@ def check_user2_pattern(market, tanggal, waktu_block):
                 available = [c for c in extra_candles if c is not None]
                 if len(available) > 0:
                     # Semua candle lanjutan yang tersedia harus Merah
-                    pattern_type = "UP" if all(c == "Merah" for c in available) else "NONE"
+                    pattern_type = (
+                        "UP" if all(c == "Merah" for c in available) else "NONE"
+                    )
                 else:
                     pattern_type = "UP"  # Sementara cocok (c4-c8 belum ada)
             # Cek pola DOWN: C1=H, C2=M, C3+=H
@@ -717,7 +719,9 @@ def check_user2_pattern(market, tanggal, waktu_block):
                 extra_candles = [c4, c5, c6, c7, c8]
                 available = [c for c in extra_candles if c is not None]
                 if len(available) > 0:
-                    pattern_type = "DOWN" if all(c == "Hijau" for c in available) else "NONE"
+                    pattern_type = (
+                        "DOWN" if all(c == "Hijau" for c in available) else "NONE"
+                    )
                 else:
                     pattern_type = "DOWN"  # Sementara cocok
 
@@ -741,7 +745,20 @@ def check_user2_pattern(market, tanggal, waktu_block):
                 SET c1=%s, c2=%s, c3=%s, c4=%s, c5=%s, c6=%s, c7=%s, c8=%s, pattern_type=%s, updated_at=NOW()
                 WHERE market=%s AND tanggal=%s AND waktu_block=%s
             """,
-                (c1, c2, c3, c4, c5, c6, c7, c8, pattern_type, market, tanggal, waktu_block),
+                (
+                    c1,
+                    c2,
+                    c3,
+                    c4,
+                    c5,
+                    c6,
+                    c7,
+                    c8,
+                    pattern_type,
+                    market,
+                    tanggal,
+                    waktu_block,
+                ),
             )
             notif_already_sent = existing["notif_sent"]
         else:
@@ -752,7 +769,20 @@ def check_user2_pattern(market, tanggal, waktu_block):
                 (market, tanggal, waktu_block, c1, c2, c3, c4, c5, c6, c7, c8, pattern_type, notif_sent, created_at, updated_at)
                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,0,NOW(),NOW())
             """,
-                (market, tanggal, waktu_block, c1, c2, c3, c4, c5, c6, c7, c8, pattern_type),
+                (
+                    market,
+                    tanggal,
+                    waktu_block,
+                    c1,
+                    c2,
+                    c3,
+                    c4,
+                    c5,
+                    c6,
+                    c7,
+                    c8,
+                    pattern_type,
+                ),
             )
             notif_already_sent = False
 
