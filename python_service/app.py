@@ -46,7 +46,7 @@ def _get_start_all_job_id():
 #    "password": "",
 #    "database": "robot_trading5",
 #}
- DB_CONFIG = {
+DB_CONFIG = {
      'host': 'localhost',
      'user': 'rodis_admin',
      'password': '@Nightmare02',
@@ -1593,9 +1593,12 @@ def manual_trade():
 def get_data():
     market = request.args.get("market")
     conn = get_db_connection()
+    if not conn:
+        return jsonify({"status": "error"})
     c = conn.cursor(dictionary=True)
     c.execute("SELECT * FROM market_states WHERE market = %s", (market,))
     state = c.fetchone()
+    c.close()
 
     if state:
         histories = get_history_db(market, 500)
@@ -1721,6 +1724,7 @@ def trade_history():
             "SELECT tanggal, waktu, market, warna, amount FROM trade_histories ORDER BY id DESC LIMIT 500"
         )
         results = c.fetchall()
+        c.close()
         conn.close()
         return jsonify({"trade_history": results})
     return jsonify({"trade_history": []})
@@ -1863,14 +1867,15 @@ def count_open_positions_today(candles):
 @app.route("/api/trade-history", methods=["GET"])
 def trade_history_calculated():
     try:
-        raw_target_loss = request.args.get("target_loss", "2")
-        try:
-            requested_target_loss = int(raw_target_loss)
-        except (TypeError, ValueError):
-            requested_target_loss = 2
-
-        if requested_target_loss < 1 or requested_target_loss > 6:
-            requested_target_loss = 2
+        raw_target_loss = request.args.get("target_loss")
+        requested_target_loss = None
+        if raw_target_loss not in (None, ""):
+            try:
+                candidate = int(raw_target_loss)
+                if 1 <= candidate <= 6:
+                    requested_target_loss = candidate
+            except (TypeError, ValueError):
+                requested_target_loss = None
 
         conn = get_db_connection()
         if not conn:
@@ -1885,7 +1890,25 @@ def trade_history_calculated():
 
         c = conn.cursor(dictionary=True)
 
-        # ✅ ambil semua data (terbaru dulu)
+        if requested_target_loss is None:
+            c.execute(
+                """
+                SELECT tg_target_loss
+                FROM market_states
+                WHERE is_running = 1
+                  AND tg_active = 1
+                  AND tg_target_loss BETWEEN 1 AND 6
+                ORDER BY updated_at DESC, id DESC
+                LIMIT 1
+                """
+            )
+            row_target = c.fetchone()
+            if row_target:
+                requested_target_loss = int(row_target.get("tg_target_loss") or 2)
+            else:
+                requested_target_loss = 2
+
+        # ambil semua data (terbaru dulu)
         c.execute(
             """
             SELECT 
@@ -1966,6 +1989,7 @@ def trade_history_calculated():
                 "success": True,
                 "data": result,
                 "date": datetime.now().strftime("%Y-%m-%d"),
+                "target_loss": requested_target_loss,
                 "summary": summary,
                 "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             }
@@ -2077,3 +2101,5 @@ def send_telegram():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000, host="0.0.0.0")
+
+

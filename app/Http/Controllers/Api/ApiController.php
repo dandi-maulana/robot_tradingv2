@@ -47,8 +47,22 @@ class ApiController extends Controller
         try {
             $today = date('Y-m-d');
             $currentMonth = date('Y-m');
-            $requestedTargetLoss = max(1, (int) $request->query('target_loss', 0));
-            $targetLoss = $requestedTargetLoss > 0 ? $requestedTargetLoss : 2;
+            $requestedTargetLoss = (int) $request->query('target_loss', 0);
+            if ($requestedTargetLoss >= 1 && $requestedTargetLoss <= 6) {
+                $targetLoss = $requestedTargetLoss;
+            } else {
+                $activeMassTarget = DB::table('market_states')
+                    ->where('is_running', 1)
+                    ->where('tg_active', 1)
+                    ->whereBetween('tg_target_loss', [1, 6])
+                    ->orderByDesc('updated_at')
+                    ->value('tg_target_loss');
+
+                $targetLoss = ($activeMassTarget !== null) ? (int) $activeMassTarget : 2;
+                if ($targetLoss < 1 || $targetLoss > 6) {
+                    $targetLoss = 2;
+                }
+            }
             $rows = DB::table('phase_histories')
                 ->select([
                     'market as ticker',
