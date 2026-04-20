@@ -275,7 +275,8 @@
         let currentPage = 1;
         let currentDate = '';
         const rowsPerPage = 10;
-        const FIXED_HISTORY_TARGET_LOSS = 2;
+        const DEFAULT_HISTORY_TARGET_LOSS = 2;
+        let historyTargetLoss = DEFAULT_HISTORY_TARGET_LOSS;
 
         function startRealtimeClock() {
             setInterval(() => {
@@ -302,7 +303,7 @@
         function getPhaseTimeLabel(row, phaseNumber) {
             const val = normalizePhaseValue(row[`phase_${phaseNumber}`]);
             if (val !== 'TRUE' && val !== 'FALSE') return '';
-            const targetLoss = Number.parseInt(row.target_loss || FIXED_HISTORY_TARGET_LOSS, 10);
+            const targetLoss = Number.parseInt(row.target_loss || historyTargetLoss || DEFAULT_HISTORY_TARGET_LOSS, 10);
             if (phaseNumber <= targetLoss) return '';
             const base = parseTriggerDateTime(row.trigger_at);
             if (!base) return '';
@@ -416,10 +417,16 @@
         }
 
         function loadTradeHistory() {
-            fetch(`${API_BASE}/trade-history?target_loss=${FIXED_HISTORY_TARGET_LOSS}`)
+            fetch(`${API_BASE}/trade-history`)
                 .then(res => res.json())
                 .then(data => {
                     if (!data.success) throw new Error();
+
+                    const targetLossFromApi = Number.parseInt(data.target_loss || DEFAULT_HISTORY_TARGET_LOSS, 10);
+                    historyTargetLoss = Number.isFinite(targetLossFromApi) && targetLossFromApi >= 1 && targetLossFromApi <= 6 ?
+                        targetLossFromApi :
+                        DEFAULT_HISTORY_TARGET_LOSS;
+
                     historyData = data.data || [];
                     currentApiDate = data.date || '';
                     fillTickerOptions(historyData);

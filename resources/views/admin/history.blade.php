@@ -240,7 +240,8 @@
         let currentDate = '';
         let currentPage = 1;
         const rowsPerPage = 5;
-        const FIXED_HISTORY_TARGET_LOSS = 2;
+        const DEFAULT_HISTORY_TARGET_LOSS = 2;
+        let historyTargetLoss = DEFAULT_HISTORY_TARGET_LOSS;
 
         function startRealtimeClock() {
             setInterval(() => {
@@ -289,7 +290,7 @@
                 return '';
             }
 
-            const targetLoss = Number.parseInt(row.target_loss || FIXED_HISTORY_TARGET_LOSS, 10);
+            const targetLoss = Number.parseInt(row.target_loss || historyTargetLoss || DEFAULT_HISTORY_TARGET_LOSS, 10);
             if (!Number.isFinite(targetLoss) || phaseNumber <= targetLoss) {
                 return '';
             }
@@ -444,13 +445,17 @@
         }
 
         function loadTradeHistory() {
-            const targetLoss = FIXED_HISTORY_TARGET_LOSS;
-            fetch(`${API_BASE}/trade-history?target_loss=${targetLoss}`)
+            fetch(`${API_BASE}/trade-history`)
                 .then(res => res.json())
                 .then(data => {
                     if (!data.success) {
                         throw new Error(data.message || 'Gagal memuat data');
                     }
+
+                    const targetLossFromApi = Number.parseInt(data.target_loss || DEFAULT_HISTORY_TARGET_LOSS, 10);
+                    historyTargetLoss = Number.isFinite(targetLossFromApi) && targetLossFromApi >= 1 && targetLossFromApi <= 6 ?
+                        targetLossFromApi :
+                        DEFAULT_HISTORY_TARGET_LOSS;
 
                     historyData = Array.isArray(data.data) ? data.data : [];
                     currentApiDate = data.date || '';
