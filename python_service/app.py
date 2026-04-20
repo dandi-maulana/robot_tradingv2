@@ -40,18 +40,18 @@ def _get_start_all_job_id():
 
 
 # --- KONFIGURASI MYSQL ---
-# DB_CONFIG = {
-#     "host": "localhost",
-#     "user": "root",
-#     "password": "",
-#     "database": "robot_trading5",
-# }
 DB_CONFIG = {
     "host": "localhost",
-    "user": "rodis_admin",
-    "password": "@Nightmare02",
-    "database": "robot_trading",
+    "user": "root",
+    "password": "",
+    "database": "robot_trading5",
 }
+# DB_CONFIG = {
+#     "host": "localhost",
+#     "user": "rodis_admin",
+#     "password": "@Nightmare02",
+#     "database": "robot_trading",
+# }
 
 
 def get_db_connection():
@@ -897,7 +897,9 @@ async def fetch_accounts(token):
                         )
         except Exception:
             pass
-        if hasattr(client, "close"):
+        if hasattr(client, "stop"):
+            await client.stop()
+        elif hasattr(client, "close"):
             await client.close()
         elif hasattr(client, "disconnect"):
             await client.disconnect()
@@ -1146,7 +1148,9 @@ async def async_bot_task(market_name, token, user_account_id):
             break
         state = markets_data[market_name]
         if state.get("is_running", 0) == 0:
-            if hasattr(client, "close"):
+            if hasattr(client, "stop"):
+                await client.stop()
+            elif hasattr(client, "close"):
                 await client.close()
             elif hasattr(client, "disconnect"):
                 await client.disconnect()
@@ -1213,7 +1217,9 @@ async def async_bot_task(market_name, token, user_account_id):
                 await client.send_message({"e": 98, "d": []})
             except:
                 try:
-                    if hasattr(client, "close"):
+                    if hasattr(client, "stop"):
+                        await client.stop()
+                    elif hasattr(client, "close"):
                         await client.close()
                     elif hasattr(client, "disconnect"):
                         await client.disconnect()
