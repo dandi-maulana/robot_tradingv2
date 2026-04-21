@@ -29,12 +29,10 @@ Route::get('/trade-history', [ApiController::class, 'getTradeHistory']);
 Route::get('/debug-trade-history', [ApiController::class, 'debugTradeHistory']);
 
 // =========================================================================
-// CATATAN PENTING:
-// Rute lainnya (start_all, stop_all, data, status_all, toggle_telegram)
-// sudah dihapus dari sini karena fungsi aslinya berjalan di server PYTHON
-// (Flask) pada PORT 5000.
-//
-// Pastikan variabel API_BASE di Javascript (styles.blade.php / script)
-// diarahkan langsung ke "http://127.0.0.1:5000/api"
-// agar tidak nyasar ke Laravel.
+// Rute Proxy ke Python (Menghindari block port 5000 pada VPS)
 // =========================================================================
+Route::get('/user2_data', [ApiController::class, 'getUser2Data']);
+Route::get('/data', [ApiController::class, 'getData']);
+Route::get('/status_all', [ApiController::class, 'getStatusAll']);
+Route::post('/toggle_telegram_all', [ApiController::class, 'toggleTelegramAll']);
+Route::post('/toggle_telegram', [ApiController::class, 'toggleTelegram']);

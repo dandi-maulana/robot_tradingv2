@@ -42,6 +42,57 @@ class ApiController extends Controller
         return response()->json(\App\Models\Setting::first());
     }
 
+    public function getUser2Data(Request $request)
+    {
+        try {
+            $response = Http::get('http://127.0.0.1:5000/api/user2_data');
+            return response($response->body(), $response->status())->header('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal kontak server Python: '.$e->getMessage()]);
+        }
+    }
+
+    public function getStatusAll(Request $request)
+    {
+        try {
+            $response = Http::get('http://127.0.0.1:5000/api/status_all');
+            return response($response->body(), $response->status())->header('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal kontak server Python: '.$e->getMessage()]);
+        }
+    }
+
+    public function getData(Request $request)
+    {
+        try {
+            $market = $request->query('market');
+            $response = Http::get("http://127.0.0.1:5000/api/data?market=".urlencode($market));
+            return response($response->body(), $response->status())->header('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal kontak server Python: '.$e->getMessage()]);
+        }
+    }
+
+    public function toggleTelegramAll(Request $request)
+    {
+        try {
+            $response = Http::post('http://127.0.0.1:5000/api/toggle_telegram_all', $request->all());
+            return response($response->body(), $response->status())->header('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal kontak server Python: '.$e->getMessage()]);
+        }
+    }
+
+    public function toggleTelegram(Request $request)
+    {
+        try {
+            $response = Http::post('http://127.0.0.1:5000/api/toggle_telegram', $request->all());
+            return response($response->body(), $response->status())->header('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal kontak server Python: '.$e->getMessage()]);
+        }
+    }
+
     public function getTradeHistory(Request $request)
     {
         try {
