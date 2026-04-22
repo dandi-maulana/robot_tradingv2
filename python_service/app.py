@@ -39,18 +39,18 @@ def _get_start_all_job_id():
         return _start_all_job_id
 
 
-DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "",
-    "database": "robot_trading5",
-}
 # DB_CONFIG = {
 #     "host": "localhost",
-#     "user": "rodis_admin",
-#     "password": "@Nightmare02",
-#     "database": "robot_trading",
+#     "user": "root",
+#     "password": "",
+#     "database": "robot_trading5",
 # }
+DB_CONFIG = {
+    "host": "localhost",
+    "user": "rodis_admin",
+    "password": "@Nightmare02",
+    "database": "robot_trading",
+}
 
 
 def get_db_connection():
@@ -2102,7 +2102,7 @@ def user2_data():
             mkt = row["market"]
             if mkt not in market_blocks:
                 market_blocks[mkt] = []
-            
+
             if len(market_blocks[mkt]) == 0:
                 market_blocks[mkt].append(row)
             elif len(market_blocks[mkt]) == 1 and row["c8"] is None:
