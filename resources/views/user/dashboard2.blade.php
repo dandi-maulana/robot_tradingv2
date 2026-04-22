@@ -400,8 +400,16 @@
         /* ===== CANDLE GRID ===== */
         .candle-grid {
             display: grid;
-            grid-template-columns: repeat(8, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 6px;
+            row-gap: 8px;
+        }
+
+        @media (min-width: 640px) {
+            .candle-grid {
+                grid-template-columns: repeat(8, 1fr);
+                row-gap: 6px;
+            }
         }
 
         .candle-cell {
@@ -535,6 +543,31 @@
             background: linear-gradient(135deg, #f59e0b, #fbbf24);
             box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
         }
+
+        /* ===== RESPONSIVE UTILITIES ===== */
+        @media (max-width: 639px) {
+            .badge-hijau, .badge-merah, .badge-empty {
+                font-size: 8px;
+                padding: 1.5px 5px;
+            }
+            .candle-cell .c-label {
+                font-size: 8px;
+            }
+            .mnt-label {
+                font-size: 7.5px;
+            }
+            .signal-card {
+                padding: 12px 10px;
+            }
+            .stat-card {
+                padding: 6px 8px;
+                flex: 1 1 45%;
+                justify-content: center;
+            }
+            .stat-card .text-sm {
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 
@@ -598,7 +631,7 @@
                     <div>
                         <h2 class="text-base sm:text-lg font-extrabold">Monitor C1–C5</h2>
                         <p class="text-[10px]" style="color: var(--text-muted);">Auto-refresh 4s · Notif Telegram
-                            dikirim di candle C3 jika pola cocok</p>
+                            dikirim di candle C6 jika pola awal cocok</p>
                     </div>
                 </div>
 
@@ -669,7 +702,7 @@
                         </div>
                         <p class="text-[10px] mt-1.5 flex items-center gap-1"
                             style="color: var(--green-accent); opacity: 0.7;">
-                            ⚡ Notif Telegram dikirim saat <b>C1+C2+C3</b> cocok pola
+                            ⚡ Notif Telegram dikirim saat <b>C6</b> selesai (menunggu eksekusi C7-C8)
                         </p>
                     </div>
                     <div id="up-panel-body" class="p-2.5 space-y-2 max-h-[380px] overflow-y-auto">
@@ -703,7 +736,7 @@
                         </div>
                         <p class="text-[10px] mt-1.5 flex items-center gap-1"
                             style="color: var(--red-accent); opacity: 0.7;">
-                            ⚡ Notif Telegram dikirim saat <b>C1+C2+C3</b> cocok pola
+                            ⚡ Notif Telegram dikirim saat <b>C6</b> selesai (menunggu eksekusi C7-C8)
                         </p>
                     </div>
                     <div id="down-panel-body" class="p-2.5 space-y-2 max-h-[380px] overflow-y-auto">
@@ -876,7 +909,7 @@
                     </div>
                     <span class="text-[10px] font-mono" style="color: var(--text-muted);">${blokLabel}</span>
                 </div>
-                <div class="candle-grid" style="grid-template-columns: repeat(8, 1fr);">
+                <div class="candle-grid">
                     <div class="candle-cell"><span class="c-label">C1</span>${candleBadgeWithMinute(item.c1, item.waktu_block, 0)}</div>
                     <div class="candle-cell"><span class="c-label">C2</span>${candleBadgeWithMinute(item.c2, item.waktu_block, 1)}</div>
                     <div class="candle-cell"><span class="c-label">C3</span>${candleBadgeWithMinute(item.c3, item.waktu_block, 2)}</div>

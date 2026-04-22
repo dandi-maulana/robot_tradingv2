@@ -39,18 +39,18 @@ def _get_start_all_job_id():
         return _start_all_job_id
 
 
-# DB_CONFIG = {
-#    "host": "localhost",
-#    "user": "root",
-#    "password": "",
-#    "database": "robot_trading5",
-# }
 DB_CONFIG = {
     "host": "localhost",
-    "user": "rodis_admin",
-    "password": "@Nightmare02",
-    "database": "robot_trading",
+    "user": "root",
+    "password": "",
+    "database": "robot_trading5",
 }
+# DB_CONFIG = {
+#     "host": "localhost",
+#     "user": "rodis_admin",
+#     "password": "@Nightmare02",
+#     "database": "robot_trading",
+# }
 
 
 def get_db_connection():
@@ -663,7 +663,7 @@ def check_user2_pattern(market, tanggal, waktu_block):
         candle_conditions = []
         params = [market]
         target_keys = []
-        
+
         for offset in range(8):  # c1=offset 0 s/d c8=offset 7
             mm = base_mm + offset
             if mm > 59:
@@ -674,7 +674,7 @@ def check_user2_pattern(market, tanggal, waktu_block):
                 actual_hh = hh
                 actual_mm = mm
                 actual_date = block_date
-                
+
             c_tanggal = actual_date.strftime("%Y-%m-%d")
             c_waktu = f"{actual_hh:02d}:{actual_mm:02d}"
             target_keys.append(f"{c_tanggal}_{c_waktu}")
@@ -697,7 +697,11 @@ def check_user2_pattern(market, tanggal, waktu_block):
         candle_map = {}
         for row in rows:
             base_color = "Hijau" if "Hijau" in str(row["warna"]) else "Merah"
-            tgl_str = row['tanggal'].strftime("%Y-%m-%d") if hasattr(row['tanggal'], 'strftime') else str(row['tanggal'])
+            tgl_str = (
+                row["tanggal"].strftime("%Y-%m-%d")
+                if hasattr(row["tanggal"], "strftime")
+                else str(row["tanggal"])
+            )
             candle_map[f"{tgl_str}_{row['waktu']}"] = base_color
 
         # Ambil warna C1 s/d C8
@@ -710,31 +714,15 @@ def check_user2_pattern(market, tanggal, waktu_block):
         c7 = candle_map.get(target_keys[6])
         c8 = candle_map.get(target_keys[7])
 
-        # Tentukan tipe pola berdasarkan semua data yang tersedia
+        # Tentukan tipe pola berdasarkan C1, C2, dan C3 SAJA (Sesuai request: tetap tampilkan UP/DOWN di UI sampai C8 meskipun C4-C8 false)
         pattern_type = "NONE"
         if c1 and c2 and c3:
-            # Cek pola UP: C1=M, C2=H, C3+=M
+            # Cek pola UP: C1=M, C2=H, C3=M
             if c1 == "Merah" and c2 == "Hijau" and c3 == "Merah":
-                # Validasi progresif: cek candle lanjutan jika sudah tersedia
-                extra_candles = [c4, c5, c6, c7, c8]
-                available = [c for c in extra_candles if c is not None]
-                if len(available) > 0:
-                    # Semua candle lanjutan yang tersedia harus Merah
-                    pattern_type = (
-                        "UP" if all(c == "Merah" for c in available) else "NONE"
-                    )
-                else:
-                    pattern_type = "UP"  # Sementara cocok (c4-c8 belum ada)
-            # Cek pola DOWN: C1=H, C2=M, C3+=H
+                pattern_type = "UP"
+            # Cek pola DOWN: C1=H, C2=M, C3=H
             elif c1 == "Hijau" and c2 == "Merah" and c3 == "Hijau":
-                extra_candles = [c4, c5, c6, c7, c8]
-                available = [c for c in extra_candles if c is not None]
-                if len(available) > 0:
-                    pattern_type = (
-                        "DOWN" if all(c == "Hijau" for c in available) else "NONE"
-                    )
-                else:
-                    pattern_type = "DOWN"  # Sementara cocok
+                pattern_type = "DOWN"
 
         # Cek apakah notif sudah dikirim untuk blok ini
         cursor.execute(
@@ -799,8 +787,8 @@ def check_user2_pattern(market, tanggal, waktu_block):
 
         conn.commit()
 
-        # Kirim notif Telegram saat C3 sudah ada, pola cocok, dan notif belum pernah dikirim
-        if c3 and pattern_type in ("UP", "DOWN") and not notif_already_sent:
+        # Kirim notif Telegram saat C6 sudah ada, pola cocok, dan notif belum pernah dikirim
+        if c6 and pattern_type in ("UP", "DOWN") and not notif_already_sent:
             arah = "📈 UP (BELI)" if pattern_type == "UP" else "📉 DOWN (JUAL)"
             emoji = "🟢" if pattern_type == "UP" else "🔴"
             msg = f"""🚨 *SINYAL POLA TERDETEKSI* 🚨
@@ -813,8 +801,11 @@ Pola Candle:
   C1: {'🟢 Hijau' if c1=='Hijau' else '🔴 Merah'}
   C2: {'🟢 Hijau' if c2=='Hijau' else '🔴 Merah'}
   C3: {'🟢 Hijau' if c3=='Hijau' else '🔴 Merah'}
+  C4: {'🟢 Hijau' if c4=='Hijau' else '🔴 Merah'}
+  C5: {'🟢 Hijau' if c5=='Hijau' else '🔴 Merah'}
+  C6: {'🟢 Hijau' if c6=='Hijau' else '🔴 Merah'}
 
-⚡ Siap eksekusi pada C4-C8!"""
+⚡ Siap eksekusi pada C7-C8!"""
 
             send_telegram_user2(msg)
 
@@ -995,11 +986,28 @@ async def async_bot_task(market_name, token, user_account_id):
                 original_dispatch(message)
 
         client._dispatch_message = custom_dispatch
-        await client.start()
-        await asyncio.sleep(2)
+
+        # Tambahkan mekanisme retry jika gagal connect (429, timeout, dll)
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                await client.start()
+                await asyncio.sleep(2)
+                break
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    print(
+                        f"[{market_name}] Koneksi gagal ({e}). Reconnect dalam {5 + attempt * 2}s...",
+                        flush=True,
+                    )
+                    await asyncio.sleep(5 + attempt * 2)
+                else:
+                    raise e
 
     except Exception as e:
-        print(f"Error start client {market_name}: {e}")
+        print(f"Error start client {market_name}: {e}", flush=True)
+        if market_name in markets_data:
+            markets_data[market_name]["is_running"] = 0
         return
 
     last_minute_checked = -1
@@ -1236,11 +1244,15 @@ async def async_bot_task(market_name, token, user_account_id):
                         await client.disconnect()
                 except:
                     pass
-                await asyncio.sleep(1)
+                # Tunggu lebih lama jika koneksi putus (hindari spam reconnect)
+                await asyncio.sleep(3)
                 try:
                     await client.start()
-                except:
-                    pass
+                except Exception as reconnect_err:
+                    print(
+                        f"[{market_name}] Gagal reconnect ping: {reconnect_err}",
+                        flush=True,
+                    )
 
         # SIMPAN DATA CANDLE
         if 2 <= now.second <= 15 and last_minute_checked != now.minute:
@@ -1308,8 +1320,12 @@ async def async_bot_task(market_name, token, user_account_id):
                         prev_candle_time = candle_time - timedelta(minutes=5)
                         prev_tanggal_str = prev_candle_time.strftime("%Y-%m-%d")
                         prev_base_mm = (prev_candle_time.minute // 5) * 5
-                        prev_waktu_block = f"{prev_candle_time.hour:02d}:{prev_base_mm:02d}"
-                        check_user2_pattern(market_name, prev_tanggal_str, prev_waktu_block)
+                        prev_waktu_block = (
+                            f"{prev_candle_time.hour:02d}:{prev_base_mm:02d}"
+                        )
+                        check_user2_pattern(
+                            market_name, prev_tanggal_str, prev_waktu_block
+                        )
                     except Exception as e_u2:
                         print(f"[USER2] Error trigger: {e_u2}", flush=True)
 
@@ -1437,8 +1453,8 @@ def start_all():
                 target=run_trading_bot_thread, args=(m, token, account_id), daemon=True
             ).start()
 
-            # Sleep bertahap supaya responsif saat dibatalkan
-            for _ in range(15):
+            # Sleep bertahap supaya responsif saat dibatalkan (3.5 detik untuk hindari HTTP 429)
+            for _ in range(35):
                 if my_job_id != _get_start_all_job_id():
                     break
                 time.sleep(0.1)
@@ -2079,37 +2095,44 @@ def user2_data():
         )
         rows = cursor.fetchall()
 
-        # Grouping: ambil blok terbaru per market
-        latest_per_market = {}
+        # Grouping: ambil blok terbaru per market, dan JANGAN HAPUS blok sebelumnya JIKA C8 belum selesai!
+        # (Sesuai request: data tetap diambil dan ditampilkan hingga C8)
+        market_blocks = {}
         for row in rows:
             mkt = row["market"]
-            if mkt not in latest_per_market:
-                latest_per_market[mkt] = row
+            if mkt not in market_blocks:
+                market_blocks[mkt] = []
+            
+            if len(market_blocks[mkt]) == 0:
+                market_blocks[mkt].append(row)
+            elif len(market_blocks[mkt]) == 1 and row["c8"] is None:
+                # Blok lama yang C8-nya masih proses tetap di-push ke UI
+                market_blocks[mkt].append(row)
 
-        # Tambahkan market yang running tapi belum ada record hari ini
+        # Tambahkan market yang running tapi belum ada record
         cursor.execute("SELECT market FROM market_states WHERE is_running = 1")
         running_markets = [r["market"] for r in cursor.fetchall()]
 
         result = []
         for mkt in running_markets:
-            if mkt in latest_per_market:
-                row = latest_per_market[mkt]
-                result.append(
-                    {
-                        "market": mkt,
-                        "waktu_block": row["waktu_block"],
-                        "c1": row["c1"] or "-",
-                        "c2": row["c2"] or "-",
-                        "c3": row["c3"] or "-",
-                        "c4": row["c4"] or "-",
-                        "c5": row["c5"] or "-",
-                        "c6": row["c6"] or "-",
-                        "c7": row["c7"] or "-",
-                        "c8": row["c8"] or "-",
-                        "pattern_type": row["pattern_type"] or "NONE",
-                        "notif_sent": bool(row["notif_sent"]),
-                    }
-                )
+            if mkt in market_blocks:
+                for row in market_blocks[mkt]:
+                    result.append(
+                        {
+                            "market": mkt,
+                            "waktu_block": row["waktu_block"],
+                            "c1": row["c1"] or "-",
+                            "c2": row["c2"] or "-",
+                            "c3": row["c3"] or "-",
+                            "c4": row["c4"] or "-",
+                            "c5": row["c5"] or "-",
+                            "c6": row["c6"] or "-",
+                            "c7": row["c7"] or "-",
+                            "c8": row["c8"] or "-",
+                            "pattern_type": row["pattern_type"] or "NONE",
+                            "notif_sent": bool(row["notif_sent"]),
+                        }
+                    )
             else:
                 result.append(
                     {
