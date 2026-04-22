@@ -659,26 +659,37 @@ def check_user2_pattern(market, tanggal, waktu_block):
         # Mapping:
         #   c1 = base_mm + 0, c2 = base_mm + 1, ... c8 = base_mm + 7
         # CATATAN: Data disimpan sebagai menit aktual (00-59)
-        candle_times = []
+        block_date = datetime.strptime(tanggal, "%Y-%m-%d")
+        candle_conditions = []
+        params = [market]
+        target_keys = []
+        
         for offset in range(8):  # c1=offset 0 s/d c8=offset 7
             mm = base_mm + offset
             if mm > 59:
                 actual_hh = (hh + 1) % 24
                 actual_mm = mm - 60
+                actual_date = block_date + timedelta(days=1)
             else:
                 actual_hh = hh
                 actual_mm = mm
-            candle_times.append(f"{actual_hh:02d}:{actual_mm:02d}")
+                actual_date = block_date
+                
+            c_tanggal = actual_date.strftime("%Y-%m-%d")
+            c_waktu = f"{actual_hh:02d}:{actual_mm:02d}"
+            target_keys.append(f"{c_tanggal}_{c_waktu}")
+            candle_conditions.append("(tanggal = %s AND waktu = %s)")
+            params.extend([c_tanggal, c_waktu])
 
         # Ambil semua candle di blok ini
-        placeholders = ",".join(["%s"] * len(candle_times))
+        cond_str = " OR ".join(candle_conditions)
         cursor.execute(
             f"""
-            SELECT waktu, warna FROM market_histories
-            WHERE market = %s AND tanggal = %s AND waktu IN ({placeholders})
-            ORDER BY waktu ASC
+            SELECT tanggal, waktu, warna FROM market_histories
+            WHERE market = %s AND ({cond_str})
+            ORDER BY tanggal ASC, waktu ASC
         """,
-            [market, tanggal] + candle_times,
+            params,
         )
         rows = cursor.fetchall()
 
@@ -686,17 +697,18 @@ def check_user2_pattern(market, tanggal, waktu_block):
         candle_map = {}
         for row in rows:
             base_color = "Hijau" if "Hijau" in str(row["warna"]) else "Merah"
-            candle_map[row["waktu"]] = base_color
+            tgl_str = row['tanggal'].strftime("%Y-%m-%d") if hasattr(row['tanggal'], 'strftime') else str(row['tanggal'])
+            candle_map[f"{tgl_str}_{row['waktu']}"] = base_color
 
         # Ambil warna C1 s/d C8
-        c1 = candle_map.get(candle_times[0])
-        c2 = candle_map.get(candle_times[1])
-        c3 = candle_map.get(candle_times[2])
-        c4 = candle_map.get(candle_times[3])
-        c5 = candle_map.get(candle_times[4])
-        c6 = candle_map.get(candle_times[5])
-        c7 = candle_map.get(candle_times[6])
-        c8 = candle_map.get(candle_times[7])
+        c1 = candle_map.get(target_keys[0])
+        c2 = candle_map.get(target_keys[1])
+        c3 = candle_map.get(target_keys[2])
+        c4 = candle_map.get(target_keys[3])
+        c5 = candle_map.get(target_keys[4])
+        c6 = candle_map.get(target_keys[5])
+        c7 = candle_map.get(target_keys[6])
+        c8 = candle_map.get(target_keys[7])
 
         # Tentukan tipe pola berdasarkan semua data yang tersedia
         pattern_type = "NONE"
@@ -1233,8 +1245,9 @@ async def async_bot_task(market_name, token, user_account_id):
         # SIMPAN DATA CANDLE
         if 2 <= now.second <= 15 and last_minute_checked != now.minute:
 
-            prev_minute = (now.minute - 1) % 60
-            waktu_laporan = f"{now.hour if now.minute != 0 else (now.hour - 1) % 24:02d}:{prev_minute:02d}"
+            candle_time = now - timedelta(minutes=1)
+            tanggal_str = candle_time.strftime("%Y-%m-%d")
+            waktu_laporan = f"{candle_time.hour:02d}:{candle_time.minute:02d}"
 
             last_raw_candles = []
 
@@ -1264,7 +1277,7 @@ async def async_bot_task(market_name, token, user_account_id):
 
                     save_analysis_db(
                         market_name,
-                        now.strftime("%Y-%m-%d"),
+                        tanggal_str,
                         waktu_laporan,
                         warna_label,
                         o_pr,
@@ -1285,12 +1298,18 @@ async def async_bot_task(market_name, token, user_account_id):
                     # ✅ USER2: CEK POLA C1-C8 SETELAH SIMPAN
                     # =========================================
                     try:
-                        tanggal_str = now.strftime("%Y-%m-%d")
                         menit_laporan = int(waktu_laporan.split(":")[1])
                         base_block_mm = (menit_laporan // 5) * 5
                         jam_laporan = waktu_laporan.split(":")[0]
                         waktu_block = f"{jam_laporan}:{base_block_mm:02d}"
                         check_user2_pattern(market_name, tanggal_str, waktu_block)
+
+                        # Cek juga blok sebelumnya (untuk evaluasi C6, C7, C8)
+                        prev_candle_time = candle_time - timedelta(minutes=5)
+                        prev_tanggal_str = prev_candle_time.strftime("%Y-%m-%d")
+                        prev_base_mm = (prev_candle_time.minute // 5) * 5
+                        prev_waktu_block = f"{prev_candle_time.hour:02d}:{prev_base_mm:02d}"
+                        check_user2_pattern(market_name, prev_tanggal_str, prev_waktu_block)
                     except Exception as e_u2:
                         print(f"[USER2] Error trigger: {e_u2}", flush=True)
 
@@ -1300,7 +1319,7 @@ async def async_bot_task(market_name, token, user_account_id):
                     if state.get("tg_active"):
                         hist = get_history_db(market_name, 100)
                         sig_loss = calc_sig_loss(hist)
-                        candle_id = f"{now.strftime('%Y-%m-%d')}_{waktu_laporan}"
+                        candle_id = f"{tanggal_str}_{waktu_laporan}"
 
                         if state.get("tg_last_candle") != candle_id:
                             trigger_target = state.get("tg_target_loss", 7)
@@ -2049,15 +2068,14 @@ def user2_data():
         today = datetime.now().strftime("%Y-%m-%d")
         cursor = conn.cursor(dictionary=True)
 
-        # Ambil semua record user2_patterns untuk hari ini
+        # Ambil record terbaru (tanpa filter hari) agar dashboard tidak kosong saat pergantian hari
         cursor.execute(
             """
             SELECT market, waktu_block, c1, c2, c3, c4, c5, c6, c7, c8, pattern_type, notif_sent
             FROM user2_patterns
-            WHERE tanggal = %s
-            ORDER BY market ASC, waktu_block DESC
-        """,
-            (today,),
+            ORDER BY tanggal DESC, waktu_block DESC
+            LIMIT 500
+        """
         )
         rows = cursor.fetchall()
 
