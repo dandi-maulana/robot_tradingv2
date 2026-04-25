@@ -780,18 +780,12 @@
                                 <th class="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider"
                                     style="color: var(--text-muted);">C5</th>
                                 <th class="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider"
-                                    style="color: var(--text-muted);">C6</th>
-                                <th class="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider"
-                                    style="color: var(--text-muted);">C7</th>
-                                <th class="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider"
-                                    style="color: var(--text-muted);">C8</th>
-                                <th class="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider"
                                     style="color: var(--text-muted);">Waktu</th>
                             </tr>
                         </thead>
                         <tbody id="waiting-tbody">
                             <tr>
-                                <td colspan="11" class="px-4 py-6 text-center text-xs" style="color: var(--text-ghost);">
+                                <td colspan="8" class="px-4 py-6 text-center text-xs" style="color: var(--text-ghost);">
                                     Menunggu data dari bot trading...
                                 </td>
                             </tr>
@@ -962,9 +956,49 @@
                 return;
             }
 
+            // Menyembunyikan sinyal jika candle setelah C3 mencapai kondisi TRUE
+            data.forEach(d => {
+                if (d.pattern_type === 'UP') {
+                    if (
+                        (d.c4 && d.c4.includes('Hijau')) ||
+                        (d.c5 && d.c5.includes('Hijau')) ||
+                        (d.c6 && d.c6.includes('Hijau')) ||
+                        (d.c7 && d.c7.includes('Hijau')) ||
+                        (d.c8 && d.c8.includes('Hijau'))
+                    ) {
+                        d.pattern_type = 'NONE';
+                    }
+                } else if (d.pattern_type === 'DOWN') {
+                    if (
+                        (d.c4 && d.c4.includes('Merah')) ||
+                        (d.c5 && d.c5.includes('Merah')) ||
+                        (d.c6 && d.c6.includes('Merah')) ||
+                        (d.c7 && d.c7.includes('Merah')) ||
+                        (d.c8 && d.c8.includes('Merah'))
+                    ) {
+                        d.pattern_type = 'NONE';
+                    }
+                }
+            });
+
             const upItems = data.filter(d => d.pattern_type === 'UP');
             const downItems = data.filter(d => d.pattern_type === 'DOWN');
-            const waitingItems = data.filter(d => d.pattern_type === 'NONE');
+            
+            const waitingItems = [];
+            const seenWaiting = new Set();
+            
+            // Tandai market yang sudah aktif di UP/DOWN agar blok lamanya tidak bocor ke bawah
+            upItems.forEach(d => seenWaiting.add(d.market));
+            downItems.forEach(d => seenWaiting.add(d.market));
+
+            data.forEach(d => {
+                if (d.pattern_type === 'NONE') {
+                    if (!seenWaiting.has(d.market)) {
+                        waitingItems.push(d);
+                        seenWaiting.add(d.market);
+                    }
+                }
+            });
 
             if (statBot) statBot.textContent = data.length;
             if (statUp) statUp.textContent = upItems.length;
@@ -988,7 +1022,7 @@
                 : downItems.map(item => buildSignalCard(item, 'DOWN')).join('');
 
             if (waitingItems.length === 0) {
-                waitingBody.innerHTML = `<tr><td colspan="11" class="px-4 py-4 text-center text-xs" style="color:var(--text-muted)">Semua market memiliki pola aktif 🎉</td></tr>`;
+                waitingBody.innerHTML = `<tr><td colspan="8" class="px-4 py-4 text-center text-xs" style="color:var(--text-muted)">Semua market memiliki pola aktif 🎉</td></tr>`;
             } else {
                 let html = '';
                 waitingItems.forEach((item, idx) => {
@@ -1004,9 +1038,6 @@
                         <td class="px-3 py-2 text-center">${candleBadgeWithMinute(item.c3, item.waktu_block, 2)}</td>
                         <td class="px-3 py-2 text-center">${candleBadgeWithMinute(item.c4, item.waktu_block, 3)}</td>
                         <td class="px-3 py-2 text-center">${candleBadgeWithMinute(item.c5, item.waktu_block, 4)}</td>
-                        <td class="px-3 py-2 text-center">${candleBadgeWithMinute(item.c6, item.waktu_block, 5)}</td>
-                        <td class="px-3 py-2 text-center">${candleBadgeWithMinute(item.c7, item.waktu_block, 6)}</td>
-                        <td class="px-3 py-2 text-center">${candleBadgeWithMinute(item.c8, item.waktu_block, 7)}</td>
                         <td class="px-3 py-2 text-center text-[11px]">${blokLabel}</td>
                     </tr>`;
                 });

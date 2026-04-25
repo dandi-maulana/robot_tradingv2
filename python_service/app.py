@@ -223,9 +223,20 @@ def save_analysis_db(
     conn.commit()
     cursor.close()
 
-    # ✅ SETELAH INSERT SELESAI: Recalculate open_positions_today dan update ke DB
-    update_open_positions_to_db(market, tanggal)
-    sync_phase_histories_to_db(market)
+    # ✅ SETELAH INSERT SELESAI: Jalankan proses berat di background thread
+    # agar tidak menunda update pada layar User2 Pattern.
+    def background_tasks(m, t):
+        try:
+            update_open_positions_to_db(m, t)
+            sync_phase_histories_to_db(m)
+        except Exception as e:
+            print(f"Background task error: {e}")
+
+    import threading
+
+    threading.Thread(
+        target=background_tasks, args=(market, tanggal), daemon=True
+    ).start()
 
     conn.close()
 
@@ -669,7 +680,9 @@ def check_user2_pattern(market, tanggal, waktu_block):
             if mm > 59:
                 actual_hh = (hh + 1) % 24
                 actual_mm = mm - 60
-                actual_date = block_date + timedelta(days=1)
+                actual_date = (
+                    block_date + timedelta(days=1) if actual_hh == 0 else block_date
+                )
             else:
                 actual_hh = hh
                 actual_mm = mm
@@ -1011,6 +1024,9 @@ async def async_bot_task(market_name, token, user_account_id):
         return
 
     last_minute_checked = -1
+    prefetch_done_for_minute = (
+        -1
+    )  # Untuk sistem pre-fetch candle sebelum menit berganti
 
     # Logika Lama
     # while True:
@@ -1254,29 +1270,70 @@ async def async_bot_task(market_name, token, user_account_id):
                         flush=True,
                     )
 
-        # SIMPAN DATA CANDLE
-        if 2 <= now.second <= 15 and last_minute_checked != now.minute:
+        # ========================================================
+        # PRE-FETCH: Ambil data candle 2 detik SEBELUM menit berganti
+        # (detik 57-59). Data sudah siap di memory saat menit baru dimulai.
+        # ========================================================
+        if now.second >= 57 and prefetch_done_for_minute != now.minute:
+            prefetch_done_for_minute = now.minute
+            last_raw_candles = []  # reset untuk pre-fetch baru
+            try:
+                await asyncio.wait_for(
+                    client.market.get_candles(actual_asset_id, 60, 1), timeout=3.0
+                )
+                # Tunggu respons singkat (maks 2 detik)
+                for _ in range(20):
+                    if len(last_raw_candles) >= 1:
+                        break
+                    await asyncio.sleep(0.1)
+            except Exception:
+                pass  # Gagal pre-fetch tidak apa-apa, fallback ke cara lama
+
+        # ========================================================
+        # SIMPAN DATA CANDLE (detik 0-2 setelah menit baru)
+        # Gunakan data pre-fetch yang sudah siap jika tersedia
+        # ========================================================
+        if 0 <= now.second <= 5 and last_minute_checked != now.minute:
 
             candle_time = now - timedelta(minutes=1)
             tanggal_str = candle_time.strftime("%Y-%m-%d")
             waktu_laporan = f"{candle_time.hour:02d}:{candle_time.minute:02d}"
 
-            last_raw_candles = []
+            target_candle = None
 
-            try:
-                await client.market.get_candles(actual_asset_id, 60, 2)
-                await asyncio.sleep(1)
-            except:
-                pass
-
-            if len(last_raw_candles) > 0:
+            if len(last_raw_candles) >= 1:
+                # Data pre-fetch sudah tersedia - langsung pakai!
+                target_candle = (
+                    last_raw_candles[1]
+                    if len(last_raw_candles) >= 2
+                    else last_raw_candles[0]
+                )
+            else:
+                # Fallback: pre-fetch gagal, request sekarang
+                last_raw_candles = []
                 try:
-                    last_minute_checked = now.minute
+                    await asyncio.wait_for(
+                        client.market.get_candles(actual_asset_id, 60, 1), timeout=5.0
+                    )
+                    for _ in range(30):
+                        if len(last_raw_candles) >= 1:
+                            break
+                        await asyncio.sleep(0.1)
+                except asyncio.TimeoutError:
+                    print(f"[{market_name}] get_candles fallback timeout", flush=True)
+                except Exception as e_gc:
+                    print(f"[{market_name}] get_candles error: {e_gc}", flush=True)
+
+                if len(last_raw_candles) >= 1:
                     target_candle = (
                         last_raw_candles[1]
                         if len(last_raw_candles) >= 2
                         else last_raw_candles[0]
                     )
+
+            if target_candle:
+                try:
+                    last_minute_checked = now.minute
 
                     o_pr = float(target_candle.get("open", 0))
                     h_pr = float(target_candle.get("high", 0))
@@ -1287,6 +1344,7 @@ async def async_bot_task(market_name, token, user_account_id):
                     warna_label = get_candle_color(o_pr, h_pr, l_pr, c_pr)
                     base_warna = "Hijau" if "Hijau" in warna_label else "Merah"
 
+                    t1 = datetime.now()
                     save_analysis_db(
                         market_name,
                         tanggal_str,
@@ -1297,13 +1355,6 @@ async def async_bot_task(market_name, token, user_account_id):
                         l_pr,
                         c_pr,
                         vol,
-                    )
-
-                    # Tampilkan status di terminal biar user tahu bot jalan
-                    symbol_color = "🟢" if base_warna == "Hijau" else "🔴"
-                    print(
-                        f"[{now.strftime('%H:%M:%S')}] {market_name} | {waktu_laporan} | {symbol_color} {warna_label} | {c_pr}",
-                        flush=True,
                     )
 
                     # =========================================
@@ -1453,8 +1504,8 @@ def start_all():
                 target=run_trading_bot_thread, args=(m, token, account_id), daemon=True
             ).start()
 
-            # Sleep bertahap supaya responsif saat dibatalkan (3.5 detik untuk hindari HTTP 429)
-            for _ in range(35):
+            # Sleep bertahap supaya responsif saat dibatalkan (1 detik untuk hindari HTTP 429)
+            for _ in range(10):
                 if my_job_id != _get_start_all_job_id():
                     break
                 time.sleep(0.1)
