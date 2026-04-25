@@ -1290,10 +1290,10 @@ async def async_bot_task(market_name, token, user_account_id):
                 pass  # Gagal pre-fetch tidak apa-apa, fallback ke cara lama
 
         # ========================================================
-        # SIMPAN DATA CANDLE (detik 0-2 setelah menit baru)
-        # Gunakan data pre-fetch yang sudah siap jika tersedia
+        # SIMPAN DATA CANDLE (detik 0-3 setelah menit baru)
+        # Dipersempit dari 0-5 ke 0-3 karena pre-fetch sudah siap di detik 57-59
         # ========================================================
-        if 0 <= now.second <= 5 and last_minute_checked != now.minute:
+        if 0 <= now.second <= 3 and last_minute_checked != now.minute:
 
             candle_time = now - timedelta(minutes=1)
             tanggal_str = candle_time.strftime("%Y-%m-%d")
@@ -1377,6 +1377,52 @@ async def async_bot_task(market_name, token, user_account_id):
                         check_user2_pattern(
                             market_name, prev_tanggal_str, prev_waktu_block
                         )
+
+                        # ✅ FIX: Cek semua blok aktif (UP/DOWN) yang belum selesai (c8 masih NULL)
+                        # agar C4-C8 selalu diperbarui meskipun blok sinyal sudah > 5 menit lalu
+                        try:
+                            _conn_active = get_db_connection()
+                            if _conn_active:
+                                _cur_active = _conn_active.cursor(dictionary=True)
+                                _cur_active.execute(
+                                    """
+                                    SELECT tanggal, waktu_block FROM user2_patterns
+                                    WHERE market = %s
+                                      AND pattern_type IN ('UP', 'DOWN')
+                                      AND c8 IS NULL
+                                      AND tanggal >= %s
+                                    ORDER BY tanggal DESC, waktu_block DESC
+                                    LIMIT 5
+                                    """,
+                                    (market_name, tanggal_str),
+                                )
+                                active_blocks = _cur_active.fetchall() or []
+                                _cur_active.close()
+                                _conn_active.close()
+
+                                for ab in active_blocks:
+                                    ab_tgl = (
+                                        ab["tanggal"].strftime("%Y-%m-%d")
+                                        if hasattr(ab["tanggal"], "strftime")
+                                        else str(ab["tanggal"])
+                                    )
+                                    ab_wb = str(ab["waktu_block"])
+                                    # Jangan dobel-cek blok yang sudah dicek di atas
+                                    if (
+                                        ab_wb != waktu_block
+                                        and ab_wb != prev_waktu_block
+                                    ):
+                                        check_user2_pattern(market_name, ab_tgl, ab_wb)
+                                        print(
+                                            f"[USER2] 🔄 Update blok aktif: {market_name} {ab_tgl} {ab_wb}",
+                                            flush=True,
+                                        )
+                        except Exception as e_active:
+                            print(
+                                f"[USER2] Error update blok aktif: {e_active}",
+                                flush=True,
+                            )
+
                     except Exception as e_u2:
                         print(f"[USER2] Error trigger: {e_u2}", flush=True)
 
@@ -2138,7 +2184,7 @@ def user2_data():
         # Ambil record terbaru (tanpa filter hari) agar dashboard tidak kosong saat pergantian hari
         cursor.execute(
             """
-            SELECT market, waktu_block, c1, c2, c3, c4, c5, c6, c7, c8, pattern_type, notif_sent
+            SELECT market, tanggal, waktu_block, c1, c2, c3, c4, c5, c6, c7, c8, pattern_type, notif_sent
             FROM user2_patterns
             ORDER BY tanggal DESC, waktu_block DESC
             LIMIT 500
@@ -2146,19 +2192,65 @@ def user2_data():
         )
         rows = cursor.fetchall()
 
-        # Grouping: ambil blok terbaru per market, dan JANGAN HAPUS blok sebelumnya JIKA C8 belum selesai!
-        # (Sesuai request: data tetap diambil dan ditampilkan hingga C8)
+        # Grouping: ambil blok terbaru per market.
+        # Sinyal UP/DOWN hanya ditampilkan jika blok masih dalam window waktu aktif
+        # (max 10 menit dari waktu_block). Ini mencegah data lama dari sesi bot sebelumnya
+        # muncul di panel sinyal saat bot di-restart (terutama saat tes lokal).
+        now_dt = datetime.now()
+        MAX_BLOCK_AGE_MINUTES = 10  # C8 = blok + 7 menit, +3 menit toleransi
+
+        def is_block_still_live(row_data):
+            """
+            Cek apakah blok ini masih dalam window waktu aktif.
+
+            Aturan:
+            - Jika c8 sudah terisi (blok selesai) → SELALU live (data valid)
+            - Jika c8 masih NULL → cek apakah masih dalam 10 menit dari waktu_block
+              (mencegah data lama dari sesi bot sebelumnya muncul di panel sinyal)
+            """
+            try:
+                # Jika c8 sudah ada, blok selesai dengan data lengkap → selalu tampilkan
+                if row_data.get("c8") is not None:
+                    return True
+
+                wb = str(row_data.get("waktu_block") or "")
+                tgl_val = row_data.get("tanggal")
+                if not wb or wb == "-":
+                    return False
+                tgl_str = (
+                    tgl_val.strftime("%Y-%m-%d")
+                    if hasattr(tgl_val, "strftime")
+                    else str(tgl_val)
+                )
+                block_dt = datetime.strptime(f"{tgl_str} {wb}", "%Y-%m-%d %H:%M")
+                block_end = block_dt + timedelta(minutes=MAX_BLOCK_AGE_MINUTES)
+                return now_dt <= block_end
+            except Exception:
+                return False
+
         market_blocks = {}
         for row in rows:
             mkt = row["market"]
             if mkt not in market_blocks:
                 market_blocks[mkt] = []
 
+            row_pattern = row.get("pattern_type") or "NONE"
+
             if len(market_blocks[mkt]) == 0:
+                # Selalu ambil blok terbaru
                 market_blocks[mkt].append(row)
-            elif len(market_blocks[mkt]) == 1 and row["c8"] is None:
-                # Blok lama yang C8-nya masih proses tetap di-push ke UI
-                market_blocks[mkt].append(row)
+            elif len(market_blocks[mkt]) == 1:
+                first = market_blocks[mkt][0]
+                first_pattern = first.get("pattern_type") or "NONE"
+                # Blok lama masih aktif: blok terbaru belum ada pattern (NONE)
+                # tapi blok lama punya UP/DOWN, C8 masih NULL, dan masih dalam window waktu
+                if (
+                    first_pattern == "NONE"
+                    and row_pattern in ("UP", "DOWN")
+                    and row["c8"] is None
+                    and is_block_still_live(row)
+                ):
+                    market_blocks[mkt].append(row)
 
         # Tambahkan market yang running tapi belum ada record
         cursor.execute("SELECT market FROM market_states WHERE is_running = 1")
@@ -2168,6 +2260,14 @@ def user2_data():
         for mkt in running_markets:
             if mkt in market_blocks:
                 for row in market_blocks[mkt]:
+                    p_type = row.get("pattern_type") or "NONE"
+
+                    # Jika sinyal UP/DOWN tapi blok sudah kadaluarsa (> 10 menit lalu),
+                    # degradasi ke NONE agar tidak tampil di panel sinyal.
+                    # Blok masih tampil di tabel bawah sebagai referensi candle terbaru.
+                    if p_type in ("UP", "DOWN") and not is_block_still_live(row):
+                        p_type = "NONE"
+
                     result.append(
                         {
                             "market": mkt,
@@ -2180,7 +2280,7 @@ def user2_data():
                             "c6": row["c6"] or "-",
                             "c7": row["c7"] or "-",
                             "c8": row["c8"] or "-",
-                            "pattern_type": row["pattern_type"] or "NONE",
+                            "pattern_type": p_type,
                             "notif_sent": bool(row["notif_sent"]),
                         }
                     )

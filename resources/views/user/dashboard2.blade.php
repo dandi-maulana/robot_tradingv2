@@ -630,7 +630,7 @@
                     </div>
                     <div>
                         <h2 class="text-base sm:text-lg font-extrabold">Monitor C1–C5</h2>
-                        <p class="text-[10px]" style="color: var(--text-muted);">Auto-refresh 4s · Notif Telegram
+                        <p class="text-[10px]" style="color: var(--text-muted);">Auto-refresh 2s · Notif Telegram
                             dikirim di candle C6 jika pola awal cocok</p>
                     </div>
                 </div>
@@ -956,26 +956,33 @@
                 return;
             }
 
-            // Menyembunyikan sinyal jika candle setelah C3 mencapai kondisi TRUE
+            // Sembunyikan sinyal jika pola rusak:
+            // - Sinyal UP rusak jika C4/C5/C6/C7/C8 ada yang HIJAU (harusnya semua Merah)
+            // - Sinyal DOWN rusak jika C4/C5/C6/C7/C8 ada yang MERAH (harusnya semua Hijau)
+            // Jika C4-C8 masih sesuai pola (Merah untuk UP, Hijau untuk DOWN), sinyal TETAP tampil.
             data.forEach(d => {
                 if (d.pattern_type === 'UP') {
-                    if (
-                        (d.c4 && d.c4.includes('Hijau')) ||
-                        (d.c5 && d.c5.includes('Hijau')) ||
-                        (d.c6 && d.c6.includes('Hijau')) ||
-                        (d.c7 && d.c7.includes('Hijau')) ||
-                        (d.c8 && d.c8.includes('Hijau'))
-                    ) {
+                    const patternBroken = (
+                        (d.c4 && d.c4 !== '-' && d.c4.includes('Hijau')) ||
+                        (d.c5 && d.c5 !== '-' && d.c5.includes('Hijau')) ||
+                        (d.c6 && d.c6 !== '-' && d.c6.includes('Hijau')) ||
+                        (d.c7 && d.c7 !== '-' && d.c7.includes('Hijau')) ||
+                        (d.c8 && d.c8 !== '-' && d.c8.includes('Hijau'))
+                    );
+                    if (patternBroken) {
+                        console.log(`[UP BATAL] ${d.market} - pola rusak (ada candle Hijau di C4-C8)`);
                         d.pattern_type = 'NONE';
                     }
                 } else if (d.pattern_type === 'DOWN') {
-                    if (
-                        (d.c4 && d.c4.includes('Merah')) ||
-                        (d.c5 && d.c5.includes('Merah')) ||
-                        (d.c6 && d.c6.includes('Merah')) ||
-                        (d.c7 && d.c7.includes('Merah')) ||
-                        (d.c8 && d.c8.includes('Merah'))
-                    ) {
+                    const patternBroken = (
+                        (d.c4 && d.c4 !== '-' && d.c4.includes('Merah')) ||
+                        (d.c5 && d.c5 !== '-' && d.c5.includes('Merah')) ||
+                        (d.c6 && d.c6 !== '-' && d.c6.includes('Merah')) ||
+                        (d.c7 && d.c7 !== '-' && d.c7.includes('Merah')) ||
+                        (d.c8 && d.c8 !== '-' && d.c8.includes('Merah'))
+                    );
+                    if (patternBroken) {
+                        console.log(`[DOWN BATAL] ${d.market} - pola rusak (ada candle Merah di C4-C8)`);
                         d.pattern_type = 'NONE';
                     }
                 }
@@ -1064,7 +1071,7 @@
 
         function startPolling() {
             fetchData();
-            pollingInterval = setInterval(fetchData, 4000);
+            pollingInterval = setInterval(fetchData, 2000); // dipercepat dari 4s ke 2s
         }
 
         // ============================================================
