@@ -176,7 +176,7 @@
 
         @media (max-width: 639px) {
             #streak-list {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
