@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
@@ -26,8 +27,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // ============================================================
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
-        $user = auth()->user();
-        // Kalau yang login bukan admin, tendang ke user dashboard
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
         if ($user->role !== 'admin') {
             return redirect('/user/dashboard');
         }
@@ -35,7 +39,11 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     Route::get('/admin/history', function () {
-        $user = auth()->user();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
         if ($user->role !== 'admin') {
             return redirect('/user/dashboard');
         }
@@ -142,13 +150,12 @@ Route::get('/user/history', function (\Illuminate\Http\Request $request) {
 
 // ============================================================
 // USER2 PATTERN SCANNER — Pakai cookie 'rodis_viewer2'
-// Akun khusus dengan logika C1-C5 pola candle
+// Multi-session: banyak orang bisa login bersamaan
 // ============================================================
 Route::get('/user2/dashboard', function (\Illuminate\Http\Request $request) {
-    $viewerId    = $request->cookie('rodis_viewer2');
-    $viewerToken = $request->cookie('rodis_viewer2_token');
+    $viewerId = $request->cookie('rodis_viewer2');
 
-    if (!$viewerId || !$viewerToken) {
+    if (!$viewerId) {
         return redirect('/login');
     }
 
@@ -157,31 +164,21 @@ Route::get('/user2/dashboard', function (\Illuminate\Http\Request $request) {
 
         if (!$user || $user->role !== 'user2') {
             return redirect('/login')
-                ->withCookie(cookie()->forget('rodis_viewer2'))
-                ->withCookie(cookie()->forget('rodis_viewer2_token'));
-        }
-
-        if ($user->viewer_token !== $viewerToken) {
-            return redirect('/login')
-                ->withCookie(cookie()->forget('rodis_viewer2'))
-                ->withCookie(cookie()->forget('rodis_viewer2_token'))
-                ->withErrors(['username' => 'Sesi Anda telah berakhir karena akun ini login di perangkat lain.']);
+                ->withCookie(cookie()->forget('rodis_viewer2'));
         }
 
         return view('user.dashboard2', ['user' => $user]);
     } catch (\Exception $e) {
         return redirect('/login')
-            ->withCookie(cookie()->forget('rodis_viewer2'))
-            ->withCookie(cookie()->forget('rodis_viewer2_token'));
+            ->withCookie(cookie()->forget('rodis_viewer2'));
     }
 })->name('user2.dashboard');
 
 // USER2 SESSION CHECK — Cek sesi user2 setiap beberapa detik
 Route::get('/user2/check-session', function (\Illuminate\Http\Request $request) {
-    $viewerId    = $request->cookie('rodis_viewer2');
-    $viewerToken = $request->cookie('rodis_viewer2_token');
+    $viewerId = $request->cookie('rodis_viewer2');
 
-    if (!$viewerId || !$viewerToken) {
+    if (!$viewerId) {
         return response()->json(['valid' => false, 'reason' => 'no_cookie']);
     }
 
@@ -189,10 +186,6 @@ Route::get('/user2/check-session', function (\Illuminate\Http\Request $request) 
 
     if (!$user || $user->role !== 'user2') {
         return response()->json(['valid' => false, 'reason' => 'invalid_user']);
-    }
-
-    if ($user->viewer_token !== $viewerToken) {
-        return response()->json(['valid' => false, 'reason' => 'session_replaced']);
     }
 
     return response()->json(['valid' => true]);

@@ -71,14 +71,11 @@ class AuthController extends Controller
                 // ====================================================
                 // USER2 PATTERN SCANNER: Login via cookie terpisah
                 // Cookie: rodis_viewer2 untuk halaman pattern scanner
+                // Multi-session: TIDAK enforce single-session,
+                // siapapun bisa login bersamaan dengan akun yang sama
                 // ====================================================
-                $viewerToken = bin2hex(random_bytes(32));
-                $user->viewer_token = $viewerToken;
-                $user->save();
-
                 return redirect('/user2/dashboard')
-                    ->withCookie(cookie('rodis_viewer2', $user->id, 120, '/', null, false, true))
-                    ->withCookie(cookie('rodis_viewer2_token', $viewerToken, 120, '/', null, false, true));
+                    ->withCookie(cookie('rodis_viewer2', $user->id, 120, '/', null, false, true));
 
             } else {
                 // ====================================================
@@ -114,7 +111,7 @@ class AuthController extends Controller
             $request->session()->regenerateToken();
         }
 
-        // Hapus viewer_token dari DB jika ada cookie viewer
+        // Hapus viewer_token dari DB jika ada cookie viewer (role: user)
         $viewerId = $request->cookie('rodis_viewer');
         if ($viewerId) {
             $viewer = User::find($viewerId);
@@ -124,9 +121,10 @@ class AuthController extends Controller
             }
         }
 
-        // Selalu hapus juga viewer cookies (biar bersih)
+        // Selalu hapus semua viewer cookies (biar bersih)
         return redirect('/login')
             ->withCookie(cookie()->forget('rodis_viewer'))
-            ->withCookie(cookie()->forget('rodis_viewer_token'));
+            ->withCookie(cookie()->forget('rodis_viewer_token'))
+            ->withCookie(cookie()->forget('rodis_viewer2'));
     }
 }

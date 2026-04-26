@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+﻿from flask import Flask, request, jsonify
 from flask_cors import CORS
 import threading
 import time
@@ -1279,9 +1279,9 @@ async def async_bot_task(market_name, token, user_account_id):
             last_raw_candles = []  # reset untuk pre-fetch baru
             try:
                 await asyncio.wait_for(
-                    client.market.get_candles(actual_asset_id, 60, 1), timeout=3.0
+                    client.market.get_candles(actual_asset_id, 60, 1),
+                    timeout=3.0,
                 )
-                # Tunggu respons singkat (maks 2 detik)
                 for _ in range(20):
                     if len(last_raw_candles) >= 1:
                         break
@@ -1303,6 +1303,7 @@ async def async_bot_task(market_name, token, user_account_id):
 
             if len(last_raw_candles) >= 1:
                 # Data pre-fetch sudah tersedia - langsung pakai!
+                # OT mengembalikan [candle_open, candle_closed] → ambil [1] jika ada
                 target_candle = (
                     last_raw_candles[1]
                     if len(last_raw_candles) >= 2
@@ -1738,6 +1739,25 @@ def stop_telegram_all():
             "message": "Sinyal Telegram di SEMUA market berhasil dimatikan!",
         }
     )
+
+
+@app.route("/api/send_tg", methods=["POST"])
+def send_tg():
+    """
+    Endpoint untuk mengirim pesan Telegram dari dashboard admin.
+    Digunakan khusus untuk bot-stopped alert (terpisah dari sinyal massal).
+    """
+    try:
+        data = request.json or {}
+        message = str(data.get("message", "")).strip()
+        if not message:
+            return jsonify({"status": "error", "message": "Pesan kosong"}), 400
+        send_telegram_internal(message)
+        print(f"[ALERT] Notif bot dikirim ke TG.", flush=True)
+        return jsonify({"status": "success", "message": "Alert terkirim"})
+    except Exception as e:
+        print(f"[ALERT] Gagal kirim alert TG: {e}", flush=True)
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 @app.route("/api/manual_trade", methods=["POST"])

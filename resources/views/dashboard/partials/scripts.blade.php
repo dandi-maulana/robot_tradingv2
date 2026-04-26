@@ -26,222 +26,52 @@ let rodisState = {
     direction: ''
 };
 
-const allMarkets = [{
-        id: "Asia Composite Index",
-        name: "Asia Index",
-        icon: "🌏",
-        cat: "24 Jam FTT"
-    },
-    {
-        id: "Europe Composite Index",
-        name: "Europe Index",
-        icon: "🌍",
-        cat: "24 Jam FTT"
-    },
-    {
-        id: "Commodity Composite",
-        name: "Commodity",
-        icon: "🌾",
-        cat: "24 Jam FTT"
-    },
-    {
-        id: "Crypto Composite Index",
-        name: "Crypto Index",
-        icon: "₿",
-        cat: "24 Jam FTT"
-    },
-    {
-        id: "EUR/USD OTC",
-        name: "EUR/USD OTC",
-        icon: "🇪🇺",
-        cat: "OTC"
-    },
-    {
-        id: "GBP/USD OTC",
-        name: "GBP/USD OTC",
-        icon: "🇬🇧",
-        cat: "OTC"
-    },
-    {
-        id: "USD/JPY OTC",
-        name: "USD/JPY OTC",
-        icon: "🇯🇵",
-        cat: "OTC"
-    },
-    {
-        id: "AUD/USD OTC",
-        name: "AUD/USD OTC",
-        icon: "🇦🇺",
-        cat: "OTC"
-    },
-    {
-        id: "NZD/USD OTC",
-        name: "NZD/USD OTC",
-        icon: "🇳🇿",
-        cat: "OTC"
-    },
-    {
-        id: "USD/CAD OTC",
-        name: "USD/CAD OTC",
-        icon: "🇨🇦",
-        cat: "OTC"
-    },
-    {
-        id: "USD/CHF OTC",
-        name: "USD/CHF OTC",
-        icon: "🇨🇭",
-        cat: "OTC"
-    },
-    {
-        id: "EUR/JPY OTC",
-        name: "EUR/JPY OTC",
-        icon: "💶",
-        cat: "OTC"
-    },
-    {
-        id: "GBP/JPY OTC",
-        name: "GBP/JPY OTC",
-        icon: "💷",
-        cat: "OTC"
-    },
-    {
-        id: "AUD/JPY OTC",
-        name: "AUD/JPY OTC",
-        icon: "🇦🇺",
-        cat: "OTC"
-    },
-    {
-        id: "CAD/JPY OTC",
-        name: "CAD/JPY OTC",
-        icon: "🇨🇦",
-        cat: "OTC"
-    },
-    {
-        id: "NZD/JPY OTC",
-        name: "NZD/JPY OTC",
-        icon: "🇳🇿",
-        cat: "OTC"
-    },
-    {
-        id: "CHF/JPY OTC",
-        name: "CHF/JPY OTC",
-        icon: "🇨🇭",
-        cat: "OTC"
-    },
-    {
-        id: "EUR/GBP OTC",
-        name: "EUR/GBP OTC",
-        icon: "💶",
-        cat: "OTC"
-    },
-    {
-        id: "EUR/AUD OTC",
-        name: "EUR/AUD OTC",
-        icon: "💶",
-        cat: "OTC"
-    },
-    {
-        id: "EUR/CAD OTC",
-        name: "EUR/CAD OTC",
-        icon: "💶",
-        cat: "OTC"
-    },
-    {
-        id: "EUR/CHF OTC",
-        name: "EUR/CHF OTC",
-        icon: "💶",
-        cat: "OTC"
-    },
-    {
-        id: "GBP/AUD OTC",
-        name: "GBP/AUD OTC",
-        icon: "💷",
-        cat: "OTC"
-    },
-    {
-        id: "GBP/CAD OTC",
-        name: "GBP/CAD OTC",
-        icon: "💷",
-        cat: "OTC"
-    },
-    {
-        id: "GBP/CHF OTC",
-        name: "GBP/CHF OTC",
-        icon: "💷",
-        cat: "OTC"
-    },
-    {
-        id: "AUD/CAD OTC",
-        name: "AUD/CAD OTC",
-        icon: "🇦🇺",
-        cat: "OTC"
-    },
-    {
-        id: "AUD/CHF OTC",
-        name: "AUD/CHF OTC",
-        icon: "🇦🇺",
-        cat: "OTC"
-    },
-    {
-        id: "CAD/CHF OTC",
-        name: "CAD/CHF OTC",
-        icon: "🇨🇦",
-        cat: "OTC"
-    },
-    {
-        id: "Bitcoin OTC",
-        name: "Bitcoin OTC",
-        icon: "₿",
-        cat: "OTC"
-    },
-    {
-        id: "Ethereum OTC",
-        name: "Ethereum OTC",
-        icon: "Ξ",
-        cat: "OTC"
-    },
-    {
-        id: "Ripple OTC",
-        name: "Ripple OTC",
-        icon: "Ʀ",
-        cat: "OTC"
-    },
-    {
-        id: "Litecoin OTC",
-        name: "Litecoin OTC",
-        icon: "Ł",
-        cat: "OTC"
-    },
-    {
-        id: "Solana OTC",
-        name: "Solana OTC",
-        icon: "◎",
-        cat: "OTC"
-    },
-    {
-        id: "Stablecoin Composite",
-        name: "Stablecoin Composite",
-        icon: "💵",
-        cat: "24 Jam FTT"
-    },
-    {
-        id: "Halal Index",
-        name: "Halal Index",
-        icon: "🌙",
-        cat: "24 Jam FTT"
-    },
-    {
-        id: "Silver OTC",
-        name: "Silver OTC",
-        icon: "🥈",
-        cat: "OTC"
-    },
-    {
-        id: "Gold OTC",
-        name: "Gold OTC",
-        icon: "🥇",
-        cat: "OTC"
-    }
+const allMarkets = [
+    // ─── INDEX ───────────────────────────────────────────────
+    { id: "Asia Composite Index",   name: "Asia Index",       icon: "🌏", cat: "24 Jam FTT", group: "Index OTC",    groupOrder: 4 },
+    { id: "Europe Composite Index", name: "Europe Index",     icon: "🌍", cat: "24 Jam FTT", group: "Index OTC",    groupOrder: 4 },
+    { id: "Crypto Composite Index", name: "Crypto Index",     icon: "₿",  cat: "24 Jam FTT", group: "Index OTC",    groupOrder: 4 },
+    { id: "Halal Index",            name: "Halal Index",      icon: "🌙", cat: "24 Jam FTT", group: "Index OTC",    groupOrder: 4 },
+    // ─── COMMODITY ───────────────────────────────────────────
+    { id: "Commodity Composite",    name: "Commodity",        icon: "🌾", cat: "24 Jam FTT", group: "Commodity OTC", groupOrder: 5 },
+    { id: "Stablecoin Composite",   name: "Stablecoin",       icon: "💵", cat: "24 Jam FTT", group: "Commodity OTC", groupOrder: 5 },
+    { id: "Gold OTC",               name: "Gold OTC",         icon: "🥇", cat: "OTC",       group: "Commodity OTC", groupOrder: 5 },
+    { id: "Silver OTC",             name: "Silver OTC",       icon: "🥈", cat: "OTC",       group: "Commodity OTC", groupOrder: 5 },
+    // ─── CRYPTO ──────────────────────────────────────────────
+    { id: "Bitcoin OTC",            name: "Bitcoin OTC",      icon: "₿",  cat: "OTC",       group: "Crypto OTC",   groupOrder: 3 },
+    { id: "Ethereum OTC",           name: "Ethereum OTC",     icon: "Ξ",  cat: "OTC",       group: "Crypto OTC",   groupOrder: 3 },
+    { id: "Litecoin OTC",           name: "Litecoin OTC",     icon: "Ł",  cat: "OTC",       group: "Crypto OTC",   groupOrder: 3 },
+    { id: "Ripple OTC",             name: "Ripple OTC",       icon: "Ʀ",  cat: "OTC",       group: "Crypto OTC",   groupOrder: 3 },
+    { id: "Solana OTC",             name: "Solana OTC",       icon: "◎",  cat: "OTC",       group: "Crypto OTC",   groupOrder: 3 },
+    // ─── EUR GROUP ───────────────────────────────────────────
+    { id: "EUR/AUD OTC",            name: "EUR/AUD OTC",      icon: "💶", cat: "OTC",       group: "EUR Group",    groupOrder: 0 },
+    { id: "EUR/CAD OTC",            name: "EUR/CAD OTC",      icon: "💶", cat: "OTC",       group: "EUR Group",    groupOrder: 0 },
+    { id: "EUR/CHF OTC",            name: "EUR/CHF OTC",      icon: "💶", cat: "OTC",       group: "EUR Group",    groupOrder: 0 },
+    { id: "EUR/GBP OTC",            name: "EUR/GBP OTC",      icon: "💶", cat: "OTC",       group: "EUR Group",    groupOrder: 0 },
+    { id: "EUR/JPY OTC",            name: "EUR/JPY OTC",      icon: "💶", cat: "OTC",       group: "EUR Group",    groupOrder: 0 },
+    { id: "EUR/USD OTC",            name: "EUR/USD OTC",      icon: "💶", cat: "OTC",       group: "EUR Group",    groupOrder: 0 },
+    // ─── GBP GROUP ───────────────────────────────────────────
+    { id: "GBP/AUD OTC",            name: "GBP/AUD OTC",      icon: "💷", cat: "OTC",       group: "GBP Group",    groupOrder: 0 },
+    { id: "GBP/CAD OTC",            name: "GBP/CAD OTC",      icon: "💷", cat: "OTC",       group: "GBP Group",    groupOrder: 0 },
+    { id: "GBP/CHF OTC",            name: "GBP/CHF OTC",      icon: "💷", cat: "OTC",       group: "GBP Group",    groupOrder: 0 },
+    { id: "GBP/JPY OTC",            name: "GBP/JPY OTC",      icon: "💷", cat: "OTC",       group: "GBP Group",    groupOrder: 0 },
+    { id: "GBP/USD OTC",            name: "GBP/USD OTC",      icon: "💷", cat: "OTC",       group: "GBP Group",    groupOrder: 0 },
+    // ─── AUD GROUP ───────────────────────────────────────────
+    { id: "AUD/CAD OTC",            name: "AUD/CAD OTC",      icon: "🇦🇺", cat: "OTC",      group: "AUD Group",    groupOrder: 1 },
+    { id: "AUD/CHF OTC",            name: "AUD/CHF OTC",      icon: "🇦🇺", cat: "OTC",      group: "AUD Group",    groupOrder: 1 },
+    { id: "AUD/JPY OTC",            name: "AUD/JPY OTC",      icon: "🇦🇺", cat: "OTC",      group: "AUD Group",    groupOrder: 1 },
+    { id: "AUD/USD OTC",            name: "AUD/USD OTC",      icon: "🇦🇺", cat: "OTC",      group: "AUD Group",    groupOrder: 1 },
+    // ─── USD GROUP ───────────────────────────────────────────
+    { id: "USD/CAD OTC",            name: "USD/CAD OTC",      icon: "🇨🇦", cat: "OTC",      group: "USD Group",    groupOrder: 1 },
+    { id: "USD/CHF OTC",            name: "USD/CHF OTC",      icon: "🇨🇭", cat: "OTC",      group: "USD Group",    groupOrder: 1 },
+    { id: "USD/JPY OTC",            name: "USD/JPY OTC",      icon: "🇯🇵", cat: "OTC",      group: "USD Group",    groupOrder: 1 },
+    // ─── NZD GROUP ───────────────────────────────────────────
+    { id: "NZD/JPY OTC",            name: "NZD/JPY OTC",      icon: "🇳🇿", cat: "OTC",      group: "NZD Group",    groupOrder: 2 },
+    { id: "NZD/USD OTC",            name: "NZD/USD OTC",      icon: "🇳🇿", cat: "OTC",      group: "NZD Group",    groupOrder: 2 },
+    // ─── CROSS ───────────────────────────────────────────────
+    { id: "CAD/CHF OTC",            name: "CAD/CHF OTC",      icon: "🇨🇦", cat: "OTC",      group: "Cross",        groupOrder: 2 },
+    { id: "CAD/JPY OTC",            name: "CAD/JPY OTC",      icon: "🇨🇦", cat: "OTC",      group: "Cross",        groupOrder: 2 },
+    { id: "CHF/JPY OTC",            name: "CHF/JPY OTC",      icon: "🇨🇭", cat: "OTC",      group: "Cross",        groupOrder: 2 },
 ];
 
 let currentPage = 1;
@@ -1259,6 +1089,152 @@ function changePage(page) {
 }
 
 // ================================================================
+// BOT STOPPED DETECTION + TOGGLE ALERT
+// ================================================================
+let lastDataReceivedAt = Date.now();
+let botStoppedAlertSent = false;
+const BOT_STOPPED_THRESHOLD_MS = 60000;
+const BOT_ALERT_COOLDOWN_KEY   = 'rodis_bot_alert_cooldown';
+const BOT_ALERT_ENABLED_KEY    = 'rodis_bot_alert_enabled';
+const BOT_ALERT_COOLDOWN_MS    = 5 * 60 * 1000; // 5 menit
+
+// Baca state toggle dari localStorage (default: OFF)
+let botAlertEnabled = localStorage.getItem(BOT_ALERT_ENABLED_KEY) === 'true';
+
+/** Perbarui tampilan tombol & status bar sesuai state aktif/nonaktif */
+function updateBotAlertToggleUI() {
+    const btn       = document.getElementById('btn-bot-alert-tg');
+    const icon      = document.getElementById('bot-alert-icon');
+    const label     = document.getElementById('bot-alert-label');
+    const statusTxt = document.getElementById('bot-alert-status-text');
+    const statusEl  = document.getElementById('bot-alert-tg-status');
+    const coolInfo  = document.getElementById('bot-alert-cooldown-info');
+
+    if (botAlertEnabled) {
+        // Tombol → HIJAU (aktif)
+        if (btn) {
+            btn.className = 'control-btn w-full sm:w-auto text-white border-0 shadow-sm bg-green-600 hover:bg-green-700';
+        }
+        if (icon)      icon.textContent  = '🔔';
+        if (label)     label.textContent = 'Alert Bot: ON';
+        if (statusTxt) { statusTxt.textContent = 'ON'; statusTxt.className = 'text-green-600'; }
+        if (statusEl)  statusEl.className = 'text-gray-500';
+
+        // Tampilkan cooldown jika masih berlaku
+        const lastSent = parseInt(localStorage.getItem(BOT_ALERT_COOLDOWN_KEY) || '0', 10);
+        const remaining = BOT_ALERT_COOLDOWN_MS - (Date.now() - lastSent);
+        if (remaining > 0 && coolInfo) {
+            coolInfo.textContent = `(cooldown ${Math.ceil(remaining/60000)}m)`;
+            coolInfo.classList.remove('hidden');
+        } else if (coolInfo) {
+            coolInfo.classList.add('hidden');
+        }
+    } else {
+        // Tombol → ABU (nonaktif)
+        if (btn) {
+            btn.className = 'control-btn w-full sm:w-auto text-white border-0 shadow-sm bg-gray-400 hover:bg-gray-500';
+        }
+        if (icon)      icon.textContent  = '🔕';
+        if (label)     label.textContent = 'Alert Bot: OFF';
+        if (statusTxt) { statusTxt.textContent = 'OFF'; statusTxt.className = 'text-gray-500'; }
+        if (statusEl)  statusEl.className = 'text-gray-400';
+        if (coolInfo)  coolInfo.classList.add('hidden');
+    }
+}
+
+/** Toggle aktif/nonaktif alert bot */
+function toggleBotAlertTg() {
+    botAlertEnabled = !botAlertEnabled;
+    localStorage.setItem(BOT_ALERT_ENABLED_KEY, String(botAlertEnabled));
+    updateBotAlertToggleUI();
+
+    const msg = botAlertEnabled
+        ? '🔔 Alert Bot DIAKTIFKAN — notifikasi otomatis akan dikirim jika bot berhenti.'
+        : '🔕 Alert Bot DINONAKTIFKAN — tidak ada notifikasi yang akan dikirim.';
+    showPopup(msg, botAlertEnabled ? 'success' : 'info');
+
+    // Reset flag agar bisa kirim lagi setelah diaktifkan kembali
+    if (botAlertEnabled) botStoppedAlertSent = false;
+}
+
+function checkBotStopped() {
+    const elapsed   = Date.now() - lastDataReceivedAt;
+    const banner    = document.getElementById('bot-stopped-banner');
+    const connDot   = document.getElementById('connection-dot');
+    const connTxt   = document.getElementById('connection-text');
+    const connBadge = document.getElementById('connection-badge');
+    const statusEl  = document.getElementById('global-conn-status');
+
+    if (elapsed >= BOT_STOPPED_THRESHOLD_MS) {
+        if (banner) banner.classList.remove('hidden');
+        if (connDot)   { connDot.classList.remove('bg-green-500','bg-yellow-400'); connDot.classList.add('bg-red-500'); }
+        if (connTxt)   connTxt.textContent = 'Offline';
+        if (connBadge) { connBadge.classList.remove('bg-green-50','border-green-200','text-green-700','bg-yellow-50','border-yellow-200','text-yellow-700'); connBadge.classList.add('bg-red-50','border-red-200','text-red-700'); }
+        if (statusEl)  { statusEl.textContent = 'OFFLINE — Tidak ada data'; statusEl.className = 'text-red-600 font-bold'; }
+
+        // Auto-kirim HANYA jika toggle AKTIF
+        if (botAlertEnabled) {
+            const now      = Date.now();
+            const lastSent = parseInt(localStorage.getItem(BOT_ALERT_COOLDOWN_KEY) || '0', 10);
+            const inCooldown = (now - lastSent) < BOT_ALERT_COOLDOWN_MS;
+            if (!inCooldown && !botStoppedAlertSent) {
+                _doSendBotAlert();
+            }
+            updateBotAlertToggleUI(); // refresh cooldown info
+        }
+    } else if (elapsed >= 15000) {
+        if (banner) banner.classList.add('hidden');
+        if (connDot)   { connDot.classList.remove('bg-green-500','bg-red-500'); connDot.classList.add('bg-yellow-400'); connDot.classList.remove('animate-pulse'); }
+        if (connTxt)   connTxt.textContent = `Delay (${Math.round(elapsed/1000)}s)`;
+        if (connBadge) { connBadge.classList.remove('bg-green-50','border-green-200','text-green-700','bg-red-50','border-red-200','text-red-700'); connBadge.classList.add('bg-yellow-50','border-yellow-200','text-yellow-700'); }
+        if (statusEl)  { statusEl.textContent = `Delay ${Math.round(elapsed/1000)}s`; statusEl.className = 'text-yellow-600 font-bold'; }
+    } else {
+        if (banner) banner.classList.add('hidden');
+        if (connDot)   { connDot.classList.remove('bg-red-500','bg-yellow-400'); connDot.classList.add('bg-green-500','animate-pulse'); }
+        if (connTxt)   connTxt.textContent = 'Live';
+        if (connBadge) { connBadge.classList.remove('bg-red-50','border-red-200','text-red-700','bg-yellow-50','border-yellow-200','text-yellow-700'); connBadge.classList.add('bg-green-50','border-green-200','text-green-700'); }
+        if (statusEl)  { statusEl.textContent = 'Live'; statusEl.className = 'text-green-600 font-bold'; }
+        botStoppedAlertSent = false;
+    }
+}
+
+
+/** Internal: kirim alert ke Telegram (dipanggil otomatis saat bot offline & toggle ON) */
+function _doSendBotAlert() {
+    const ts          = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+    const activeCount = (typeof activeMarketsList !== 'undefined') ? activeMarketsList.length : '?';
+    const msg = `[RODIS BOT ALERT]\nStatus: STOPPED\nTime: ${ts} WIB\nReason: No data / Token expired\nAsset Count: ${activeCount}`;
+
+    fetch(`${API_BASE}/send_tg`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+    })
+    .then(res => res.json())
+    .then(() => {
+        localStorage.setItem(BOT_ALERT_COOLDOWN_KEY, String(Date.now()));
+        botStoppedAlertSent = true;
+        showPopup('🔔 Alert Bot dikirim ke Telegram!', 'success');
+        updateBotAlertToggleUI();
+    })
+    .catch(() => {
+        setTimeout(() => {
+            fetch(`${API_BASE}/send_tg`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg })
+            }).catch(() => {});
+        }, 3000);
+    });
+}
+
+// Inisialisasi UI toggle saat halaman dimuat
+updateBotAlertToggleUI();
+
+// Cek bot stopped setiap 10 detik
+setInterval(checkBotStopped, 10000);
+
+// ================================================================
 // DASHBOARD POLLING
 // ================================================================
 function startDashboardPolling() {
@@ -1343,51 +1319,72 @@ function refreshDashboardStatus() {
                     return;
                 }
 
+                // ── Update last-data timestamp ──────────────────
+                lastDataReceivedAt = Date.now();
+                const luEl = document.getElementById('global-last-update');
+                if (luEl) {
+                    const d = new Date();
+                    luEl.textContent = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+                }
+
+                // ── Build grouped streak display ─────────────────
+                const streaks = data.market_streaks;
+
+                // Kelompokkan market berdasarkan group
+                const groupMap = {};
+                Object.keys(streaks).forEach(mkt => {
+                    const mktObj = allMarkets.find(x => x.id === mkt);
+                    const grp = mktObj ? mktObj.group : 'Lainnya';
+                    if (!groupMap[grp]) groupMap[grp] = { order: mktObj ? mktObj.groupOrder : 99, markets: [] };
+                    groupMap[grp].markets.push({ id: mkt, streak: streaks[mkt], obj: mktObj });
+                });
+
+                // Urutkan group lalu market di dalamnya
+                const sortedGroups = Object.entries(groupMap)
+                    .sort((a, b) => a[1].order - b[1].order || a[0].localeCompare(b[0]));
+
                 streakList.innerHTML = '';
+                sortedGroups.forEach(([grpName, grpData]) => {
+                    // Sort market alphabetically within group
+                    grpData.markets.sort((a, b) => a.id.localeCompare(b.id));
 
-                const totalMarket = allMarkets.length;
-                const activeCount = activeMarketsList.length;
-                const allConnected = (activeCount === totalMarket && totalMarket > 0);
+                    const section = document.createElement('div');
+                    section.className = 'streak-section';
 
-                let sortedMarkets = Object.keys(data.market_streaks)
-                    .sort((a, b) => data.market_streaks[b] - data.market_streaks[a]);
+                    // Header group
+                    const header = document.createElement('div');
+                    header.className = 'streak-group-header';
+                    header.textContent = grpName;
+                    section.appendChild(header);
 
-                const highestStreak = sortedMarkets.length > 0 ?
-                    data.market_streaks[sortedMarkets[0]] :
-                    0;
+                    // Grid cards (vertical list)
+                    const grid = document.createElement('div');
+                    grid.className = 'streak-group-grid';
 
-                sortedMarkets.forEach(mkt => {
-                    let streak = data.market_streaks[mkt];
-                    let mktObj = allMarkets.find(x => x.id === mkt);
-                    let mktName = mktObj ? mktObj.name : mkt;
+                    grpData.markets.forEach(item => {
+                        const streak = item.streak;
+                        const mktName = item.obj ? item.obj.name : item.id;
 
-                    let colorClass = 'bg-gray-50 text-gray-500 border-gray-200';
+                        let cardClass = 'streak-ok';
+                        let valueClass = 'val-ok';
+                        if (streak >= 3) { cardClass = 'streak-danger'; valueClass = 'val-danger'; }
+                        else if (streak >= 1) { cardClass = 'streak-warn'; valueClass = 'val-warn'; }
 
-                    if (streak >= 7)
-                        colorClass = 'bg-red-100 text-red-700 border-red-300 font-extrabold';
-                    else if (streak >= 5)
-                        colorClass = 'bg-orange-100 text-orange-700 border-orange-300 font-bold';
-                    else if (streak >= 3)
-                        colorClass = 'bg-yellow-100 text-yellow-700 border-yellow-300 font-bold';
-                    else if (streak >= 1)
-                        colorClass = 'bg-blue-50 text-blue-600 border-blue-200';
+                        const card = document.createElement('div');
+                        card.className = `streak-card ${cardClass}`;
+                        card.onclick = () => openMarketDetail(item.id);
+                        card.title = item.id;
+                        card.innerHTML = `
+                            <span class="streak-name">${mktName}</span>
+                            <div class="streak-right">
+                                <span class="streak-value ${valueClass}">${streak}</span>
+                                <span class="streak-label">False Streak</span>
+                            </div>`;
+                        grid.appendChild(card);
+                    });
 
-                    let connectedClass = allConnected ?
-                        'bg-green-100 text-green-800 border-green-300 font-bold' :
-                        '';
-
-                    let dangerGlow = (streak === highestStreak && streak >= 7) ?
-                        'danger-glow' :
-                        '';
-
-                    streakList.innerHTML += `
-                    <div onclick="openMarketDetail('${mkt}')"
-                        class="w-full px-3 py-1.5 rounded-lg border text-[11px] flex items-center justify-between
-                               ${colorClass} ${connectedClass} ${dangerGlow}
-                               transition-all duration-300 cursor-pointer hover:scale-[1.04] hover:shadow-md active:scale-95">
-                        <span class="truncate font-semibold">${mktName}</span>
-                        <span class="bg-white/90 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider border border-white/50">False: ${streak}</span>
-                    </div>`;
+                    section.appendChild(grid);
+                    streakList.appendChild(section);
                 });
             }
             const btn = document.getElementById('btn-mass-tg');
@@ -1921,3 +1918,4 @@ function renderDojiAnalytics(dojiData) {
     });
 }
 </script>
+
