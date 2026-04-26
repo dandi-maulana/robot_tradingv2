@@ -958,6 +958,7 @@ async def async_bot_task(market_name, token, user_account_id):
     global global_demo_balance
     actual_asset_id = ASSET_MAPPING.get(market_name, market_name)
     last_raw_candles = []
+    _accept_history = False  # flag: hanya terima candle saat diminta
 
     try:
         target_account_id = (
@@ -971,7 +972,7 @@ async def async_bot_task(market_name, token, user_account_id):
         original_dispatch = client._dispatch_message
 
         async def custom_dispatch(message):
-            nonlocal last_raw_candles
+            nonlocal last_raw_candles, _accept_history
             global global_demo_balance
             if isinstance(message, dict):
                 msg_event = message.get("e")
@@ -992,7 +993,10 @@ async def async_bot_task(market_name, token, user_account_id):
                                 and item.get("p") == actual_asset_id
                                 and "candles" in item
                             ):
-                                last_raw_candles = item.get("candles", [])
+                                # Hanya update last_raw_candles saat flag aktif
+                                # agar live-tick tidak menimpa historical response
+                                if _accept_history:
+                                    last_raw_candles = item.get("candles", [])
             if asyncio.iscoroutinefunction(original_dispatch):
                 await original_dispatch(message)
             else:
@@ -1183,12 +1187,15 @@ async def async_bot_task(market_name, token, user_account_id):
             break
         state = markets_data[market_name]
         if state.get("is_running", 0) == 0:
-            if hasattr(client, "stop"):
-                await client.stop()
-            elif hasattr(client, "close"):
-                await client.close()
-            elif hasattr(client, "disconnect"):
-                await client.disconnect()
+            try:
+                if hasattr(client, "stop"):
+                    await client.stop()
+                elif hasattr(client, "close"):
+                    await client.close()
+                elif hasattr(client, "disconnect"):
+                    await client.disconnect()
+            except Exception:
+                pass
             break
 
         now = datetime.now()
@@ -1287,13 +1294,19 @@ async def async_bot_task(market_name, token, user_account_id):
                         break
                     await asyncio.sleep(0.1)
             except Exception:
-                pass  # Gagal pre-fetch tidak apa-apa, fallback ke cara lama
-
+                pass  # Gagal pre-fetch tidak apa-apa
+        # SIMPAN DATA CANDLE (detik 3-8 setelah menit baru)
+        # --------------------------------------------------------
+        # Request FRESH setelah candle tutup sempurna.
+        # Detik 3-8: candle menit lalu sudah pasti CLOSED final.
+        # OT response format: [candle_open(forming), candle_closed]
+        #   → ambil index [1] = candle yg baru closed (OHLC final)
+        #   → fallback [0] jika hanya ada 1 candle
+        # PRE-FETCH (detik 57-59) TIDAK DIPAKAI untuk save
+        # karena data belum final saat candle masih forming.
         # ========================================================
-        # SIMPAN DATA CANDLE (detik 0-3 setelah menit baru)
-        # Dipersempit dari 0-5 ke 0-3 karena pre-fetch sudah siap di detik 57-59
-        # ========================================================
-        if 0 <= now.second <= 3 and last_minute_checked != now.minute:
+        if 3 <= now.second <= 8 and last_minute_checked != now.minute:
+            last_minute_checked = now.minute  # tandai agar tidak double-save
 
             candle_time = now - timedelta(minutes=1)
             tanggal_str = candle_time.strftime("%Y-%m-%d")
@@ -1301,41 +1314,48 @@ async def async_bot_task(market_name, token, user_account_id):
 
             target_candle = None
 
-            if len(last_raw_candles) >= 1:
-                # Data pre-fetch sudah tersedia - langsung pakai!
-                # OT mengembalikan [candle_open, candle_closed] → ambil [1] jika ada
-                target_candle = (
-                    last_raw_candles[1]
-                    if len(last_raw_candles) >= 2
-                    else last_raw_candles[0]
-                )
-            else:
-                # Fallback: pre-fetch gagal, request sekarang
-                last_raw_candles = []
-                try:
-                    await asyncio.wait_for(
-                        client.market.get_candles(actual_asset_id, 60, 1), timeout=5.0
-                    )
-                    for _ in range(30):
-                        if len(last_raw_candles) >= 1:
-                            break
-                        await asyncio.sleep(0.1)
-                except asyncio.TimeoutError:
-                    print(f"[{market_name}] get_candles fallback timeout", flush=True)
-                except Exception as e_gc:
-                    print(f"[{market_name}] get_candles error: {e_gc}", flush=True)
+            # Request fresh dengan flag aktif agar live-tick tidak menimpa
+            _accept_history = True
+            last_raw_candles = []
+            try:
+                # Gunakan await biasa (bukan wait_for) agar WebSocket tidak
+                # rusak akibat cancel saat timeout. Respon ditunggu via sleep loop.
+                await client.market.get_candles(actual_asset_id, 60, 2)
+            except Exception as e_gc:
+                print(f"[{market_name}] get_candles send error: {e_gc}", flush=True)
+            finally:
+                pass
 
-                if len(last_raw_candles) >= 1:
-                    target_candle = (
-                        last_raw_candles[1]
-                        if len(last_raw_candles) >= 2
-                        else last_raw_candles[0]
-                    )
+            # Tunggu min 2 candle (maks 6 detik)
+            for _ in range(60):
+                if len(last_raw_candles) >= 2:
+                    break
+                await asyncio.sleep(0.1)
+            _accept_history = False
+
+            # Pilih candle yg sudah CLOSED berdasarkan timestamp jika ada,
+            # atau ambil candle TERTUA (index terkecil = oldest)
+            if len(last_raw_candles) >= 2:
+                # Coba sort berdasarkan field 'time'/'t' jika ada
+                c0 = last_raw_candles[0]
+                c1 = last_raw_candles[1]
+                t0 = c0.get("time", c0.get("t", 0))
+                t1 = c1.get("time", c1.get("t", 0))
+                # Candle LAMA (menit lalu) = timestamp lebih kecil
+                target_candle = c0 if t0 <= t1 else c1
+                print(
+                    f"[{market_name}] [{waktu_laporan}] c0.time={t0} c1.time={t1} → pakai {'c0' if t0<=t1 else 'c1'}",
+                    flush=True,
+                )
+            elif len(last_raw_candles) == 1:
+                target_candle = last_raw_candles[0]
+                print(
+                    f"[{market_name}] [{waktu_laporan}] hanya 1 candle tersedia",
+                    flush=True,
+                )
 
             if target_candle:
                 try:
-                    last_minute_checked = now.minute
-
                     o_pr = float(target_candle.get("open", 0))
                     h_pr = float(target_candle.get("high", 0))
                     l_pr = float(target_candle.get("low", 0))
@@ -1467,9 +1487,23 @@ async def async_bot_task(market_name, token, user_account_id):
 
 
 def run_trading_bot_thread(market_name, token, account_id):
+    """Thread runner dengan auto-restart jika async task crash."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(async_bot_task(market_name, token, account_id))
+    while True:
+        try:
+            loop.run_until_complete(async_bot_task(market_name, token, account_id))
+        except Exception as e:
+            print(f"[{market_name}] ⚠️ Bot crash: {e}. Restart dalam 10s...", flush=True)
+            time.sleep(10)
+            # Hanya restart jika masih is_running
+            if (
+                market_name not in markets_data
+                or markets_data[market_name].get("is_running", 0) == 0
+            ):
+                break
+            continue
+        break  # keluar normal (is_running=0 atau market dihapus)
 
 
 # ==========================================
